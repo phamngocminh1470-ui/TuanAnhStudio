@@ -3,7 +3,7 @@ import {
   ShieldCheck, Users, Key, RefreshCw, Cpu,
   Download, Lock, Unlock, KeyRound, TrendingUp, FileSpreadsheet, Filter,
   Search, RotateCcw, AlertTriangle, Calendar,
-  Info, FileText, Zap, Activity
+  Info, FileText, Zap, Mic
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -800,7 +800,7 @@ export default function AdminPanel({ keys, onSaveKeys }) {
             {[
               { label: 'Google Gemini AI', sub: 'Gemini 1.5 Flash / 2.0', key: keys?.gemini, icon: Zap, color: 'amber' },
               { label: 'Groq Cloud Whisper', sub: 'Whisper Large v3 Turbo', key: keys?.groq, icon: Cpu, color: 'blue' },
-              { label: 'Azure Cognitive', sub: 'Speech & Pronunciation', key: keys?.azure, icon: Activity, color: 'purple' },
+              { label: 'Azure Cognitive', sub: 'Speech & Pronunciation', key: keys?.azure, icon: Mic, color: 'purple' },
             ].map(({ label, sub, key: hasKey, icon: Icon, color }) => (
               <div key={label} className="p-5 rounded-2xl bg-white/[0.02] border border-white/10 space-y-3">
                 <div className="flex items-center justify-between">
