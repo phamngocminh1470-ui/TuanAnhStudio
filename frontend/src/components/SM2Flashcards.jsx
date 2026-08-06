@@ -200,13 +200,12 @@ export default function SM2Flashcards({ selectedGrade, currentUser }) {
           </div>
         </div>
 
-        {/* School Branding Card Header */}
         <div className="flex items-center space-x-3 bg-gradient-to-r from-slate-950 to-indigo-950/80 border border-indigo-500/20 p-4 rounded-2xl shrink-0 shadow-lg">
           <GraduationCap className="w-8 h-8 text-amber-400 shrink-0" />
           <div>
-            <span className="text-[10px] text-amber-400 font-extrabold uppercase tracking-wider block">Dự án KHKT Học sinh</span>
-            <span className="text-xs font-bold text-white block">TRƯỜNG THPT NGUYỄN KHUYẾN</span>
-            <span className="text-[10px] text-gray-400 block font-semibold">Tỉnh Bà Rịa - Vũng Tàu</span>
+            <span className="text-[10px] text-amber-400 font-extrabold uppercase tracking-wider block">Hệ thống Luyện thi AI</span>
+            <span className="text-xs font-bold text-white block">AI ENGLISH MENTOR</span>
+            <span className="text-[10px] text-gray-400 block font-semibold">Nền tảng học tập thích ứng cá nhân hóa</span>
           </div>
         </div>
       </div>
@@ -344,9 +343,9 @@ export default function SM2Flashcards({ selectedGrade, currentUser }) {
                 <GraduationCap className="w-6 h-6" />
               </div>
               <div>
-                <span className="text-[10px] text-amber-400 font-extrabold uppercase tracking-wider block">Đơn vị Nghiên cứu</span>
-                <h4 className="text-sm font-black text-white">THPT NGUYỄN KHUYẾN</h4>
-                <p className="text-[11px] text-gray-400">Bà Rịa - Vũng Tàu</p>
+                <span className="text-[10px] text-amber-400 font-extrabold uppercase tracking-wider block">Đơn vị Phát triển</span>
+                <h4 className="text-sm font-black text-white">AI ENGLISH MENTOR LAB</h4>
+                <p className="text-[11px] text-gray-400">Dự án Thực nghiệm KHKT</p>
               </div>
             </div>
             <p className="text-xs text-gray-300 leading-relaxed pt-1 border-t border-white/5">

@@ -68,10 +68,10 @@ export default function ExportProgressReportModal({ isOpen, onClose, selectedGra
               </div>
               <div>
                 <h1 className="text-xl md:text-2xl font-black text-indigo-400 print:text-indigo-900 font-outfit uppercase">
-                  TRƯỜNG THPT NGUYỄN KHUYẾN - BR-VT
+                  HỆ THỐNG AI ENGLISH MENTOR
                 </h1>
                 <p className="text-xs font-bold text-slate-400 print:text-gray-600 uppercase tracking-widest">
-                  DỰ ÁN KHKT: NỀN TẢNG AI ENGLISH MENTOR CÁ NHÂN HÓA THÍCH ỨNG
+                  BÁO CÁO KẾT QUẢ THỰC NGHIỆM HỌC TẬP THÍCH ỨNG
                 </p>
               </div>
             </div>
@@ -188,7 +188,7 @@ export default function ExportProgressReportModal({ isOpen, onClose, selectedGra
           <div className="pt-4 border-t border-slate-800 print:border-gray-300 flex justify-between items-end text-[11px] text-slate-400 print:text-gray-600">
             <div>
               <p>Hệ thống Học tập Tiếng Anh Cá nhân hóa Thích ứng AI</p>
-              <p className="font-semibold text-slate-300 print:text-black">Trường THPT Nguyễn Khuyến - BR-VT</p>
+              <p className="font-semibold text-slate-300 print:text-black">Dự án Nghiên cứu Khoa học Kỹ thuật Quốc gia</p>
             </div>
 
             <div className="text-center font-semibold">
