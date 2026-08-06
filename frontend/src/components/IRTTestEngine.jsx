@@ -279,30 +279,30 @@ export default function IRTTestEngine({ selectedGrade, currentUser }) {
       </div>
 
       {/* Main IRT Question Container */}
-      <div className="glass-card rounded-3xl p-8 md:p-10 border border-white/10 space-y-8 relative overflow-hidden">
-        <div className="flex items-center justify-between border-b border-white/10 pb-4">
+      <div className="glass-card rounded-3xl p-4 sm:p-6 md:p-10 border border-white/10 space-y-4 md:space-y-8 relative overflow-hidden">
+        <div className="flex items-center justify-between border-b border-white/10 pb-3 md:pb-4">
           <div className="flex items-center space-x-3">
             <Sparkles className="w-5 h-5 text-indigo-400" />
-            <span className="text-sm font-extrabold text-white">Câu hỏi Đánh giá Thích ứng AI</span>
+            <span className="text-xs md:text-sm font-extrabold text-white">Câu hỏi Đánh giá Thích ứng AI</span>
           </div>
 
           <button
             onClick={fetchNextQuestion}
             disabled={loadingQuestion}
-            className="px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 text-xs font-bold flex items-center gap-2 transition cursor-pointer border border-white/10"
+            className="px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 text-[10px] md:text-xs font-bold flex items-center gap-1.5 transition cursor-pointer border border-white/10"
           >
-            <RefreshCw className={`w-4 h-4 ${loadingQuestion ? 'animate-spin text-indigo-400' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${loadingQuestion ? 'animate-spin text-indigo-400' : ''}`} />
             <span>Đổi câu hỏi mới</span>
           </button>
         </div>
 
         {/* Question Box */}
         {currentQuestion ? (
-          <div className="space-y-6">
-            <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-gray-400">
+          <div className="space-y-4 md:space-y-6">
+            <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] md:text-xs text-gray-400">
               <span className="font-bold text-gray-300">Mã câu hỏi: <strong className="text-indigo-400 font-mono">{currentQuestion.item_id}</strong></span>
               <div className="flex items-center gap-3">
-                <span className="bg-white/5 border border-white/10 px-3 py-1 rounded-xl text-gray-300 font-semibold">
+                <span className="bg-white/5 border border-white/10 px-2 py-0.5 md:px-3 md:py-1 rounded-lg text-gray-300 font-semibold">
                   Mức độ: <strong className="text-amber-400">{currentQuestion.difficulty >= 1.0 ? 'Thử thách' : (currentQuestion.difficulty <= -0.5 ? 'Cơ bản' : 'Vừa sức')}</strong>
                 </span>
               </div>
@@ -310,27 +310,27 @@ export default function IRTTestEngine({ selectedGrade, currentUser }) {
 
             {/* Explainable Recommendation Banner */}
             {recommendationReason && (
-              <div className="p-3.5 rounded-2xl bg-indigo-600/10 border border-indigo-500/20 text-xs text-indigo-300 font-bold">
+              <div className="p-2.5 md:p-3.5 rounded-xl md:rounded-2xl bg-indigo-600/10 border border-indigo-500/20 text-[10px] md:text-xs text-indigo-300 font-bold">
                 💡 <span className="text-gray-400">Độ thích ứng gợi ý:</span> {recommendationReason}
               </div>
             )}
 
             {/* Passage / Reading / Notice Container */}
             {currentQuestion.passage && (
-              <div className="p-5 rounded-2xl bg-[#060a17] border border-indigo-500/30 text-gray-200 text-sm leading-relaxed whitespace-pre-wrap font-sans shadow-inner max-h-80 overflow-y-auto">
-                <span className="text-[11px] font-extrabold text-cyan-400 uppercase tracking-wider block mb-2 border-b border-indigo-500/20 pb-1 flex items-center gap-1.5">
+              <div className="p-3 md:p-5 rounded-xl md:rounded-2xl bg-[#060a17] border border-indigo-500/30 text-gray-200 text-xs md:text-sm leading-relaxed whitespace-pre-wrap font-sans shadow-inner max-h-36 md:max-h-80 overflow-y-auto">
+                <span className="text-[9px] md:text-[11px] font-extrabold text-cyan-400 uppercase tracking-wider block mb-1.5 border-b border-indigo-500/20 pb-0.5 flex items-center gap-1.5">
                   📄 Văn bản / Bài đọc / Thông báo tham chiếu ({currentQuestion.task_type || 'Đọc hiểu'})
                 </span>
                 {currentQuestion.passage}
               </div>
             )}
 
-            <div className="p-6 rounded-2xl bg-[#080d1e] border border-indigo-500/20 text-gray-100 font-semibold text-base leading-relaxed shadow-inner">
+            <div className="p-4 md:p-6 rounded-xl md:rounded-2xl bg-[#080d1e] border border-indigo-500/20 text-gray-100 font-semibold text-sm md:text-base leading-relaxed shadow-inner">
               {currentQuestion.question}
             </div>
 
             {/* Options Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
               {currentQuestion.options.map((opt, idx) => {
                 const letter = opt.charAt(0);
                 const isSelected = selectedOption === letter;
@@ -338,14 +338,14 @@ export default function IRTTestEngine({ selectedGrade, currentUser }) {
                   <button
                     key={idx}
                     onClick={() => !questionFeedback && setSelectedOption(letter)}
-                    className={`p-5 rounded-2xl text-left text-sm font-bold transition-all duration-200 border cursor-pointer flex items-center justify-between ${
+                    className={`p-3 md:p-5 rounded-xl md:rounded-2xl text-left text-xs md:text-sm font-bold transition-all duration-200 border cursor-pointer flex items-center justify-between ${
                       isSelected
                         ? 'bg-indigo-600/25 border-indigo-400 text-white shadow-xl shadow-indigo-500/20 scale-[1.01]'
                         : 'bg-white/[0.02] border-white/5 text-gray-300 hover:bg-white/5 hover:border-white/20'
                     }`}
                   >
-                    <span>{opt}</span>
-                    {isSelected && <CheckCircle2 className="w-5 h-5 text-indigo-400 shrink-0" />}
+                    <span className="pr-2">{opt}</span>
+                    {isSelected && <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5 text-indigo-400 shrink-0" />}
                   </button>
                 );
               })}
@@ -353,36 +353,36 @@ export default function IRTTestEngine({ selectedGrade, currentUser }) {
 
             {/* Feedback / Explanation Box */}
             {questionFeedback ? (
-              <div className="space-y-4 animate-fade-in">
-                <div className={`p-4 rounded-2xl text-sm font-extrabold flex items-center justify-between ${
+              <div className="space-y-3 md:space-y-4 animate-fade-in">
+                <div className={`p-3 md:p-4 rounded-xl md:rounded-2xl text-xs md:text-sm font-extrabold flex items-center justify-between ${
                   questionFeedback.isCorrect 
                     ? 'bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 shadow-lg' 
                     : 'bg-rose-500/15 border border-rose-500/40 text-rose-300 shadow-lg'
                 }`}>
-                  <div className="flex items-center gap-3">
-                    {questionFeedback.isCorrect ? <CheckCircle2 className="w-6 h-6 shrink-0 text-emerald-400" /> : <XCircle className="w-6 h-6 shrink-0 text-rose-400" />}
+                  <div className="flex items-center gap-2 md:gap-3">
+                    {questionFeedback.isCorrect ? <CheckCircle2 className="w-5 h-5 md:w-6 md:h-6 shrink-0 text-emerald-400" /> : <XCircle className="w-5 h-5 md:w-6 md:h-6 shrink-0 text-rose-400" />}
                     <span>{questionFeedback.message}</span>
                   </div>
                   <button
                     onClick={fetchNextQuestion}
-                    className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-extrabold flex items-center gap-2 transition cursor-pointer"
+                    className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[10px] md:text-xs font-extrabold flex items-center gap-1.5 transition cursor-pointer shrink-0"
                   >
                     <span>Câu tiếp theo</span>
-                    <ArrowRight className="w-4 h-4" />
+                    <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
 
                 {/* AI Diagnostics Panel */}
                 {lastDiagnostics && !questionFeedback.isCorrect && (
-                  <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-300 space-y-1.5 animate-fade-in">
+                  <div className="p-3 md:p-4 rounded-xl md:rounded-2xl bg-rose-500/10 border border-rose-500/20 text-[10px] md:text-xs text-rose-300 space-y-1 animate-fade-in">
                     <span className="font-extrabold uppercase text-rose-400 block">Chẩn đoán lỗi (Diagnostic Engine):</span>
                     <p>{lastDiagnostics.relevance}</p>
-                    <p className="text-[10px] text-gray-400 font-medium">Phân loại lỗi: <strong className="text-rose-400 font-mono">{lastDiagnostics.error_category}</strong> (Độ tin cậy của mô hình: {Math.round(lastDiagnostics.confidence_score * 100)}%)</p>
+                    <p className="text-[9px] text-gray-400 font-medium">Phân loại lỗi: <strong className="text-rose-400 font-mono">{lastDiagnostics.error_category}</strong> (Độ tin cậy của mô hình: {Math.round(lastDiagnostics.confidence_score * 100)}%)</p>
                   </div>
                 )}
 
                 {currentQuestion.explanation && (
-                  <div className="p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-xs text-indigo-200 space-y-1">
+                  <div className="p-3 md:p-4 rounded-xl md:rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-[10px] md:text-xs text-indigo-200 space-y-1">
                     <span className="font-extrabold uppercase text-indigo-400 block">Giải thích đáp án chi tiết:</span>
                     <p className="leading-relaxed">{currentQuestion.explanation}</p>
                   </div>
@@ -392,21 +392,22 @@ export default function IRTTestEngine({ selectedGrade, currentUser }) {
               <button
                 onClick={handleAnswerSubmit}
                 disabled={!selectedOption}
-                className={`w-full py-4 rounded-2xl font-black text-sm shadow-xl transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 ${
+                className={`w-full py-3 md:py-4 rounded-xl md:rounded-2xl font-black text-xs md:text-sm shadow-xl transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5 md:gap-2 ${
                   selectedOption
                     ? 'bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white glow-btn-brand shine-effect'
                     : 'bg-white/5 text-gray-600 cursor-not-allowed border border-white/5'
                 }`}
               >
                 <span>Xác nhận đáp án &amp; Cập nhật trình độ</span>
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-3.5 h-3.5 md:w-4 md:h-4" />
               </button>
             )}
           </div>
         ) : (
-          <div className="p-12 text-center text-gray-500 font-bold animate-pulse">Đang tải câu hỏi đánh giá thích ứng...</div>
+          <div className="p-12 text-center text-gray-500 font-bold animate-pulse text-sm">Đang tải câu hỏi đánh giá thích ứng...</div>
         )}
       </div>
+
 
       {/* Trajectory History Logs Table */}
       <div className="glass-card rounded-3xl p-6 md:p-8 border border-white/10 space-y-4">

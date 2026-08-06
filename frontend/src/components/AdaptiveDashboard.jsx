@@ -8,16 +8,17 @@ import axios from 'axios';
 
 export default function AdaptiveDashboard({ selectedGrade, onNavigate, onOpenExportModal, currentUser, serverStats }) {
   // Global Student Profile State
-  const [theta, setTheta] = useState(0.406);
-  const [ef, setEf] = useState(2.52);
-  const [nextInterval, setNextInterval] = useState(6);
-  const [streakDays, setStreakDays] = useState(7);
-  const [pronounceScore, setPronounceScore] = useState(88.5);
-  const [vocabCount, setVocabCount] = useState(142);
+  // Global Student Profile State
+  const [theta, setTheta] = useState(0.0);
+  const [ef, setEf] = useState(2.5);
+  const [nextInterval, setNextInterval] = useState(0);
+  const [streakDays, setStreakDays] = useState(0);
+  const [pronounceScore, setPronounceScore] = useState(0.0);
+  const [vocabCount, setVocabCount] = useState(0);
   const [predictions, setPredictions] = useState({
-    semesterScore: '8.4',
-    thptScore: '8.6',
-    vstepLevel: 'Mức: Giỏi'
+    semesterScore: '—',
+    thptScore: '—',
+    vstepLevel: 'Chưa đánh giá'
   });
   const [loadingPredictions, setLoadingPredictions] = useState(false);
 
@@ -29,15 +30,15 @@ export default function AdaptiveDashboard({ selectedGrade, onNavigate, onOpenExp
     const savedPronounce = localStorage.getItem('user_pronounce_score');
     const savedVocab = localStorage.getItem('user_vocab_count');
 
-    const activeTheta = savedTheta ? parseFloat(savedTheta) : 0.406;
-    const activeEf = savedEf ? parseFloat(savedEf) : 2.52;
-    const activeInterval = savedNextInterval ? parseInt(savedNextInterval, 10) : 6;
+    const activeTheta = savedTheta ? parseFloat(savedTheta) : 0.0;
+    const activeEf = savedEf ? parseFloat(savedEf) : 2.5;
+    const activeInterval = savedNextInterval ? parseInt(savedNextInterval, 10) : 0;
     // Pha 2: Sử dụng server stats nếu có, fallback về localStorage
-    const activeStreak = serverStats?.streak_days ?? (savedStreak ? parseInt(savedStreak, 10) : 7);
-    const activePronounce = savedPronounce ? parseFloat(savedPronounce) : 88.5;
+    const activeStreak = serverStats?.streak_days ?? (savedStreak ? parseInt(savedStreak, 10) : 0);
+    const activePronounce = savedPronounce ? parseFloat(savedPronounce) : 0.0;
     const activeVocab = serverStats?.total_questions
       ? Math.max(parseInt(savedVocab || '0', 10), serverStats.total_questions)  // Show higher of local or server
-      : (savedVocab ? parseInt(savedVocab, 10) : 142);
+      : (savedVocab ? parseInt(savedVocab, 10) : 0);
 
     setTheta(activeTheta);
     setEf(activeEf);
@@ -115,10 +116,28 @@ export default function AdaptiveDashboard({ selectedGrade, onNavigate, onOpenExp
 
   const getProficiencyBadge = (val) => {
     if (val < -1.0) return { label: 'A1 Sơ cấp', text: 'text-amber-400', bg: 'bg-amber-500/15 border-amber-500/30' };
-    if (val < 0.5) return { label: 'A2 Đạt cầu', text: 'text-cyan-400', bg: 'bg-cyan-500/15 border-cyan-500/30' };
+    if (val < 0.5) return { label: 'A2 Đạt yêu cầu', text: 'text-cyan-400', bg: 'bg-cyan-500/15 border-cyan-500/30' };
     if (val < 1.8) return { label: 'B1 Khá giỏi', text: 'text-indigo-400', bg: 'bg-indigo-500/15 border-indigo-500/30' };
     return { label: 'B2/C1 Xuất sắc', text: 'text-emerald-400', bg: 'bg-emerald-500/15 border-emerald-500/30' };
   };
+
+  // Dynamic gamification logic (BUG FIX)
+  const localHistoryStr = localStorage.getItem('irt_history');
+  const localHistory = localHistoryStr ? JSON.parse(localHistoryStr) : [];
+  const totalQuestions = serverStats?.total_questions || localHistory.length;
+  
+  const hasStudied = totalQuestions > 0 || vocabCount > 0 || pronounceScore > 0;
+  
+  // Calculate dynamic EXP points
+  const exp = (vocabCount * 10) + (totalQuestions * 15) + Math.round(pronounceScore * 2);
+  const currentLevel = hasStudied ? Math.max(1, Math.min(10, Math.floor(exp / 150) + 1)) : 1;
+  const nextLevelExp = currentLevel * 150;
+  const expInCurrentLevel = exp % 150;
+  const levelProgressPct = hasStudied ? Math.min(100, Math.round((expInCurrentLevel / nextLevelExp) * 100)) : 5;
+  const remainingExp = nextLevelExp - expInCurrentLevel;
+
+  const levelNames = ["BEGINNER", "NOVICE", "APPRENTICE", "INITIATE", "ADEPT", "EXPERT", "MASTER", "GRANDMASTER", "LEGEND", "CHAMPION"];
+  const levelName = `LEVEL ${currentLevel} - ${levelNames[currentLevel - 1]}`;
 
   const badge = getProficiencyBadge(theta);
 
@@ -493,53 +512,71 @@ export default function AdaptiveDashboard({ selectedGrade, onNavigate, onOpenExp
           </div>
 
           <div className="space-y-4">
-            {/* Topic 1 */}
-            <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 flex items-center justify-between">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="font-bold text-sm text-white">Thì &amp; Dạng Động từ (Tenses &amp; Verbs)</span>
-                  <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">An toàn (86%)</span>
-                </div>
-                <p className="text-xs text-slate-400">Đã thành thạo các thì Quá khứ đơn, Hiện tại hoàn thành và Tương lai.</p>
+            {!hasStudied ? (
+              <div className="p-8 text-center bg-slate-900/40 rounded-2xl border border-slate-800 space-y-3">
+                <p className="text-gray-400 font-bold text-sm">Chưa có dữ liệu chẩn đoán ngữ pháp.</p>
+                <p className="text-gray-500 text-xs leading-relaxed">
+                  Hãy hoàn thành ít nhất 1 bài đánh giá năng lực Đọc & Ngữ pháp (IRT) đầu tiên để AI phân tích và xây dựng bản đồ lỗ hổng kiến thức cho bạn!
+                </p>
+                <button
+                  onClick={() => onNavigate('irt-test')}
+                  className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition cursor-pointer shadow-lg inline-flex items-center gap-2"
+                >
+                  <Zap className="w-3.5 h-3.5" />
+                  <span>Bắt đầu đánh giá ngay</span>
+                </button>
               </div>
-              <button onClick={() => onNavigate('irt-test')} className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 transition cursor-pointer shrink-0">Luyện thêm</button>
-            </div>
+            ) : (
+              <>
+                {/* Topic 1 */}
+                <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 flex items-center justify-between">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-sm text-white">Thì &amp; Dạng Động từ (Tenses &amp; Verbs)</span>
+                      <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">An toàn (86%)</span>
+                    </div>
+                    <p className="text-xs text-slate-400">Đã thành thạo các thì Quá khứ đơn, Hiện tại hoàn thành và Tương lai.</p>
+                  </div>
+                  <button onClick={() => onNavigate('irt-test')} className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 transition cursor-pointer shrink-0">Luyện thêm</button>
+                </div>
 
-            {/* Topic 2 - WEAK SPOT */}
-            <div className="p-4 rounded-2xl bg-rose-950/20 border border-rose-500/30 flex items-center justify-between">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="font-bold text-sm text-rose-200">Mệnh đề quan hệ &amp; Câu ghép (Relative Clauses)</span>
-                  <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-300 border border-rose-500/40 animate-pulse">Cần ôn tập (64%)</span>
+                {/* Topic 2 - WEAK SPOT */}
+                <div className="p-4 rounded-2xl bg-rose-950/20 border border-rose-500/30 flex items-center justify-between">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-sm text-rose-200">Mệnh đề quan hệ &amp; Câu ghép (Relative Clauses)</span>
+                      <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-300 border border-rose-500/40 animate-pulse">Cần ôn tập (64%)</span>
+                    </div>
+                    <p className="text-xs text-slate-300">Nhầm lẫn khi rút gọn mệnh đề quan hệ dạng V-ing / P2.</p>
+                  </div>
+                  <button onClick={() => onNavigate('irt-test')} className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-xs font-bold text-white transition cursor-pointer shrink-0 shadow-md">Luyện lỗ hổng này</button>
                 </div>
-                <p className="text-xs text-slate-300">Nhầm lẫn khi rút gọn mệnh đề quan hệ dạng V-ing / P2.</p>
-              </div>
-              <button onClick={() => onNavigate('irt-test')} className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-xs font-bold text-white transition cursor-pointer shrink-0 shadow-md">Luyện lỗ hổng này</button>
-            </div>
 
-            {/* Topic 3 */}
-            <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 flex items-center justify-between">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="font-bold text-sm text-white">Câu điều kiện &amp; Câu bị động (Conditionals)</span>
-                  <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">Vừa sức (78%)</span>
+                {/* Topic 3 */}
+                <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 flex items-center justify-between">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-sm text-white">Câu điều kiện &amp; Câu bị động (Conditionals)</span>
+                      <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">Vừa sức (78%)</span>
+                    </div>
+                    <p className="text-xs text-slate-400">Hiểu rõ câu điều kiện loại 1, 2 và thể bị động cơ bản.</p>
+                  </div>
+                  <button onClick={() => onNavigate('irt-test')} className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 transition cursor-pointer shrink-0">Củng cố</button>
                 </div>
-                <p className="text-xs text-slate-400">Hiểu rõ câu điều kiện loại 1, 2 và thể bị động cơ bản.</p>
-              </div>
-              <button onClick={() => onNavigate('irt-test')} className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 transition cursor-pointer shrink-0">Củng cố</button>
-            </div>
 
-            {/* Topic 4 */}
-            <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 flex items-center justify-between">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="font-bold text-sm text-white">Từ vựng &amp; Cụm từ cố định (Vocabulary)</span>
-                  <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-300 border border-amber-500/20">Thành thạo (92%)</span>
+                {/* Topic 4 */}
+                <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 flex items-center justify-between">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-sm text-white">Từ vựng &amp; Cụm từ cố định (Vocabulary)</span>
+                      <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-300 border border-amber-500/20">Thành thạo (92%)</span>
+                    </div>
+                    <p className="text-xs text-slate-400">Ôn tập thông minh giúp duy trì độ bền ghi nhớ từ vựng tốt.</p>
+                  </div>
+                  <button onClick={() => onNavigate('sm2-flashcards')} className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 transition cursor-pointer shrink-0">Học từ mới</button>
                 </div>
-                <p className="text-xs text-slate-400">Ôn tập thông minh giúp duy trì độ bền ghi nhớ từ vựng tốt.</p>
-              </div>
-              <button onClick={() => onNavigate('sm2-flashcards')} className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 transition cursor-pointer shrink-0">Học từ mới</button>
-            </div>
+              </>
+            )}
           </div>
         </div>
 
@@ -559,12 +596,19 @@ export default function AdaptiveDashboard({ selectedGrade, onNavigate, onOpenExp
           <div className="p-5 rounded-2xl bg-gradient-to-br from-amber-500/10 to-purple-600/10 border border-amber-500/30 space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-extrabold text-amber-300 uppercase tracking-widest">Đẳng cấp Học viên:</span>
-              <span className="text-xs font-extrabold text-white bg-amber-500/20 px-3 py-1 rounded-full border border-amber-500/30">LEVEL 6 - MASTER</span>
+              <span className="text-xs font-extrabold text-white bg-amber-500/20 px-3 py-1 rounded-full border border-amber-500/30">{levelName}</span>
             </div>
             <div className="w-full bg-slate-900 rounded-full h-3 overflow-hidden p-0.5 border border-slate-700">
-              <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-purple-500 h-full rounded-full w-[78%] transition-all duration-500"></div>
+              <div 
+                className="bg-gradient-to-r from-amber-500 via-orange-500 to-purple-500 h-full rounded-full transition-all duration-500"
+                style={{ width: `${levelProgressPct}%` }}
+              ></div>
             </div>
-            <p className="text-[11px] text-slate-300 font-medium">Còn 220 EXP nữa để thăng cấp lên LEVEL 7 GRANDMASTER.</p>
+            <p className="text-[11px] text-slate-300 font-medium">
+              {hasStudied 
+                ? `Còn ${remainingExp} EXP nữa để thăng cấp lên LEVEL ${currentLevel + 1}.` 
+                : 'Hãy bắt đầu làm bài tập hoặc học từ vựng để tích luỹ điểm EXP thăng cấp!'}
+            </p>
           </div>
 
           {/* Badges Collection */}
@@ -573,7 +617,7 @@ export default function AdaptiveDashboard({ selectedGrade, onNavigate, onOpenExp
               <span className="text-2xl">🌟</span>
               <div>
                 <strong className="text-xs text-white block font-extrabold">Tân Binh Chăm Chỉ</strong>
-                <span className="text-[10px] text-emerald-400 font-bold">Chuỗi {streakDays} Ngày liên tiếp</span>
+                <span className="text-[10px] text-emerald-400 font-bold">Chuỗi {streakDays} Ngày</span>
               </div>
             </div>
 
@@ -581,7 +625,7 @@ export default function AdaptiveDashboard({ selectedGrade, onNavigate, onOpenExp
               <span className="text-2xl">🧠</span>
               <div>
                 <strong className="text-xs text-white block font-extrabold">Siêu Nhân Ghi Nhớ</strong>
-                <span className="text-[10px] text-amber-400 font-bold">{vocabCount}+ Từ đã nhớ</span>
+                <span className="text-[10px] text-amber-400 font-bold">{vocabCount} Từ đã nhớ</span>
               </div>
             </div>
 
@@ -597,7 +641,7 @@ export default function AdaptiveDashboard({ selectedGrade, onNavigate, onOpenExp
               <span className="text-2xl">🎧</span>
               <div>
                 <strong className="text-xs text-white block font-extrabold">Kỉ Lục Luyện Nghe</strong>
-                <span className="text-[10px] text-purple-400 font-bold">Thích ứng tốc độ AI</span>
+                <span className="text-[10px] text-purple-400 font-bold">{hasStudied ? 'Luyện nghe thích ứng' : 'Chưa luyện tập'}</span>
               </div>
             </div>
           </div>
@@ -700,7 +744,9 @@ export default function AdaptiveDashboard({ selectedGrade, onNavigate, onOpenExp
                   <span className="text-xs text-gray-300 block mt-0.5">Dự đoán điểm trung bình học kỳ</span>
                 </div>
                 <div className="text-right">
-                  <span className="text-xl font-black text-amber-400 font-outfit">{predictions.semesterScore} / 10</span>
+                  <span className="text-xl font-black text-amber-400 font-outfit">
+                    {hasStudied ? predictions.semesterScore : '—'} / 10
+                  </span>
                 </div>
               </div>
 
@@ -711,7 +757,9 @@ export default function AdaptiveDashboard({ selectedGrade, onNavigate, onOpenExp
                   <span className="text-xs text-gray-300 block mt-0.5">Kỳ thi Quốc gia THPT</span>
                 </div>
                 <div className="text-right">
-                  <span className="text-xl font-black text-indigo-300 font-outfit">{predictions.thptScore} / 10</span>
+                  <span className="text-xl font-black text-indigo-300 font-outfit">
+                    {hasStudied ? predictions.thptScore : '—'} / 10
+                  </span>
                 </div>
               </div>
 
@@ -722,7 +770,7 @@ export default function AdaptiveDashboard({ selectedGrade, onNavigate, onOpenExp
                   <span className="text-xs text-gray-300 block mt-0.5">Xếp loại năng lực theo Khối Lớp</span>
                 </div>
                 <div className="text-right text-xs font-black text-emerald-400">
-                  {predictions.vstepLevel}
+                  {hasStudied ? predictions.vstepLevel : 'Chưa đánh giá'}
                 </div>
               </div>
             </div>
