@@ -3,7 +3,7 @@ import {
   ShieldCheck, Users, Key, RefreshCw, Cpu,
   Download, Lock, Unlock, KeyRound, TrendingUp, FileSpreadsheet, Filter,
   Search, RotateCcw, AlertTriangle, Calendar,
-  Info, FileText, Zap
+  Info, FileText, Zap, Activity
 } from 'lucide-react';
 import axios from 'axios';
 
