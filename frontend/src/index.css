@@ -156,3 +156,14 @@
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(99, 102, 241, 0.4);
 }
+
+/* Fix select option styling contrast issues (Light text on light background in some browsers) */
+select option {
+  background-color: #0f172a !important; /* Slate 900 background */
+  color: #f1f5f9 !important;            /* White-ish Slate 100 text */
+}
+
+/* Ensure selected option wrapper styling on focus aligns with dark UI */
+select:focus {
+  background-color: #0f172a !important;
+}
