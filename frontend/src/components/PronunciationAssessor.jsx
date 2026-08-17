@@ -248,12 +248,25 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
-        const response = await axios.get(`${API_BASE}/questions?grade=${selectedGrade}`);
-        if (response.data.status === 'success' && response.data.questions?.length > 0) {
-          setDynamicSentences(response.data.questions);
+        const response = await axios.get(`${API_BASE}/content/pronounce/sentences?grade=${selectedGrade}`);
+        if (response.data.status === 'success' && response.data.data?.length > 0) {
+          const mapped = response.data.data
+            .filter(s => s.is_active)
+            .map(s => ({
+              id: s.id,
+              text: s.text,
+              level: `Lớp ${s.level_grade} (IRT: ${s.difficulty.toFixed(1)})`,
+              difficulty: s.difficulty
+            }));
+          if (mapped.length > 0) {
+            setDynamicSentences(mapped);
+            return;
+          }
         }
+        setDynamicSentences([]);
       } catch (err) {
         console.error("Dùng ngân hàng câu hỏi nội bộ fallback:", err);
+        setDynamicSentences([]);
       }
     };
     fetchQuestions();

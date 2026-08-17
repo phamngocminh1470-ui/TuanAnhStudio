@@ -58,6 +58,7 @@ class RegisterRequest(BaseModel):
     role: str = "student"       # "student", "teacher", "admin"
     grade: str = "12"
     target_score: float = 7.0
+    experiment_group: str = "ADAPTIVE"
 
 class LoginRequest(BaseModel):
     username: str
@@ -69,6 +70,7 @@ class ProfileUpdateRequest(BaseModel):
     grade: Optional[str] = None
     target_score: Optional[float] = None
     avatar_seed: Optional[str] = None
+    experiment_group: Optional[str] = None
 
 class PasswordChangeRequest(BaseModel):
     current_password: str
@@ -115,6 +117,7 @@ def _user_to_dict(user: User) -> dict:
         "avatar_seed": user.avatar_seed or user.username,
         "is_active": user.is_active,
         "created_at": user.created_at,
+        "experiment_group": user.experiment_group,
     }
 
 
@@ -202,6 +205,7 @@ async def register(request: RegisterRequest, db: Session = Depends(get_session))
         grade=request.grade,
         target_score=request.target_score,
         avatar_seed=request.username.strip(),
+        experiment_group=request.experiment_group or "ADAPTIVE",
         created_at=now,
         updated_at=now,
     )
@@ -280,6 +284,10 @@ async def update_profile(
         user.target_score = request.target_score
     if request.avatar_seed is not None:
         user.avatar_seed = request.avatar_seed
+    if request.experiment_group is not None:
+        if request.experiment_group not in ["ADAPTIVE", "CONTROL"]:
+            raise HTTPException(status_code=400, detail="Nhóm thực nghiệm không hợp lệ. Phải là 'ADAPTIVE' hoặc 'CONTROL'.")
+        user.experiment_group = request.experiment_group
     
     user.updated_at = _now_iso()
     db.add(user)
@@ -419,5 +427,34 @@ async def admin_reset_student_progress(
     return {
         "status": "success",
         "message": f"Đã reset tiến độ học tập của '{username}'. Lịch sử phiên học giữ nguyên cho nghiên cứu."
+    }
+
+
+@router.put("/auth/users/{username}/change-group")
+async def change_user_experiment_group(
+    username: str,
+    group: str,
+    current_user: User = Depends(require_current_user),
+    db: Session = Depends(get_session)
+):
+    """Admin/Teacher thay đổi nhóm thực nghiệm (ADAPTIVE/CONTROL) của học sinh."""
+    if current_user.role not in ["admin", "teacher"]:
+        raise HTTPException(status_code=403, detail="Không có quyền thực hiện thao tác này.")
+    
+    if group not in ["ADAPTIVE", "CONTROL"]:
+        raise HTTPException(status_code=400, detail="Nhóm thực nghiệm không hợp lệ. Phải là 'ADAPTIVE' hoặc 'CONTROL'.")
+        
+    target = db.exec(select(User).where(User.username == username)).first()
+    if not target:
+        raise HTTPException(status_code=404, detail=f"Không tìm thấy tài khoản '{username}'.")
+        
+    target.experiment_group = group
+    target.updated_at = _now_iso()
+    db.add(target)
+    db.commit()
+    
+    return {
+        "status": "success", 
+        "message": f"Đã chuyển học sinh '{username}' sang nhóm '{group}'."
     }
 

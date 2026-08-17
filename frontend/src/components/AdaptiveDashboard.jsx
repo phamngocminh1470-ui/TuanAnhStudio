@@ -204,6 +204,14 @@ export default function AdaptiveDashboard({ selectedGrade, onNavigate, onOpenExp
             </button>
 
             <button
+              onClick={() => onNavigate('vocab-library')}
+              className="px-6 py-3 rounded-2xl bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-200 border border-cyan-500/40 font-extrabold text-xs transition cursor-pointer flex items-center gap-2 shadow-lg"
+            >
+              <BookOpen className="w-4 h-4 text-cyan-400" />
+              <span>Học liệu từ vựng</span>
+            </button>
+
+            <button
               onClick={() => onNavigate('chat')}
               className="px-6 py-3 rounded-2xl bg-purple-600/20 hover:bg-purple-600/30 text-purple-200 border border-purple-500/40 font-extrabold text-xs transition cursor-pointer flex items-center gap-2 shadow-lg"
             >
@@ -219,6 +227,7 @@ export default function AdaptiveDashboard({ selectedGrade, onNavigate, onOpenExp
               <span>Chấm phát âm</span>
             </button>
           </div>
+
         </div>
       </div>
 
@@ -237,12 +246,20 @@ export default function AdaptiveDashboard({ selectedGrade, onNavigate, onOpenExp
           </div>
 
           <div className="flex items-baseline justify-between pt-1">
-            <span className="text-3xl font-black text-white font-outfit tracking-normal">{Math.max(10, Math.min(100, Math.round(((theta + 3.0) / 6.0) * 100)))}%</span>
-            <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full border ${badge.bg} ${badge.text}`}>{badge.label}</span>
+            {hasStudied ? (
+              <span className="text-3xl font-black text-white font-outfit tracking-normal">{Math.max(1, Math.min(100, Math.round(((theta + 3.0) / 6.0) * 100)))}%</span>
+            ) : (
+              <span className="text-3xl font-black text-gray-500 font-outfit tracking-normal">—</span>
+            )}
+            {hasStudied ? (
+              <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full border ${badge.bg} ${badge.text}`}>{badge.label}</span>
+            ) : (
+              <span className="text-xs font-bold px-2.5 py-0.5 rounded-full border bg-gray-500/10 border-gray-500/30 text-gray-400">Chưa đánh giá</span>
+            )}
           </div>
 
           <p className="text-[11px] text-indigo-400 font-bold pt-2 border-t border-white/5 flex items-center justify-between group-hover:underline">
-            <span>Đánh giá năng lực Đọc &amp; Viết</span>
+            <span>{hasStudied ? 'Đánh giá năng lực Đọc & Viết' : 'Làm bài test để cập nhật'}</span>
             <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
           </p>
         </div>
@@ -260,8 +277,14 @@ export default function AdaptiveDashboard({ selectedGrade, onNavigate, onOpenExp
           </div>
 
           <div className="flex items-baseline justify-between pt-1">
-            <span className="text-3xl font-black text-amber-400 font-outfit tracking-normal">{Math.max(10, Math.min(100, Math.round((ef / 3.0) * 100)))}%</span>
-            <span className="text-xs font-bold px-2.5 py-0.5 rounded-full border bg-amber-500/10 border-amber-500/30 text-amber-300">Ôn lại: {nextInterval} ngày</span>
+            {vocabCount > 0 ? (
+              <span className="text-3xl font-black text-amber-400 font-outfit tracking-normal">{Math.max(1, Math.min(100, Math.round((ef / 3.0) * 100)))}%</span>
+            ) : (
+              <span className="text-3xl font-black text-gray-500 font-outfit tracking-normal">0%</span>
+            )}
+            <span className="text-xs font-bold px-2.5 py-0.5 rounded-full border bg-amber-500/10 border-amber-500/30 text-amber-300">
+              {vocabCount > 0 ? `Ôn lại: ${nextInterval} ngày` : 'Chưa học từ nào'}
+            </span>
           </div>
 
           <p className="text-[11px] text-amber-400 font-bold pt-2 border-t border-white/5 flex items-center justify-between group-hover:underline">

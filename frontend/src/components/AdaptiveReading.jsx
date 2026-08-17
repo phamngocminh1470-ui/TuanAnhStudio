@@ -61,31 +61,103 @@ export default function AdaptiveReading({ selectedGrade }) {
     } catch (e) {
       console.error(e);
       // Fallback local mockup data
+      const topic_val = topic.trim();
       setReadingData({
-        title: `The Influence of ${topic} on Education`,
-        passage: `In recent years, the integration of ${topic} into classrooms has transformed the way students learn. By using interactive platforms, teachers can customize lessons to match individual needs. This development not only enhances academic outcomes but also prepares students for global careers in the modern world. Experts believe that adopting these methods is crucial for future success.`,
-        topic: topic,
+        title: `The Influence of ${topic_val} on Education and Society`,
+        passage: `In recent years, the integration of ${topic_val} into schools and communities worldwide has transformed the way students engage with knowledge. Interactive digital platforms powered by advances in ${topic_val} now allow teachers to personalise their lessons to suit the unique learning pace and interests of each student. This shift from one-size-fits-all instruction to genuinely individualised education is widely considered one of the most exciting developments in modern pedagogy.
+
+Historically, the concept of adapting education to individual learners dates back to the early twentieth century, when progressive educators like John Dewey argued that schools should respond to each child's curiosity and creativity. However, it was only with the arrival of powerful computing tools and data analysis methods inspired by ${topic_val} that these ideals could be realised at scale. Today, schools in over one hundred countries use platforms that analyse student performance in real time and automatically adjust the content and difficulty of exercises accordingly.
+
+Beyond the classroom, ${topic_val} has made a profound impact on the healthcare sector. Medical researchers have used insights derived from ${topic_val} to develop diagnostic tools that can detect certain diseases far earlier and more accurately than conventional methods. In clinical trials, these tools have demonstrated a 35% improvement in early detection rates, giving patients access to treatment at a stage when outcomes are significantly better. Such results have led health organisations around the globe to invest heavily in the further development of ${topic_val}-based medical technologies.
+
+Environmental scientists have also discovered that principles drawn from ${topic_val} can help address some of the most urgent challenges facing the planet. By processing vast datasets collected from satellites, weather stations, and ocean sensors, researchers can now model climate change scenarios with far greater precision than was possible even a decade ago. These models have been critical in helping governments design more effective policies for reducing carbon emissions and protecting biodiversity.
+
+Despite these remarkable advances, the widespread adoption of ${topic_val} has not been without controversy. Critics point out that the benefits are not evenly distributed: wealthier communities are far more likely to have access to the latest tools and expertise, while disadvantaged groups risk being left further behind. Researchers at leading universities have argued that addressing this 'digital divide' must be a top priority if the opportunities presented by ${topic_val} are to contribute to greater global equality rather than deeper inequality.
+
+In conclusion, ${topic_val} represents one of the defining forces of the twenty-first century. Its potential to improve education, healthcare, environmental protection, and many other fields is enormous. However, realising this potential in a way that benefits all people, regardless of background or income, requires careful planning, strong investment in public infrastructure, and a commitment to ensuring that no community is left behind. The choices societies make in the coming years will determine whether ${topic_val} becomes a great equaliser or a new source of division.`,
+        topic: topic_val,
         grade: selectedGrade,
+        word_count: 440,
         key_vocabulary: [
-          { word: "Integration", ipa: "/ˌɪn.tɪˈɡreɪ.ʃən/", meaning: "sự tích hợp, kết hợp" },
-          { word: "Transform", ipa: "/trænsˈfɔːm/", meaning: "biến đổi sâu sắc" },
-          { word: "Interactive", ipa: "/ˌɪn.təˈræk.tɪv/", meaning: "tương tác qua lại" },
-          { word: "Outcome", ipa: "/ˈaʊt.kʌm/", meaning: "kết quả đầu ra" }
+          { word: 'Integration', ipa: '/ˌɪn.tɪˈɡreɪ.ʃən/', meaning: 'sự tích hợp, kết hợp' },
+          { word: 'Pedagogy', ipa: '/ˈped.ə.ɡɒ.dʒi/', meaning: 'phương pháp sư phạm, nghệ thuật giảng dạy' },
+          { word: 'Precision', ipa: '/prɪˈsɪʒ.ən/', meaning: 'độ chính xác, sự tỉ mỉ' },
+          { word: 'Biodiversity', ipa: '/ˌbaɪ.əʊ.daɪˈvɜː.sɪ.ti/', meaning: 'đa dạng sinh học' },
+          { word: 'Controversy', ipa: '/ˈkɒn.trə.vɜː.si/', meaning: 'tranh cãi, sự gây tranh luận' },
+          { word: 'Equaliser', ipa: '/ˈiː.kwə.laɪ.zər/', meaning: 'nhân tố bình đẳng hoá' }
         ],
         questions: [
           {
-            id: "Q1",
-            question: "What is the main topic of the passage?",
-            options: [`A. The positive impact of ${topic} on education`, "B. The history of traditional schools", "C. Disadvantages of classroom games", "D. How to become a teacher"],
-            correct: "A",
-            explanation: "Toàn bộ đoạn văn thảo luận về sự biến đổi và lợi ích tích cực của chủ đề đối với môi trường giáo dục."
+            id: 'Q1',
+            question: 'What is the main idea of the passage?',
+            options: [
+              `A. The wide-ranging benefits and challenges of ${topic_val}`,
+              'B. Why traditional teaching is better than modern methods',
+              'C. How to build computers from scratch',
+              'D. The history of agricultural development'
+            ],
+            correct: 'A',
+            explanation: `Toàn bộ đoạn văn thảo luận về nhiều tác động của ${topic_val} trong giáo dục, y tế, môi trường và bất bình đẳng xã hội.`
           },
           {
-            id: "Q2",
-            question: "According to the passage, interactive platforms allow teachers to:",
-            options: ["A. Cancel all examinations", "B. Customize lessons to match individual needs", "C. Play video games all day", "D. Spend less time reading"],
-            correct: "B",
-            explanation: "Thông tin có sẵn trong đoạn văn: 'By using interactive platforms, teachers can customize lessons to match individual needs.'"
+            id: 'Q2',
+            question: 'According to paragraph 2, who first argued that schools should respond to each child\'s curiosity?',
+            options: [
+              'A. Albert Einstein',
+              'B. John Dewey',
+              'C. Marie Curie',
+              'D. Nikola Tesla'
+            ],
+            correct: 'B',
+            explanation: `Đoạn 2 đề cập: "progressive educators like John Dewey argued that schools should respond to each child's curiosity".`
+          },
+          {
+            id: 'Q3',
+            question: 'The word "pedagogy" in paragraph 1 is closest in meaning to:',
+            options: [
+              'A. Technology industry',
+              'B. The art and science of teaching',
+              'C. Government education policy',
+              'D. University research methods'
+            ],
+            correct: 'B',
+            explanation: `"Pedagogy" có nghĩa là phương pháp sư phạm — nghệ thuật và khoa học dạy học.`
+          },
+          {
+            id: 'Q4',
+            question: 'Which of the following is NOT mentioned as a benefit of this topic?',
+            options: [
+              'A. Improving early disease detection in healthcare',
+              'B. Helping model climate change more accurately',
+              'C. Reducing the cost of housing construction',
+              'D. Personalising education for individual students'
+            ],
+            correct: 'C',
+            explanation: `Đoạn văn đề cập giáo dục (đoạn 1-2), y tế (đoạn 3) và môi trường (đoạn 4). Xây dựng nhà ở KHÔNG được đề cập.`
+          },
+          {
+            id: 'Q5',
+            question: 'According to paragraph 3, what improvement was demonstrated in clinical trials?',
+            options: [
+              'A. A 50% reduction in hospital costs',
+              'B. A 35% improvement in early detection rates',
+              'C. A 20% increase in surgery speed',
+              'D. A 40% decrease in medication errors'
+            ],
+            correct: 'B',
+            explanation: `Đoạn 3 ghi rõ: "these tools have demonstrated a 35% improvement in early detection rates".`
+          },
+          {
+            id: 'Q6',
+            question: 'What can be inferred from the final paragraph?',
+            options: [
+              `A. ${topic_val} will automatically benefit everyone equally`,
+              'B. Investment and planning are needed to prevent this topic from increasing inequality',
+              'C. Governments should stop funding research immediately',
+              'D. Only wealthy countries can benefit from this topic'
+            ],
+            correct: 'B',
+            explanation: `Đoạn cuối kết luận rằng cần có "careful planning, strong investment" để đảm bảo lợi ích phân phối đều — suy ra không có điều đó thì có thể gây thêm bất bình đẳng.`
           }
         ]
       });

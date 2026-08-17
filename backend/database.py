@@ -41,6 +41,7 @@ class User(SQLModel, table=True):
     grade: str = Field(default="12")            # "10", "11", "12"
     target_score: float = Field(default=7.0)   # Mục tiêu điểm THPT (0-10)
     avatar_seed: str = Field(default="")        # Seed cho DiceBear avatar
+    experiment_group: str = Field(default="ADAPTIVE", max_length=20) # "ADAPTIVE", "CONTROL"
     is_active: bool = Field(default=True)
     created_at: str = Field(default="")
     updated_at: str = Field(default="")
@@ -85,6 +86,60 @@ class LearningSession(SQLModel, table=True):
     skill_focus: str = Field(default="")           # Kỹ năng trọng tâm buổi học
     session_data_json: str = Field(default="{}")   # Full session data (JSON)
     created_at: str = Field(default="")
+
+
+class VocabularyTopic(SQLModel, table=True):
+    """
+    Bảng chủ đề từ vựng động.
+    """
+    id: Optional[int] = Field(default=None, primary_key=True)
+    title: str = Field(max_length=100)
+    slug: str = Field(unique=True, index=True, max_length=100)
+    description: str = Field(default="", max_length=255)
+    image: str = Field(default="")
+    grade: str = Field(default="10", max_length=10)
+    is_active: bool = Field(default=True)
+
+
+class VocabularyWord(SQLModel, table=True):
+    """
+    Bảng từ vựng động thuộc các chủ đề.
+    """
+    id: Optional[int] = Field(default=None, primary_key=True)
+    topic_id: int = Field(foreign_key="vocabularytopic.id", index=True)
+    word: str = Field(index=True, max_length=100)
+    ipa: str = Field(default="", max_length=100)
+    reading: str = Field(default="", max_length=100)
+    pos: str = Field(default="", max_length=50)
+    meaning: str = Field(default="", max_length=255)
+    example: str = Field(default="")
+    example_vi: str = Field(default="")
+    is_active: bool = Field(default=True)
+
+
+class IPASound(SQLModel, table=True):
+    """
+    Bảng các âm phát âm quốc tế IPA động.
+    """
+    id: Optional[int] = Field(default=None, primary_key=True)
+    symbol: str = Field(unique=True, index=True, max_length=10)
+    name: str = Field(max_length=50)
+    sound_type: str = Field(default="vowel", max_length=20)
+    example_word: str = Field(default="", max_length=50)
+    example_phonetic: str = Field(default="", max_length=50)
+    mouth_guide: str = Field(default="")
+    is_active: bool = Field(default=True)
+
+
+class PronounceSentence(SQLModel, table=True):
+    """
+    Bảng câu chấm điểm phát âm thích ứng động (kèm độ khó IRT).
+    """
+    id: Optional[int] = Field(default=None, primary_key=True)
+    text: str = Field(max_length=255)
+    level_grade: str = Field(default="10", max_length=10)
+    difficulty: float = Field(default=0.0)
+    is_active: bool = Field(default=True)
 
 
 # ─── HELPER FUNCTIONS ───────────────────────────────────────────────────────

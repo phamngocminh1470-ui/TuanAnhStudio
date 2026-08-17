@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Clock, BookOpen, Eye, EyeOff, Volume2, Sparkles, CheckCircle2, 
   RotateCw, ArrowRight, Activity, Zap, Layers, GraduationCap, Award, HelpCircle 
@@ -80,11 +80,73 @@ export default function SM2Flashcards({ selectedGrade, currentUser }) {
     ]
   };
 
-  const activeGradeCards = flashcardDataByGrade[selectedGrade] || flashcardDataByGrade['10'];
+  const [dynamicCards, setDynamicCards] = useState([]);
+  const [loadingCards, setLoadingCards] = useState(false);
+
+  useEffect(() => {
+    const loadDynamicCards = async () => {
+      setLoadingCards(true);
+      try {
+        const topicsRes = await axios.get(`${API_BASE}/content/vocab/topics`);
+        if (topicsRes.data?.status === 'success') {
+          const allTopics = topicsRes.data.data || [];
+          const gradeTopics = allTopics.filter(t => String(t.grade) === String(selectedGrade) && t.is_active);
+          
+          if (gradeTopics.length > 0) {
+            const wordPromises = gradeTopics.map(t => axios.get(`${API_BASE}/content/vocab/words?topic_id=${t.id}`));
+            const wordResponses = await Promise.all(wordPromises);
+            
+            let loadedWords = [];
+            wordResponses.forEach(res => {
+              if (res.data?.status === 'success') {
+                const wordsList = res.data.data || [];
+                wordsList.forEach(w => {
+                  if (w.is_active) {
+                    loadedWords.push({
+                      id: 'DB_' + w.id,
+                      word: w.word,
+                      ipa: w.ipa,
+                      reading: w.reading,
+                      pos: w.pos,
+                      meaning: w.meaning,
+                      example: w.example,
+                      exampleVi: w.example_vi
+                    });
+                  }
+                });
+              }
+            });
+            
+            if (loadedWords.length > 0) {
+              setDynamicCards(loadedWords);
+              setLoadingCards(false);
+              return;
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Lỗi tải từ vựng động từ backend:', err.message);
+      }
+      setDynamicCards([]);
+      setLoadingCards(false);
+    };
+
+    loadDynamicCards();
+  }, [selectedGrade]);
+
+  const activeGradeCards = dynamicCards.length > 0
+    ? dynamicCards
+    : (flashcardDataByGrade[selectedGrade] || flashcardDataByGrade['10']);
 
   const [cardIndex, setCardIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [sm2Feedback, setSm2Feedback] = useState(null);
+
+  useEffect(() => {
+    setCardIndex(0);
+    setIsFlipped(false);
+    setSm2Feedback(null);
+  }, [selectedGrade, dynamicCards]);
 
   const currentCard = activeGradeCards[cardIndex % activeGradeCards.length] || activeGradeCards[0];
 

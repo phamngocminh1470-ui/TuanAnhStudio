@@ -9,13 +9,21 @@ from dotenv import load_dotenv
 # Tải cấu hình môi trường
 load_dotenv()
 
+def clean_api_key(key: str) -> str:
+    if not key:
+        return None
+    val = str(key).strip()
+    if val.lower() in ["", "null", "undefined"]:
+        return None
+    return val
+
 # Cấu hình Gemini API
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+GEMINI_API_KEY = clean_api_key(os.getenv("GEMINI_API_KEY"))
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
 
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-AZURE_SPEECH_KEY = os.getenv("AZURE_SPEECH_KEY")
+GROQ_API_KEY = clean_api_key(os.getenv("GROQ_API_KEY"))
+AZURE_SPEECH_KEY = clean_api_key(os.getenv("AZURE_SPEECH_KEY"))
 AZURE_SPEECH_REGION = os.getenv("AZURE_SPEECH_REGION", "southeastasia")
 
 # 1. DỊCH VỤ CHAT AI & SINH NỘI DUNG (GEMINI)
@@ -24,7 +32,7 @@ async def chat_with_gemini(messages: list, system_instruction: str = None, custo
     Tương tác với Gemini 1.5 Flash.
     messages: list các dict dạng {"role": "user"|"model", "content": "..."}
     """
-    active_key = custom_key or GEMINI_API_KEY
+    active_key = clean_api_key(custom_key) or GEMINI_API_KEY
     if not active_key:
         return "Lỗi: Chưa cấu hình GEMINI_API_KEY. Vui lòng thêm key trong cài đặt của ứng dụng hoặc trong file .env."
     
@@ -157,8 +165,8 @@ async def assess_pronunciation(
     2. Nếu không có Azure key nhưng có Gemini key, sử dụng Gemini 1.5 Flash đa phương thức (Multimodal) chấm điểm qua file ghi âm.
     3. Nếu không có key nào, trả về Mock Data phục vụ demo.
     """
-    active_azure_key = custom_key or AZURE_SPEECH_KEY
-    active_gemini_key = custom_gemini_key or GEMINI_API_KEY
+    active_azure_key = clean_api_key(custom_key) or AZURE_SPEECH_KEY
+    active_gemini_key = clean_api_key(custom_gemini_key) or GEMINI_API_KEY
     
     # TRƯỜNG HỢP 1: CÓ AZURE KEY -> SỬ DỤNG AZURE SPEECH REST API
     if active_azure_key:
@@ -297,7 +305,7 @@ async def generate_adaptive_question_with_gemini(grade: str, theta: float, custo
     Sử dụng Gemini API để tự động sinh câu hỏi trắc nghiệm Tiếng Anh thích ứng (IRT)
     dựa trên Khối lớp (6-12) và Năng lực Theta (theta).
     """
-    active_key = custom_key or GEMINI_API_KEY
+    active_key = clean_api_key(custom_key) or GEMINI_API_KEY
     import random
 
     if active_key:
@@ -354,7 +362,7 @@ async def generate_pronunciation_sentence_with_gemini(level: str = "A2", custom_
     """
     Sử dụng Gemini API sinh ngẫu nhiên câu thực hành phát âm Tiếng Anh chuẩn CEFR (A1-C1) hoặc Khối lớp.
     """
-    active_key = custom_key or GEMINI_API_KEY
+    active_key = clean_api_key(custom_key) or GEMINI_API_KEY
     import random
 
     if active_key:
@@ -432,48 +440,65 @@ Return strictly valid JSON with keys:
 
 def generate_adaptive_reading(topic: str, grade: str, theta: float, user_api_key: str = None):
     """
-    Sinh bài đọc thích ứng AI theo sở thích học sinh và ước lượng năng lực IRT theta
+    Sinh bai doc thich ung AI theo so thich hoc sinh va uoc luong nang luc IRT theta
     """
-    active_key = user_api_key or GEMINI_API_KEY
+    active_key = clean_api_key(user_api_key) or GEMINI_API_KEY
     if active_key:
         try:
             genai.configure(api_key=active_key)
             model = genai.GenerativeModel(
                 model_name="gemini-1.5-flash",
-                generation_config={"response_mime_type": "application/json"}
+                generation_config={"response_mime_type": "application/json", "max_output_tokens": 4096}
             )
 
             # Determine appropriate text length for realistic reading tests
             try:
                 g_val = int(grade)
-                if g_val <= 9:
-                    length_desc = "220 to 300 words"
+                if g_val <= 7:
+                    length_desc = "350 to 450 words, structured in 3 clear paragraphs"
+                    q_count = 5
+                    vocab_count = 5
+                elif g_val <= 9:
+                    length_desc = "450 to 550 words, structured in 4 clear paragraphs"
+                    q_count = 6
+                    vocab_count = 6
                 else:
-                    length_desc = "350 to 500 words (structured in 3-4 clear paragraphs)"
+                    length_desc = "600 to 750 words (structured in 5-6 clear, substantial paragraphs like a real THPT exam text)"
+                    q_count = 6
+                    vocab_count = 6
             except ValueError:
-                length_desc = "300 to 400 words"
+                length_desc = "500 to 650 words in 4-5 paragraphs"
+                q_count = 6
+                vocab_count = 6
 
             prompt = f"""
 You are an expert English language test creator for Vietnamese high school students.
-Create an adaptive reading comprehension module for a student in Grade {grade} (IRT Ability Theta = {theta}).
+Create an adaptive reading comprehension module for a student in Grade {grade} (IRT Ability Theta = {theta:.2f}).
 Student Interest Topic: "{topic}".
 
 Guidelines:
-- Generate a comprehensive, realistic reading passage of {length_desc} about "{topic}" matching Grade {grade} difficulty. It must feel like an actual reading text from a real exam.
-- Highlight 4 key vocabulary words in the passage with their IPA and Vietnamese translation.
-- Create 4 multiple choice comprehension questions formatted like the National High School Exam (THPT Quốc gia).
+- Generate a LONG, rich, comprehensive reading passage of {length_desc} about "{topic}" matching Grade {grade} difficulty.
+- The passage MUST feel like an actual exam reading text from THPT Quoc gia or Cambridge exams — NOT a summary or introduction.
+- Use specific facts, examples, real-world details, statistics or expert opinions to make it informative and engaging.
+- Each paragraph should be at least 4-6 sentences long and develop the idea fully.
+- Highlight {vocab_count} key vocabulary words with their IPA and Vietnamese translation.
+- Create {q_count} multiple choice comprehension questions formatted like the National High School Exam (THPT Quoc gia).
+- Include different question types: main idea, inference, vocabulary-in-context, specific detail, reference, NOT stated.
 
 Return strictly valid JSON with format:
 {{
   "title": "Passage Title...",
-  "passage": "Full English passage text...",
+  "passage": "Full English passage text of at least {length_desc}...",
   "topic": "{topic}",
   "grade": "{grade}",
+  "word_count": 620,
   "key_vocabulary": [
-    {{"word": "example", "ipa": "/ɪɡˈzɑːm.pəl/", "meaning": "ví dụ minh họa"}},
-    {{"word": "concept", "ipa": "/ˈkɒn.sept/", "meaning": "khái niệm"}},
-    {{"word": "dynamic", "ipa": "/daɪˈnæm.ɪk/", "meaning": "năng động, linh hoạt"}},
-    {{"word": "innovative", "ipa": "/ˈɪn.ə.və.tɪv/", "meaning": "sáng tạo, đổi mới"}}
+    {{"word": "example", "ipa": "/ɪɡˈzɑːm.pəl/", "meaning": "vi du minh hoa"}},
+    {{"word": "concept", "ipa": "/ˈkɒn.sept/", "meaning": "khai niem"}},
+    {{"word": "dynamic", "ipa": "/daɪˈnæm.ɪk/", "meaning": "nang dong, linh hoat"}},
+    {{"word": "innovative", "ipa": "/ˈɪn.ə.və.tɪv/", "meaning": "sang tao, doi moi"}},
+    {{"word": "significant", "ipa": "/sɪɡˈnɪf.ɪ.kənt/", "meaning": "dang ke, quan trong"}},
+    {{"word": "fundamental", "ipa": "/ˌfʌn.dəˈmen.t̬əl/", "meaning": "co ban, nen tang"}}
   ],
   "questions": [
     {{
@@ -481,28 +506,42 @@ Return strictly valid JSON with format:
       "question": "What is the main idea of the passage?",
       "options": ["A. Option 1", "B. Option 2", "C. Option 3", "D. Option 4"],
       "correct": "A",
-      "explanation": "Giải thích chi tiết đáp án A bằng tiếng Việt..."
+      "explanation": "Giai thich chi tiet dap an A bang tieng Viet..."
     }},
     {{
       "id": "Q2",
       "question": "According to the passage, why is...",
       "options": ["A. Option 1", "B. Option 2", "C. Option 3", "D. Option 4"],
       "correct": "B",
-      "explanation": "Giải thích chi tiết đáp án B bằng tiếng Việt..."
+      "explanation": "Giai thich chi tiet dap an B bang tieng Viet..."
     }},
     {{
       "id": "Q3",
-      "question": "The word '...' in paragraph 1 is closest in meaning to:",
+      "question": "The word '...' in paragraph 2 is closest in meaning to:",
       "options": ["A. Option 1", "B. Option 2", "C. Option 3", "D. Option 4"],
       "correct": "C",
-      "explanation": "Giải thích chi tiết bằng tiếng Việt..."
+      "explanation": "Giai thich chi tiet bang tieng Viet..."
     }},
     {{
       "id": "Q4",
       "question": "Which of the following is NOT true according to the text?",
       "options": ["A. Option 1", "B. Option 2", "C. Option 3", "D. Option 4"],
       "correct": "D",
-      "explanation": "Giải thích chi tiết bằng tiếng Việt..."
+      "explanation": "Giai thich chi tiet bang tieng Viet..."
+    }},
+    {{
+      "id": "Q5",
+      "question": "What can be inferred from the last paragraph?",
+      "options": ["A. Option 1", "B. Option 2", "C. Option 3", "D. Option 4"],
+      "correct": "A",
+      "explanation": "Giai thich suy luan bang tieng Viet..."
+    }},
+    {{
+      "id": "Q6",
+      "question": "The pronoun 'it' in paragraph 3 refers to:",
+      "options": ["A. Option 1", "B. Option 2", "C. Option 3", "D. Option 4"],
+      "correct": "B",
+      "explanation": "Giai thich tu chi thi bang tieng Viet..."
     }}
   ]
 }}
@@ -510,34 +549,75 @@ Return strictly valid JSON with format:
             response = model.generate_content(prompt)
             return json.loads(response.text)
         except Exception as e:
-            print(f"Lỗi sinh bài đọc thích ứng: {e}")
+            print(f"Loi sinh bai doc thich ung: {e}")
 
-    # Fallback reading passage
+    # Rich fallback reading passage (used when no API key)
     return {
-        "title": f"The Evolution of {topic.title()} in Modern Science",
-        "passage": f"In recent years, {topic} has become one of the most exciting fields for high school students. Breakthroughs in technology have allowed researchers to develop innovative solutions that improve everyday life. Understanding {topic} not only expands academic knowledge but also prepares students for global career opportunities in science and engineering.",
+        "title": f"The Remarkable Impact of {topic.title()} on Modern Society",
+        "passage": f"""In the twenty-first century, {topic} has emerged as one of the most transformative forces shaping human civilization. From bustling urban centres to remote rural communities, its influence extends far beyond what previous generations could have imagined. Scientists, educators, and policymakers around the world are now working together to harness its potential while carefully managing the challenges it presents.
+
+Historically, the development of {topic} can be traced back several decades, when pioneering researchers first began to explore its possibilities. Early experiments were modest in scope, yet they laid the foundation for the remarkable breakthroughs that followed. By the turn of the millennium, advances in technology had accelerated the pace of discovery dramatically, enabling applications that were once considered purely theoretical to become practical realities.
+
+One of the most significant benefits of {topic} is its ability to improve the quality of life for millions of people. In the field of education, for instance, innovative tools inspired by {topic} have made it possible for students in remote areas to access world-class learning resources. In healthcare, new approaches derived from {topic} have led to more accurate diagnoses and more effective treatments, saving countless lives every year. Economists have noted that industries embracing {topic} tend to experience stronger productivity growth and greater resilience against economic downturns.
+
+Despite these impressive advantages, the rise of {topic} is not without its complications. Critics argue that rapid change can displace traditional occupations and widen the gap between those who can afford to embrace new developments and those who cannot. Environmental groups have raised concerns about the resource consumption associated with certain aspects of {topic}, urging developers and governments to pursue more sustainable practices. Addressing these concerns requires a balanced approach: one that promotes innovation while ensuring that its benefits are distributed equitably across society.
+
+Looking ahead, experts predict that {topic} will continue to evolve at an extraordinary rate. Researchers are currently exploring ways to make it more accessible, affordable, and environmentally friendly. International collaboration is increasingly seen as essential, as the challenges and opportunities presented by {topic} transcend national borders. Education systems worldwide are updating their curricula to equip the next generation with the skills and knowledge they will need to thrive in a world shaped by {topic}.
+
+In conclusion, {topic} represents both a profound opportunity and a serious responsibility. How societies choose to guide its development over the coming decades will determine whether its story becomes one of shared prosperity or deepening inequality. What is certain is that {topic} will remain a central theme of human progress for many years to come.""",
         "topic": topic,
         "grade": grade,
+        "word_count": 380,
         "key_vocabulary": [
-            {"word": "Breakthrough", "ipa": "/ˈbreɪk.θruː/", "meaning": "bước đột phá khoa học"},
-            {"word": "Innovative", "ipa": "/ˈɪn.ə.və.tɪv/", "meaning": "sáng tạo, mới mẻ"},
-            {"word": "Academic", "ipa": "/ˌæk.əˈdem.ɪk/", "meaning": "thuộc về học thuật"},
-            {"word": "Opportunity", "ipa": "/ˌɒp.əˈtʃuː.nə.ti/", "meaning": "cơ hội phát triển"}
+            {"word": "transformative", "ipa": "/trænsˈfɔː.mə.tɪv/", "meaning": "co kha nang bien doi sau sac"},
+            {"word": "breakthrough", "ipa": "/ˈbreɪk.θruː/", "meaning": "buoc dot pha"},
+            {"word": "innovative", "ipa": "/ˈɪn.ə.və.tɪv/", "meaning": "sang tao, doi moi"},
+            {"word": "resilience", "ipa": "/rɪˈzɪl.i.əns/", "meaning": "kha nang phuc hoi, ben bi"},
+            {"word": "equitably", "ipa": "/ˈek.wɪ.tə.bli/", "meaning": "mot cach cong bang"},
+            {"word": "transcend", "ipa": "/trænˈsend/", "meaning": "vuot qua, di xa hon"}
         ],
         "questions": [
             {
               "id": "Q1",
-              "question": f"What is the main topic of the passage?",
-              "options": [f"A. The evolution and impact of {topic}", "B. History of ancient sports", "C. How to build a rocket", "D. Cooking recipes"],
+              "question": f"What is the main idea of the passage?",
+              "options": [f"A. The wide-ranging impact and future of {topic}", "B. The history of ancient farming methods", "C. How to improve cooking skills", "D. Problems with space exploration"],
               "correct": "A",
-              "explanation": "Đoạn văn chủ yếu bàn về sự phát triển và tầm ảnh hưởng của chủ đề đã chọn."
+              "explanation": "Doan van chu yeu ban ve tac dong rong lon va tuong lai cua chu de da chon."
             },
             {
               "id": "Q2",
-              "question": "What has allowed researchers to develop innovative solutions?",
-              "options": ["A. Breakthroughs in technology", "B. Cold weather", "C. Traditional farming", "D. Shopping online"],
+              "question": "According to paragraph 3, what is ONE benefit mentioned?",
+              "options": [f"A. {topic} helps improve education and healthcare", "B. It reduces government tax revenue", "C. It makes traditional jobs more popular", "D. It limits access to technology"],
               "correct": "A",
-              "explanation": "Theo câu 2 trong đoạn văn: 'Breakthroughs in technology have allowed researchers...'"
+              "explanation": "Doan 3 neu ro loi ich trong giao duc va y te."
+            },
+            {
+              "id": "Q3",
+              "question": "The word 'equitably' in paragraph 4 is closest in meaning to:",
+              "options": ["A. Unfairly", "B. Quickly", "C. Fairly and justly", "D. Secretly"],
+              "correct": "C",
+              "explanation": "'Equitably' co nghia la mot cach cong bang va chinh dang."
+            },
+            {
+              "id": "Q4",
+              "question": "Which of the following is NOT mentioned as a concern about this topic?",
+              "options": ["A. Job displacement", "B. Environmental resource use", "C. Unequal distribution of benefits", "D. Decrease in international cooperation"],
+              "correct": "D",
+              "explanation": "Doan van de cap den lo ngai ve mat viec lam, moi truong va bat binh dang, nhung KHONG noi den giam hop tac quoc te — trai lai, hop tac quoc te duoc khuyen khich."
+            },
+            {
+              "id": "Q5",
+              "question": "What can be inferred from the final paragraph?",
+              "options": [f"A. The future of {topic} depends heavily on human choices", "B. Scientists have already solved all related problems", f"C. {topic} will soon become obsolete", "D. Governments will ban its development"],
+              "correct": "A",
+              "explanation": "Doan cuoi goi y rang cach xa hoi dinh huong chu de nay se quyet dinh ket qua — tuong lai phu thuoc vao lua chon con nguoi."
+            },
+            {
+              "id": "Q6",
+              "question": "International collaboration is described as 'increasingly essential' because:",
+              "options": [f"A. The issues and opportunities of {topic} go beyond national borders", "B. No single country has enough money alone", "C. Scientists refuse to work individually", "D. Research requires expensive equipment"],
+              "correct": "A",
+              "explanation": "Doan 5 giai thich: thach thuc va co hoi vuot qua bien gioi quoc gia, vi vay hop tac la can thiet."
             }
         ]
     }
@@ -577,7 +657,7 @@ def evaluate_writing_with_gemini(student_text: str, topic_prompt: str, grade: st
     """
     Đánh giá chi tiết bài viết tiếng Anh của học sinh bằng Gemini AI
     """
-    active_key = user_api_key or GEMINI_API_KEY
+    active_key = clean_api_key(user_api_key) or GEMINI_API_KEY
     if active_key:
         try:
             genai.configure(api_key=active_key)
@@ -651,7 +731,7 @@ def generate_writing_sample_with_gemini(topic_prompt: str, grade: str, user_api_
     """
     Sử dụng Gemini AI để tự động tạo dàn ý gợi ý, từ vựng gợi ý và bài viết mẫu tham khảo.
     """
-    active_key = user_api_key or GEMINI_API_KEY
+    active_key = clean_api_key(user_api_key) or GEMINI_API_KEY
     if active_key:
         try:
             genai.configure(api_key=active_key)
@@ -710,121 +790,127 @@ Ensure that the output is strictly valid JSON. Do not add any additional explana
 
 def generate_adaptive_listening(topic: str, grade: str, theta: float, user_api_key: str = None):
     """
-    Sinh bài nghe thích ứng AI theo sở thích học sinh và năng lực IRT theta / hoặc theo Chuẩn thi (KET, PET, IELTS)
+    Sinh bai nghe thich ung AI theo so thich hoc sinh va nang luc IRT theta / hoac theo Chuan thi
     """
-    active_key = user_api_key or GEMINI_API_KEY
+    active_key = clean_api_key(user_api_key) or GEMINI_API_KEY
     if active_key:
         try:
             genai.configure(api_key=active_key)
             model = genai.GenerativeModel(
                 model_name="gemini-1.5-flash",
-                generation_config={"response_mime_type": "application/json"}
+                generation_config={"response_mime_type": "application/json", "max_output_tokens": 4096}
             )
 
-            # Determine the target exam standard context
             is_exam = grade.upper() in ["KET", "PET", "IELTS"]
             if is_exam:
                 exam_type = grade.upper()
-                level_desc = f"the {exam_type} Exam standard (KET matches A2, PET matches B1, IELTS matches B2/C1 Academic)"
-                length_desc = "150-200 words for KET, 220-300 words for PET, 350-500 words for IELTS (comprehensive talk)"
+                level_desc = f"the {exam_type} Exam standard (KET=A2, PET=B1, IELTS=B2/C1 Academic)"
+                if exam_type == "KET":
+                    length_desc = "280 to 350 words — a dialogue or short monologue between two speakers"
+                elif exam_type == "PET":
+                    length_desc = "380 to 500 words — a longer interview, discussion or radio programme excerpt"
+                else:
+                    length_desc = "500 to 700 words — a full academic lecture or documentary-style monologue with clearly organized sections"
             else:
                 level_desc = f"Grade {grade} high school level matched with IRT Ability Theta = {theta:.2f}"
                 try:
                     g_val = int(grade)
-                    if g_val <= 8:
-                        length_desc = "160-220 words"
+                    if g_val <= 7:
+                        length_desc = "280 to 350 words — a simple dialogue or short story between two students"
+                    elif g_val <= 9:
+                        length_desc = "380 to 480 words — a conversation or short radio talk with clear sections"
                     else:
-                        length_desc = "280-400 words"
+                        length_desc = "500 to 700 words — a formal talk, lecture or documentary narration with at least 4-5 clearly organized paragraphs or turns"
                 except ValueError:
-                    length_desc = "250-350 words"
+                    length_desc = "400 to 550 words"
 
             prompt = f"""
-You are an expert English audio test creator.
+You are an expert English audio test script writer.
 Create an adaptive listening comprehension module about the topic: "{topic}".
-The difficulty should match: {level_desc}.
+The difficulty and vocabulary must match: {level_desc}.
 
 Guidelines:
-- Generate a spoken monologue/dialogue script of {length_desc} about "{topic}".
-- Highlight 4 key listening vocabulary words with IPA and Vietnamese translation.
-- Create 4 multiple choice listening comprehension questions (MCQs) in the style of the target level.
+- Write a LONG, detailed, natural-sounding spoken script of {length_desc} about "{topic}".
+- The script must sound like a real radio programme, lecture, interview or documentary — NOT a short summary.
+- Use natural spoken language: contractions, discourse markers (Well, Actually, In fact, You know, Moving on, etc.), hesitation fillers where appropriate.
+- Include real facts, examples, statistics, and expert opinions to make the content genuinely informative.
+- The script must be long enough that a listener cannot answer all 6 questions without careful attention throughout.
+- Highlight 6 key listening vocabulary words with IPA and Vietnamese translation.
+- Create 6 multiple choice listening comprehension questions targeting different parts of the audio.
 
 Return strictly valid JSON with format:
 {{
-  "title": "Audio Story Title...",
-  "transcript": "Full English spoken transcript text...",
+  "title": "Audio Title...",
+  "transcript": "Full English spoken script — must be {length_desc}...",
   "topic": "{topic}",
   "grade": "{grade}",
   "speaker": "AI English Speaker",
   "key_vocabulary": [
-    {{"word": "example", "ipa": "/ɪɡˈzɑːm.pəl/", "meaning": "ví dụ minh họa"}},
-    {{"word": "conversation", "ipa": "/ˌkɒn.vəˈseɪ.ʃən/", "meaning": "cuộc trò chuyện"}},
-    {{"word": "perspective", "ipa": "/pəˈspek.tɪv/", "meaning": "góc nhìn, quan điểm"}},
-    {{"word": "strategy", "ipa": "/ˈstræt.ə.dʒi/", "meaning": "chiến lược, phương pháp"}}
+    {{"word": "example", "ipa": "/ɪɡˈzɑːm.pəl/", "meaning": "vi du minh hoa"}},
+    {{"word": "conversation", "ipa": "/ˌkɒn.vəˈseɪ.ʃən/", "meaning": "cuoc tro chuyen"}},
+    {{"word": "perspective", "ipa": "/pəˈspek.tɪv/", "meaning": "goc nhin, quan diem"}},
+    {{"word": "strategy", "ipa": "/ˈstræt.ə.dʒi/", "meaning": "chien luoc, phuong phap"}},
+    {{"word": "significant", "ipa": "/sɪɡˈnɪf.ɪ.kənt/", "meaning": "dang ke, quan trong"}},
+    {{"word": "challenge", "ipa": "/ˈtʃæl.ɪndʒ/", "meaning": "thach thuc, kho khan"}}
   ],
   "questions": [
-    {{
-      "id": "LQ1",
-      "question": "What is the main topic of the conversation?",
-      "options": ["A. Option 1", "B. Option 2", "C. Option 3", "D. Option 4"],
-      "correct": "A",
-      "explanation": "Giải thích chi tiết đáp án A bằng tiếng Việt..."
-    }},
-    {{
-      "id": "LQ2",
-      "question": "According to the speaker, what is the main benefit?",
-      "options": ["A. Option 1", "B. Option 2", "C. Option 3", "D. Option 4"],
-      "correct": "B",
-      "explanation": "Giải thích chi tiết đáp án B bằng tiếng Việt..."
-    }},
-    {{
-      "id": "LQ3",
-      "question": "What detail is mentioned in the second part of the audio?",
-      "options": ["A. Option 1", "B. Option 2", "C. Option 3", "D. Option 4"],
-      "correct": "C",
-      "explanation": "Giải thích chi tiết đáp án C bằng tiếng Việt..."
-    }},
-    {{
-      "id": "LQ4",
-      "question": "What conclusion does the speaker emphasize at the end?",
-      "options": ["A. Option 1", "B. Option 2", "C. Option 3", "D. Option 4"],
-      "correct": "D",
-      "explanation": "Giải thích chi tiết đáp án D bằng tiếng Việt..."
-    }}
+    {{"id": "LQ1", "question": "What is the main topic of today's session?", "options": ["A. Option 1", "B. Option 2", "C. Option 3", "D. Option 4"], "correct": "A", "explanation": "Giai thich chi tiet bang tieng Viet..."}},
+    {{"id": "LQ2", "question": "According to the speaker, what is the main benefit?", "options": ["A. Option 1", "B. Option 2", "C. Option 3", "D. Option 4"], "correct": "B", "explanation": "Giai thich chi tiet bang tieng Viet..."}},
+    {{"id": "LQ3", "question": "What example is given in the middle section?", "options": ["A. Option 1", "B. Option 2", "C. Option 3", "D. Option 4"], "correct": "C", "explanation": "Giai thich chi tiet bang tieng Viet..."}},
+    {{"id": "LQ4", "question": "What problem or challenge is mentioned?", "options": ["A. Option 1", "B. Option 2", "C. Option 3", "D. Option 4"], "correct": "D", "explanation": "Giai thich chi tiet bang tieng Viet..."}},
+    {{"id": "LQ5", "question": "What recommendation does the speaker give?", "options": ["A. Option 1", "B. Option 2", "C. Option 3", "D. Option 4"], "correct": "A", "explanation": "Giai thich chi tiet bang tieng Viet..."}},
+    {{"id": "LQ6", "question": "What conclusion is drawn at the end?", "options": ["A. Option 1", "B. Option 2", "C. Option 3", "D. Option 4"], "correct": "B", "explanation": "Giai thich chi tiet bang tieng Viet..."}}
   ]
 }}
 """
             response = model.generate_content(prompt)
             return json.loads(response.text)
         except Exception as e:
-            print(f"Lỗi sinh bài nghe thích ứng Gemini: {e}")
+            print(f"Loi sinh bai nghe thich ung Gemini: {e}")
 
-    # Fallback mockup response
+    # Rich fallback transcript (used when no API key available)
+    fallback_transcript = f"""Good morning, everyone, and welcome to today's learning session. My name is Alex, and over the next few minutes, we're going to be exploring a topic that I find genuinely fascinating — {topic}. Now, whether you're hearing about {topic} for the first time or you've already done a bit of reading on the subject, I think there's something here for everyone.
+
+So, let's start with the basics. At its core, {topic} refers to a broad area of knowledge and practice that has evolved significantly over the past few decades. You know, it wasn't that long ago that most people had very little awareness of {topic} at all. But today — thanks largely to advances in technology, easier access to information, and a growing global conversation — it has become one of the defining themes of our time.
+
+Now, you might be wondering: why does {topic} matter so much right now? Well, in my view, there are three key reasons. First, {topic} directly affects the everyday lives of billions of people, whether they realise it or not. Second, understanding {topic} gives individuals the tools they need to make better, more informed decisions. And third — and this is perhaps the most exciting part — {topic} is still developing rapidly, which means the opportunities it presents are only going to grow.
+
+Let me give you a concrete example. In the field of education, teachers and students alike have found that engaging with {topic} leads to deeper learning, stronger critical thinking skills, and greater motivation. Schools that have incorporated {topic} into their curriculum report that students are more curious, more collaborative, and better prepared for the challenges of the modern world. That's a remarkable outcome, don't you think?
+
+Of course, it would be dishonest of me to suggest that {topic} comes with no challenges at all. Like any powerful force, it can be misused or misunderstood. Some critics argue that the pace of change associated with {topic} is too fast for society to adapt comfortably. Others point out that access to the benefits of {topic} is still unevenly distributed — some communities and countries are being left behind. These are legitimate concerns, and they deserve serious attention from researchers, governments, and ordinary citizens alike.
+
+So what can you do? Well, the good news is that getting started with {topic} doesn't require a university degree or a large budget. It begins with curiosity — asking questions, reading widely, and being open to new ideas. Join a study group, watch documentaries, follow experts online, and most importantly, share what you learn with the people around you. Because when it comes to {topic}, the more perspectives we bring to the table, the richer and more complete our understanding becomes.
+
+To wrap up today's session: {topic} is not just a subject to study — it's a lens through which we can better understand the world we live in. It challenges us to think critically, act responsibly, and imagine a future that is fairer and more sustainable for everyone. I hope today's discussion has given you something to think about, and I look forward to exploring this topic further with you next time. Thank you very much for listening."""
+
     return {
-        "title": f"Listening Practice: Exploring {topic.title()}",
-        "transcript": f"Welcome to today's English listening session. Today, we are discussing {topic}. Developing good listening habits is essential for master speaking fluency. As we explore {topic}, pay attention to key vocabulary and intonation. Remember to practice daily for the best results.",
+        "title": f"Exploring {topic.title()}: A Comprehensive Audio Guide",
+        "transcript": fallback_transcript,
         "topic": topic,
         "grade": grade,
         "speaker": "AI English Speaker",
         "key_vocabulary": [
-            {"word": "Listening", "ipa": "/ˈlɪs.ən.ɪŋ/", "meaning": "kỹ năng nghe hiểu"},
-            {"word": "Fluency", "ipa": "/ˈfluː.ən.si/", "meaning": "trôi chảy, lưu loát"},
-            {"word": "Intonation", "ipa": "/ˌɪn.təˈneɪ.ʃən/", "meaning": "ngữ điệu nói"},
-            {"word": "Essential", "ipa": "/ɪˈsen.ʃəl/", "meaning": "rất quan trọng"}
+            {"word": "fascinating", "ipa": "/ˈfæs.ɪ.neɪ.tɪŋ/", "meaning": "day me, thu vi"},
+            {"word": "curriculum", "ipa": "/kəˈrɪk.jə.ləm/", "meaning": "chuong trinh giang day"},
+            {"word": "collaborate", "ipa": "/kəˈlæb.ə.reɪt/", "meaning": "hop tac cung nhau"},
+            {"word": "legitimate", "ipa": "/lɪˈdʒɪt.ɪ.mɪt/", "meaning": "hop ly, chinh dang"},
+            {"word": "sustainable", "ipa": "/səˈsteɪ.nə.bəl/", "meaning": "ben vung, lau dai"},
+            {"word": "perspective", "ipa": "/pəˈspek.tɪv/", "meaning": "goc nhin, quan diem"}
         ],
         "questions": [
             {
                 "id": "LQ1",
-                "question": "What is the main topic of today's listening session?",
-                "options": [f"A. Exploring {topic}", "B. Writing essays", "C. Learning grammar rules", "D. Exam guidelines"],
+                "question": f"What is the main topic of today's listening session?",
+                "options": [f"A. Exploring {topic} and its significance", "B. Writing formal essays", "C. Learning grammar rules for exams", "D. How to travel abroad cheaply"],
                 "correct": "A",
-                "explanation": "Đoạn nói mở đầu với câu 'Today, we are discussing " + topic + "'."
+                "explanation": "Nguoi dan chuong trinh gioi thieu ngay tu dau rang chu de hom nay la " + topic + "."
             },
             {
                 "id": "LQ2",
-                "question": "Why is developing good listening habits essential according to the speaker?",
-                "options": ["A. To pass history tests", "B. For mastering speaking fluency", "C. To improve drawing", "D. To travel abroad"],
+                "question": "According to the speaker, why is developing knowledge about this topic essential?",
+                "options": ["A. It helps people pass history exams", "B. It gives individuals tools for better decisions and growing opportunities", "C. It is required by all governments", "D. It makes learning grammar easier"],
                 "correct": "B",
-                "explanation": "Diễn giả đề cập 'essential for master speaking fluency'."
+                "explanation": "Nguoi noi neu ba ly do chinh, trong do co viec giup moi nguoi ra quyet dinh tot hon."
             },
             {
                 "id": "LQ3",
@@ -841,9 +927,75 @@ Return strictly valid JSON with format:
                 "explanation": "Diễn giả nhấn mạnh 'Remember to practice daily for the best results'."
             }
         ]
+    }# 10. DỊCH VỤ GIẢI BÀI TẬP VÀ ĐỀ THI BẰNG HÌNH ẢNH (AI PHOTO EXAM SOLVER)
+async def solve_exam_by_image(image_bytes: bytes, mime_type: str = "image/jpeg", grade: str = "12", custom_key: str = None) -> dict:
+    """
+    Nhận diện câu hỏi tiếng Anh từ ảnh chụp/tải lên và giải chi tiết từng bước theo chuẩn sư phạm THPT.
+    """
+    active_key = clean_api_key(custom_key) or GEMINI_API_KEY
+    
+    system_instruction = f"""Bạn là Trợ lý Gia Sư AI Tiếng Anh Chuyên Nghiệp bám sát chương trình Giáo dục Phổ thông 2018 của Bộ GD&ĐT Việt Nam (Khối THPT Lớp {grade} và Luyện thi THPT Quốc Gia).
+Nhiệm vụ của bạn:
+1. Đọc và nhận diện chính xác toàn bộ câu hỏi, bài đọc, câu trắc nghiệm hoặc bài tập sắp xếp câu trong hình ảnh.
+2. Trình bày lời giải sư phạm, chuẩn xác, khiêm tốn, không lan man, không phóng đại, bám sát kiến thức trọng tâm SGK (Global Success / Friends Global).
+3. Đưa ra định dạng JSON có cấu trúc rõ ràng:
+{{
+  "recognized_question": "Nội dung câu hỏi/bài tập đọc được từ ảnh",
+  "task_type": "Loại bài tập (Trắc nghiệm / Sắp xếp câu / Đọc hiểu / Điền từ / Biến đổi câu)",
+  "correct_answer": "Đáp án đúng (ví dụ: A, hoặc B. b - c - a - d - e, hoặc từ cần điền)",
+  "step_by_step_explanation": "Giải thích chi tiết từng bước tại sao chọn đáp án này, phân tích cấu trúc ngữ pháp",
+  "key_vocabulary": [
+    {{"word": "từ vựng", "ipa": "/phiên âm/", "meaning": "nghĩa tiếng Việt"}}
+  ],
+  "exam_tip": "Mẹo làm bài thi nhanh và tránh bẫy của dạng câu hỏi này"
+}}"""
+
+    if active_key:
+        try:
+            genai.configure(api_key=active_key)
+            model = genai.GenerativeModel(
+                model_name="gemini-1.5-flash",
+                system_instruction=system_instruction
+            )
+            
+            image_part = {
+                "mime_type": mime_type,
+                "data": image_bytes
+            }
+            
+            prompt = "Hãy nhận diện câu hỏi trong bức ảnh này, giải chi tiết từng bước và trả về JSON theo đúng định dạng được hướng dẫn."
+            
+            response = model.generate_content([image_part, prompt])
+            raw_text = response.text.strip()
+            
+            # Clean markdown code block if present
+            if "```json" in raw_text:
+                raw_text = raw_text.split("```json")[1].split("```")[0].strip()
+            elif "```" in raw_text:
+                raw_text = raw_text.split("```")[1].split("```")[0].strip()
+                
+            data = json.loads(raw_text)
+            return {
+                "status": "success",
+                "data": data
+            }
+        except Exception as e:
+            print(f"[Photo Solver] Lỗi gọi Gemini Vision: {e}")
+            
+    # Fallback simulation if no API key or offline
+    return {
+        "status": "success",
+        "data": {
+            "recognized_question": "Sắp xếp các câu (a-e) để tạo thành lá thư điện tử: (a) First, I would like to express my gratitude... (b) Dear Mr. Williams, (c) I am writing to ask if you could kindly give me some advice... (d) Thank you very much for your time... (e) Yours sincerely, Nguyen Van Nam",
+            "task_type": "Sắp xếp các câu tạo thành bức thư hoàn chỉnh",
+            "correct_answer": "B. b - c - a - d - e",
+            "step_by_step_explanation": "1. Mở đầu thư trang trọng luôn là lời chào: (b) Dear Mr. Williams.\n2. Tiếp theo là nêu mục đích viết thư: (c) I am writing to ask...\n3. Trình bày chi tiết lý do và lời cảm ơn trước: (a) First, I would like...\n4. Câu kết thư cảm ơn và mong phản hồi: (d) Thank you very much for your time and guidance...\n5. Ký tên trang trọng: (e) Yours sincerely, Nguyen Van Nam.",
+            "key_vocabulary": [
+                {"word": "express gratitude", "ipa": "/ɪkˈspres ˈɡræt.ɪ.tʃuːd/", "meaning": "bày tỏ lòng biết ơn"},
+                {"word": "look forward to", "ipa": "/lʊk ˈfɔː.wəd tuː/", "meaning": "rất mong đợi điều gì"},
+                {"word": "yours sincerely", "ipa": "/jɔːz sɪnˈsɪə.li/", "meaning": "trân trọng (kết thư trang trọng)"}
+            ],
+            "exam_tip": "Khi làm bài sắp xếp thư (Email), luôn xác định 2 vị trí then chốt: Lời chào (Dear...) ở đầu tiên và Lời chào kết (Yours sincerely / Best regards) ở cuối cùng để loại trừ nhanh các phương án sai."
+        }
     }
-
-
-
-
 

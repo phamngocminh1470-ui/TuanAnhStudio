@@ -22,7 +22,7 @@ from ai_services import (
     chat_with_gemini, text_to_speech, speech_to_text, assess_pronunciation, 
     generate_adaptive_question_with_gemini, generate_pronunciation_sentence_with_gemini,
     generate_adaptive_reading, generate_adaptive_listening, calculate_predicted_exam_scores, evaluate_writing_with_gemini,
-    generate_writing_sample_with_gemini
+    generate_writing_sample_with_gemini, solve_exam_by_image
 )
 from adaptive_learning import (
     IRTEngine, IRTQuestion, SpacedRepetitionEngine, ItemBank, KnowledgeGraph, 
@@ -32,6 +32,7 @@ from adaptive_learning import (
 from item_bank_api import router as item_bank_router
 from auth_api import router as auth_router
 from user_progress_api import router as user_progress_router
+from content_api import router as content_router
 from database import create_db_and_tables, get_session, User
 
 app = FastAPI(
@@ -58,6 +59,7 @@ app.add_middleware(
 app.include_router(auth_router, prefix="/api", tags=["Authentication"])
 app.include_router(user_progress_router, prefix="/api", tags=["User Progress"])
 app.include_router(item_bank_router, prefix="/api", tags=["Item Bank Manager"])
+app.include_router(content_router, prefix="/api")
 
 
 # ----------------- ĐỊNH NGHĨA DỮ LIỆU ĐẦU VÀO -----------------
@@ -77,6 +79,10 @@ class ChatRequest(BaseModel):
 
 class TTSRequest(BaseModel):
     text: str
+
+class WritingPracticeRequest(BaseModel):
+    prompt: str
+
 
 
 # ----------------- ĐỊNH NGHĨA ENDPOINTS -----------------
@@ -115,6 +121,23 @@ async def chat_endpoint(request: ChatRequest, x_gemini_key: Optional[str] = Head
         return {"reply": reply}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Lỗi khi xử lý chatbot: {str(e)}")
+
+
+@app.post("/api/writing/practice-ai")
+async def writing_practice_ai_endpoint(
+    request: WritingPracticeRequest,
+    x_gemini_key: Optional[str] = Header(None)
+):
+    """
+    Proxy endpoint để gọi Gemini AI cho phần Luyện viết câu,
+    tránh lỗi CORS và bảo mật API Key dưới client.
+    """
+    try:
+        messages = [{"role": "user", "content": request.prompt}]
+        reply = await chat_with_gemini(messages, custom_key=x_gemini_key)
+        return {"reply": reply}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/api/tts")
@@ -944,12 +967,27 @@ async def generate_adaptive_listening_endpoint(request: AdaptiveListeningRequest
             "status": "success",
             "listening": data
         }
+@app.post("/api/ai/solve-photo")
+async def solve_photo_endpoint(
+    file: UploadFile = File(...),
+    grade: str = Form("12"),
+    x_gemini_key: Optional[str] = Header(None)
+):
+    """
+    API Nhận diện câu hỏi tiếng Anh từ ảnh chụp/tải lên và hướng dẫn giải chi tiết từng bước.
+    """
+    try:
+        image_bytes = await file.read()
+        mime_type = file.content_type or "image/jpeg"
+        result = await solve_exam_by_image(
+            image_bytes=image_bytes,
+            mime_type=mime_type,
+            grade=grade,
+            custom_key=x_gemini_key
+        )
+        return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Lỗi khi sinh bài nghe thích ứng: {str(e)}")
-
-
-
-
+        raise HTTPException(status_code=500, detail=f"Lỗi khi giải đề bằng ảnh: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn
