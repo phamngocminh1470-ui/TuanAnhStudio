@@ -249,7 +249,7 @@ export default function GuestLandingPage({ onOpenAuth, onStartTrial, selectedGra
           {filteredExams.map((exam) => (
             <div
               key={exam.id}
-              onClick={() => onStartTrial('irt-test')}
+              onClick={() => onStartTrial('official-exams')}
               className="py-5 px-3 md:px-6 hover:bg-white/[0.03] transition-all duration-200 cursor-pointer flex flex-col md:flex-row md:items-center justify-between gap-4 group"
             >
               <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 min-w-0 flex-1">
