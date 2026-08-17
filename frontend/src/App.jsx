@@ -25,7 +25,7 @@ import OfficialExamRepository from './components/OfficialExamRepository';
 import { 
   Sparkles, MessageSquare, Mic, BookOpen, GraduationCap, LayoutDashboard, ChevronRight, 
   Settings, Key, Save, AlertCircle, CheckCircle, Cpu, Zap, Activity, HelpCircle, 
-  User, ShieldCheck, LogOut, LogIn, Clock, Headphones, Printer, Trophy, Database, BookMarked, PenLine, Camera
+  User, ShieldCheck, LogOut, LogIn, Clock, Headphones, Printer, Trophy, Database, BookMarked, PenLine, Camera, FileText
 } from 'lucide-react';
 import axios from 'axios';
 
