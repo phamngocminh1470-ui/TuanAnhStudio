@@ -992,13 +992,72 @@ export default function OfficialExamRepository({ onStartExam }) {
                 </span>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  onClick={() => {
+                    const extraQuestions = [
+                      {
+                        id: Date.now() + 1,
+                        part: 'PHẦN V: ĐỌC HIỂU HỌC THUẬT (AI GENERATED)',
+                        passage: 'Renewable energy integration has witnessed unprecedented acceleration across Southeast Asia. Developing nations are investing heavily in solar photovoltaic arrays and offshore wind farms to reduce carbon footprints. However, modernizing the power grid infrastructure remains a formidable challenge that requires international capital and technological transfer.',
+                        question: 'According to the passage, what is the primary hurdle in expanding renewable energy?',
+                        options: [
+                          { key: 'A', text: 'Upgrading the electric power grid infrastructure' },
+                          { key: 'B', text: 'Lack of sunlight and coastal wind resources' },
+                          { key: 'C', text: 'Severe shortage of local human labor' },
+                          { key: 'D', text: 'Public opposition to green energy' }
+                        ],
+                        correctAnswer: 'A',
+                        explanation: 'Dẫn chứng trong bài: "modernizing the power grid infrastructure remains a formidable challenge" (hiện đại hóa cơ sở hạ tầng lưới điện vẫn là một thách thức to lớn = upgrading the electric power grid).',
+                        trapTip: 'Paraphrasing: "modernizing power grid" = "upgrading electric power grid".'
+                      },
+                      {
+                        id: Date.now() + 2,
+                        part: 'PHẦN VI: TÌM LỖI SAI NGỮ PHÁP (AI GENERATED)',
+                        question: 'The number of students (A) participating in the environmental campaign (B) have increased (C) significantly this term (D).',
+                        options: [
+                          { key: 'A', text: 'The number of' },
+                          { key: 'B', text: 'participating in' },
+                          { key: 'C', text: 'have increased' },
+                          { key: 'D', text: 'this term' }
+                        ],
+                        correctAnswer: 'C',
+                        explanation: 'Chủ ngữ là "The number of + N(số nhiều)" thì động từ luôn chia ở dạng SỐ ÍT -> phải sửa "have increased" thành "has increased".',
+                        trapTip: 'Phân biệt: "The number of + N(plural)" + V(singular) vs "A number of + N(plural)" + V(plural).'
+                      },
+                      {
+                        id: Date.now() + 3,
+                        part: 'PHẦN VII: VIẾT LẠI CÂU NÂNG CAO (AI GENERATED)',
+                        question: 'As soon as the bell rang, the students rushed out of the classroom.\n-> No sooner ______',
+                        options: [
+                          { key: 'A', text: 'had the bell rung than the students rushed out of the classroom.' },
+                          { key: 'B', text: 'had the bell rung when the students rushed out of the classroom.' },
+                          { key: 'C', text: 'did the bell ring than the students rushed out.' },
+                          { key: 'D', text: 'the bell had rung than the students rushed out.' }
+                        ],
+                        correctAnswer: 'A',
+                        explanation: 'Cấu trúc đảo ngữ: "No sooner + had + S + V3/ed + THAN + S + V(quá khứ đơn)".',
+                        trapTip: 'Luôn nhớ cặp liên từ: No sooner... THAN | Hardly / Scarcely... WHEN.'
+                      }
+                    ];
+
+                    setActiveViewingExam(prev => ({
+                      ...prev,
+                      questions: [...prev.questions, ...extraQuestions]
+                    }));
+                  }}
+                  className="px-4 py-2.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 text-xs font-bold transition flex items-center gap-2 cursor-pointer"
+                >
+                  <Sparkles className="w-4 h-4 text-emerald-400" />
+                  <span>+ Thêm Câu Hỏi Mới Cùng Độ Khó (AI Generator)</span>
+                </button>
+
                 <button
                   onClick={() => setShowAllSolutions(!showAllSolutions)}
                   className="px-4 py-2.5 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 text-xs font-bold transition flex items-center gap-2 cursor-pointer"
                 >
                   <Eye className="w-4 h-4" />
-                  <span>{showAllSolutions ? 'Ẩn Hướng Dẫn Giải' : 'Hiện Hướng Dẫn Giải Chi Tiết'}</span>
+                  <span>{showAllSolutions ? 'Ẩn Lời Giải' : 'Hiện Hướng Dẫn Giải Chi Tiết'}</span>
                 </button>
 
                 {!examSubmitted ? (
