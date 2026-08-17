@@ -11,7 +11,7 @@ export default function CustomCursor() {
   const trailingRef = useRef(null);
 
   useEffect(() => {
-    // Only run on non-touch devices
+    // Only on desktop pointer
     if (window.matchMedia('(pointer: coarse)').matches) {
       return;
     }
@@ -28,9 +28,8 @@ export default function CustomCursor() {
       mouseY = e.clientY;
       setPosition({ x: mouseX, y: mouseY });
 
-      // Check if hovering over clickable element
       const target = e.target;
-      const isClickable = target.closest('button, a, input, select, textarea, [role="button"], .cursor-pointer, .glass-card, .btn-hero');
+      const isClickable = target.closest('button, a, input, select, textarea, [role="button"], .cursor-pointer, .glass-card, .btn-hero, tr');
       setIsHovered(!!isClickable);
     };
 
@@ -41,7 +40,7 @@ export default function CustomCursor() {
         x: e.clientX,
         y: e.clientY
       };
-      setRipples((prev) => [...prev.slice(-5), newRipple]);
+      setRipples((prev) => [...prev.slice(-6), newRipple]);
     };
 
     const handleMouseUp = () => {
@@ -56,11 +55,10 @@ export default function CustomCursor() {
       setIsVisible(true);
     };
 
-    // Smooth trailing animation loop
     let animationFrameId;
     const animateTrail = () => {
-      trailX += (mouseX - trailX) * 0.2;
-      trailY += (mouseY - trailY) * 0.2;
+      trailX += (mouseX - trailX) * 0.18;
+      trailY += (mouseY - trailY) * 0.18;
 
       if (trailingRef.current) {
         trailingRef.current.style.transform = `translate3d(${trailX}px, ${trailY}px, 0) translate(-50%, -50%)`;
@@ -86,12 +84,11 @@ export default function CustomCursor() {
     };
   }, []);
 
-  // Clean up ripples
   useEffect(() => {
     if (ripples.length > 0) {
       const timer = setTimeout(() => {
         setRipples((prev) => prev.slice(1));
-      }, 600);
+      }, 550);
       return () => clearTimeout(timer);
     }
   }, [ripples]);
@@ -100,18 +97,18 @@ export default function CustomCursor() {
 
   return (
     <>
-      {/* Dynamic Cursor Click Ripples */}
+      {/* Dynamic Laser Shockwave Ripples */}
       {ripples.map((ripple) => (
         <div
           key={ripple.id}
-          className="fixed pointer-events-none z-[99999] rounded-full border border-cyan-400/80 animate-ping-once"
+          className="fixed pointer-events-none z-[99999] rounded-full border border-emerald-400 animate-ping-once"
           style={{
             left: ripple.x,
             top: ripple.y,
             transform: 'translate(-50%, -50%)',
-            width: '45px',
-            height: '45px',
-            boxShadow: '0 0 20px rgba(6, 182, 212, 0.6), inset 0 0 10px rgba(99, 102, 241, 0.4)'
+            width: '55px',
+            height: '55px',
+            boxShadow: '0 0 25px rgba(16, 185, 129, 0.8), inset 0 0 15px rgba(59, 130, 246, 0.6)'
           }}
         />
       ))}
@@ -119,12 +116,12 @@ export default function CustomCursor() {
       {/* Trailing Outer Ring */}
       <div
         ref={trailingRef}
-        className={`fixed top-0 left-0 pointer-events-none z-[99998] rounded-full transition-all duration-150 ease-out ${
+        className={`fixed top-0 left-0 pointer-events-none z-[99998] rounded-full transition-all duration-200 ease-out ${
           isHovered
-            ? 'w-12 h-12 bg-cyan-500/10 border border-cyan-400/60 shadow-[0_0_25px_rgba(6,182,212,0.4)] backdrop-blur-[1px]'
+            ? 'w-14 h-14 bg-emerald-500/10 border border-emerald-400/80 shadow-[0_0_30px_rgba(16,185,129,0.45)] backdrop-blur-[2px]'
             : isClicked
-            ? 'w-7 h-7 bg-indigo-500/20 border border-indigo-400/80 shadow-[0_0_15px_rgba(99,102,241,0.5)]'
-            : 'w-8 h-8 border border-white/20 shadow-[0_0_10px_rgba(255,255,255,0.1)]'
+            ? 'w-8 h-8 bg-cyan-500/25 border border-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.7)]'
+            : 'w-9 h-9 border border-white/25 shadow-[0_0_12px_rgba(255,255,255,0.15)]'
         }`}
         style={{
           willChange: 'transform',
@@ -136,10 +133,10 @@ export default function CustomCursor() {
         ref={cursorRef}
         className={`fixed top-0 left-0 pointer-events-none z-[99999] rounded-full transition-transform duration-75 ease-out ${
           isHovered
-            ? 'w-2 h-2 bg-gradient-to-tr from-cyan-400 to-blue-500 shadow-[0_0_12px_#06b6d4]'
+            ? 'w-2.5 h-2.5 bg-emerald-400 shadow-[0_0_15px_#10b981]'
             : isClicked
-            ? 'w-3 h-3 bg-gradient-to-tr from-pink-500 to-purple-500 shadow-[0_0_15px_#ec4899]'
-            : 'w-2 h-2 bg-cyan-400 shadow-[0_0_8px_#38bdf8]'
+            ? 'w-3.5 h-3.5 bg-cyan-300 shadow-[0_0_20px_#22d3ee]'
+            : 'w-2 h-2 bg-emerald-400 shadow-[0_0_10px_#10b981]'
         }`}
         style={{
           transform: `translate3d(${position.x}px, ${position.y}px, 0) translate(-50%, -50%)`,

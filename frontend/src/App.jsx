@@ -20,6 +20,7 @@ import VocabLibrary from './components/VocabLibrary';
 import WritingPractice from './components/WritingPractice';
 import PhotoExamSolverModal from './components/PhotoExamSolverModal';
 import GuestLandingPage from './components/GuestLandingPage';
+import OfficialExamRepository from './components/OfficialExamRepository';
 
 import { 
   Sparkles, MessageSquare, Mic, BookOpen, GraduationCap, LayoutDashboard, ChevronRight, 
@@ -246,6 +247,18 @@ function App() {
               >
                 <Zap className="w-4 h-4 text-emerald-400" />
                 <span>Luyện Đề Thích Ứng THPT</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('official-exams')}
+                className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
+                  activeTab === 'official-exams'
+                    ? 'bg-blue-600/15 text-blue-400 border border-blue-500/25 font-bold'
+                    : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
+                }`}
+              >
+                <FileText className="w-4 h-4 text-cyan-400" />
+                <span>Kho Đề Thi Chuẩn Hóa</span>
               </button>
 
               <button
@@ -566,6 +579,11 @@ function App() {
 
           {/* TAB ADAPTIVE LISTENING */}
           {activeTab === 'listening' && <AdaptiveListening selectedGrade={selectedLevel} />}
+
+          {/* TAB OFFICIAL EXAMS REPOSITORY */}
+          {activeTab === 'official-exams' && (
+            <OfficialExamRepository onStartExam={(tab) => setActiveTab(tab)} />
+          )}
 
           {/* TAB USER GUIDE */}
           {activeTab === 'guide' && <UserGuide onStartLearning={(tab) => setActiveTab(tab)} />}
