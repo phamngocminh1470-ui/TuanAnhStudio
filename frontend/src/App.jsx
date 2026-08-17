@@ -12,7 +12,7 @@ import AdaptiveListening from './components/AdaptiveListening';
 import UserGuide from './components/UserGuide';
 import AuthModal from './components/AuthModal';
 import AdminPanel from './components/AdminPanel';
-import EnglishChess from './components/EnglishChess';
+import CustomCursor from './components/CustomCursor';
 import ExportProgressReportModal from './components/ExportProgressReportModal';
 import ItemBankManager from './components/ItemBankManager';
 import UserProfileModal from './components/UserProfileModal';
@@ -170,6 +170,9 @@ function App() {
 
   return (
     <div className="flex min-h-screen bg-mesh text-[#f3f4f6] font-sans selection:bg-indigo-500 selection:text-white">
+      {/* Hiệu ứng con trỏ chuột công nghệ cao */}
+      <CustomCursor />
+
       {/* Auth Modal */}
       <AuthModal 
         isOpen={isAuthOpen} 
@@ -334,18 +337,6 @@ function App() {
               >
                 <MessageSquare className="w-4 h-4 text-blue-400" />
                 <span>Gia Sư Hội Thoại 1:1</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('chess')}
-                className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
-                  activeTab === 'chess'
-                    ? 'bg-blue-600/15 text-blue-400 border border-blue-500/25 font-bold'
-                    : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
-                }`}
-              >
-                <Trophy className="w-4 h-4 text-amber-400" />
-                <span>Cờ Vua Tiếng Anh AI</span>
               </button>
 
               <button
@@ -575,9 +566,6 @@ function App() {
 
           {/* TAB ADAPTIVE LISTENING */}
           {activeTab === 'listening' && <AdaptiveListening selectedGrade={selectedLevel} />}
-
-          {/* TAB AI ENGLISH CHESS */}
-          {activeTab === 'chess' && <EnglishChess selectedGrade={selectedLevel} />}
 
           {/* TAB USER GUIDE */}
           {activeTab === 'guide' && <UserGuide onStartLearning={(tab) => setActiveTab(tab)} />}

@@ -99,14 +99,14 @@ export default function LearningHub({
           icon: PenLine
         },
         {
-          id: 'chess-english',
-          title: 'Đấu trí Cờ Vua Tiếng Anh (English Chess AI)',
-          desc: 'Vừa chơi cờ vừa giải câu hỏi tư duy logic ngôn ngữ để giành lợi thế trên bàn cờ',
-          badge: 'Gamification',
+          id: 'socrates-ai',
+          title: 'Socrates AI Tutor - Gia sư Socratic gợi mở tư duy',
+          desc: 'Hướng dẫn giải chi tiết từng bước, gợi mở phương pháp suy luận thay vì đưa đáp án thô',
+          badge: 'Socratic Method',
           badgeColor: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
-          count: 'PvE AI Engine',
-          action: () => onNavigate('chess'),
-          icon: Trophy
+          count: '24/7 Tương tác',
+          action: () => onNavigate('chat'),
+          icon: Sparkles
         }
       ]
     },

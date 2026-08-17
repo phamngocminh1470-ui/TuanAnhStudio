@@ -57,9 +57,7 @@ export default function MegaNavbar({
   const giaSuItems = [
     { id: 'photo-solver', title: 'Chụp ảnh giải đề AI', desc: 'Tải ảnh bài tập & nhận lời giải từng bước', badge: 'MỚI', icon: Sparkles, action: () => { if (onOpenPhotoSolver) onOpenPhotoSolver(); setOpenDropdown(null); } },
     { id: 'chat-ai', title: 'Hỏi bài AI - Chat 1:1', desc: 'Gia sư AI 24/7 giải thích mọi thắc mắc', icon: Bot, action: () => { onNavigate('chat'); setOpenDropdown(null); } },
-    { id: 'pronounce', title: 'Chấm điểm phát âm IPA', desc: 'Phân tích sóng âm chuẩn Azure Speech', badge: 'Speech AI', icon: Mic, action: () => { onNavigate('pronounce'); setOpenDropdown(null); } },
-    { id: 'writing', title: 'Luyện viết câu AI', desc: 'Chữa lỗi ngữ pháp & nâng cấp từ vựng', icon: PenLine, action: () => { onNavigate('writing-practice'); setOpenDropdown(null); } },
-    { id: 'chess', title: 'Cờ Vua Tiếng Anh AI', desc: 'Vừa chơi cờ vừa giải câu hỏi tư duy', icon: Trophy, action: () => { onNavigate('chess'); setOpenDropdown(null); } }
+    { id: 'writing', title: 'Chấm bài luận & Đoạn văn AI', desc: 'Dàn ý, bài mẫu chuẩn 9-10 & sửa lỗi từng câu', badge: 'MỚI', icon: PenLine, action: () => { onNavigate('writing-practice'); setOpenDropdown(null); } }
   ];
 
   const congCuItems = [

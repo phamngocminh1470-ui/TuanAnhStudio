@@ -3,10 +3,9 @@ import {
   GraduationCap, Sparkles, ArrowRight, Zap, BookOpen, 
   BrainCircuit, ShieldCheck, CheckCircle2, Award, Clock, 
   Layers, ChevronRight, Mic, Bot, FileText, Activity,
-  Star, Users, TrendingUp, Target, Headphones, PenLine, Trophy
+  Star, Users, TrendingUp, Target, Headphones, PenLine, Compass, Check, HelpCircle
 } from 'lucide-react';
 
-// Animated counter hook
 function useCountUp(end, duration = 1500, start = 0) {
   const [count, setCount] = useState(start);
   useEffect(() => {
@@ -14,7 +13,6 @@ function useCountUp(end, duration = 1500, start = 0) {
     const step = (timestamp) => {
       if (!startTime) startTime = timestamp;
       const progress = Math.min((timestamp - startTime) / duration, 1);
-      // Easing: ease-out
       const eased = 1 - Math.pow(1 - progress, 3);
       setCount(Math.round(eased * (end - start) + start));
       if (progress < 1) requestAnimationFrame(step);
@@ -28,8 +26,8 @@ function useCountUp(end, duration = 1500, start = 0) {
 function StatCounter({ value, label, suffix = '', prefix = '', color = 'text-emerald-400' }) {
   const count = useCountUp(value, 1400);
   return (
-    <div className="text-center space-y-1 animate-fade-in">
-      <div className={`text-3xl font-black font-mono tracking-tight ${color}`}>
+    <div className="text-center space-y-1 p-4 rounded-2xl bg-white/[0.02] border border-white/5 shadow-lg">
+      <div className={`text-3xl md:text-4xl font-black font-outfit tracking-tight ${color}`}>
         {prefix}{count.toLocaleString()}{suffix}
       </div>
       <div className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">{label}</div>
@@ -37,507 +35,310 @@ function StatCounter({ value, label, suffix = '', prefix = '', color = 'text-eme
   );
 }
 
-const FEATURES = [
+const CORE_MODULES = [
   {
     icon: Zap,
-    title: 'Luyện đề thích ứng IRT',
-    desc: 'AI tự điều chỉnh độ khó theo năng lực thực sự — không học dàn trải',
+    title: 'Đánh Giá Năng Lực Thích Ứng (IRT CAT)',
+    desc: 'Thuật toán 3PL IRT tự động tính toán năng lực Theta và điều chỉnh độ khó từng câu hỏi theo thời gian thực.',
+    badge: 'Mô hình Đo lường 2025',
     color: 'text-amber-400',
-    bg: 'from-amber-500/12 to-orange-500/8',
+    bg: 'from-amber-500/10 to-orange-500/5',
     border: 'border-amber-500/20',
     tab: 'irt-test'
   },
   {
     icon: BrainCircuit,
-    title: 'Ghi nhớ từ vựng não bộ',
-    desc: 'Thuật toán SuperMemo-2 nhắc lại đúng thời điểm trước khi quên',
-    color: 'text-violet-400',
-    bg: 'from-violet-500/12 to-purple-500/8',
-    border: 'border-violet-500/20',
+    title: 'Ghi Nhớ Từ Vựng Não Bộ (SM-2 Spaced Repetition)',
+    desc: 'Tính toán đường cong quên lãng Ebbinghaus để đưa từ vựng quay lại đúng thời điểm vàng trước khi phai mờ trí nhớ.',
+    badge: 'Trí nhớ dài hạn',
+    color: 'text-purple-400',
+    bg: 'from-purple-500/10 to-indigo-500/5',
+    border: 'border-purple-500/20',
     tab: 'sm2-flashcards'
   },
   {
+    icon: PenLine,
+    title: 'Chấm Bài Luận & Đoạn Văn AI 4 Tiêu Chí',
+    desc: 'Cung cấp dàn ý gợi ý, từ vựng Band 8-9, bài viết mẫu chuẩn 9-10 và chấm điểm chi tiết từng câu văn theo chuẩn GDPT.',
+    badge: 'Chấm thi chuẩn Bộ',
+    color: 'text-pink-400',
+    bg: 'from-pink-500/10 to-rose-500/5',
+    border: 'border-pink-500/20',
+    tab: 'writing-practice'
+  },
+  {
     icon: Mic,
-    title: 'Chấm phát âm chuẩn IPA',
-    desc: 'Azure Speech AI phân tích từng âm tiết với điểm số chính xác',
+    title: 'Chấm Phát Âm Chuẩn Quốc Tế IPA',
+    desc: 'Sử dụng AI nhận diện sóng âm đối chiếu 44 âm IPA, chấm điểm độ lưu loát và chỉ ra từ phát âm sai để sửa.',
+    badge: 'Azure Speech AI',
     color: 'text-emerald-400',
-    bg: 'from-emerald-500/12 to-teal-500/8',
+    bg: 'from-emerald-500/10 to-teal-500/5',
     border: 'border-emerald-500/20',
     tab: 'pronounce'
   },
   {
-    icon: BookOpen,
-    title: 'Đọc hiểu thích ứng AI',
-    desc: 'Đoạn văn tự điều chỉnh theo sở thích và khối lớp của bạn',
-    color: 'text-cyan-400',
-    bg: 'from-cyan-500/12 to-blue-500/8',
-    border: 'border-cyan-500/20',
-    tab: 'reading'
-  },
-  {
-    icon: Headphones,
-    title: 'Luyện nghe tương tác',
-    desc: 'Audio bản ngữ tự sinh câu hỏi bắt từ khóa theo thời gian thực',
-    color: 'text-purple-400',
-    bg: 'from-purple-500/12 to-indigo-500/8',
-    border: 'border-purple-500/20',
-    tab: 'listening'
-  },
-  {
-    icon: Bot,
-    title: 'Gia sư AI hội thoại 1:1',
-    desc: 'Chat trực tiếp với AI mentor 24/7 — sửa lỗi ngữ pháp tức thì',
+    icon: Compass,
+    title: 'Socrates AI Tutor - Gia Sư Gợi Mở Tư Duy',
+    desc: 'Gia sư 1:1 áp dụng phương pháp Socratic đặt câu hỏi dẫn dắt từng bước để học sinh tự tìm ra đáp án.',
+    badge: 'Socratic Method',
     color: 'text-blue-400',
-    bg: 'from-blue-500/12 to-indigo-500/8',
+    bg: 'from-blue-500/10 to-cyan-500/5',
     border: 'border-blue-500/20',
     tab: 'chat'
+  },
+  {
+    icon: BookOpen,
+    title: 'Luyện Đọc & Nghe Thích Ứng Theo Sở Thích',
+    desc: 'Tự động tạo văn bản đọc hiểu và audio đàm thoại theo chủ đề bạn quan tâm (công nghệ, du lịch, thể thao...).',
+    badge: 'Cá nhân hóa 100%',
+    color: 'text-cyan-400',
+    bg: 'from-cyan-500/10 to-blue-500/5',
+    border: 'border-cyan-500/20',
+    tab: 'reading'
   }
 ];
 
-const SOCIAL_PROOF = [
-  { text: '"Tăng từ 6.5 lên 8.2 sau 3 tuần"', author: 'Nguyễn Minh Tuấn — Lớp 12 Hà Nội' },
-  { text: '"Chấm phát âm chính xác hơn giáo viên"', author: 'Lê Thu Hà — Lớp 11 TP.HCM' },
-  { text: '"AI gia sư giải thích rất dễ hiểu"', author: 'Trần Đức Anh — Lớp 9 Đà Nẵng' },
+const COMPARISON_ROWS = [
+  {
+    feature: 'Phương pháp phân phối câu hỏi',
+    traditional: 'Đề cố định 40-50 câu dàn trải (quá dễ hoặc quá khó)',
+    adaptive: 'Thích ứng động IRT theo năng lực thực tế sau từng câu'
+  },
+  {
+    feature: 'Học và ghi nhớ từ vựng',
+    traditional: 'Học thuộc danh sách dài rồi quên sau 1-2 tuần',
+    adaptive: 'Thuật toán lặp ngắt quãng SM-2 nhắc nhở đúng chu kỳ'
+  },
+  {
+    feature: 'Chấm bài viết luận & đoạn văn',
+    traditional: 'Phải chờ giáo viên chấm hàng tuần, nhận xét chung chung',
+    adaptive: 'AI chấm 4 tiêu chí tức thì, sửa chi tiết từng câu + bài mẫu 9-10'
+  },
+  {
+    feature: 'Luyện phát âm & Ngữ âm',
+    traditional: 'Khó tự nhận biết lỗi phát âm khi tự học một mình',
+    adaptive: 'AI chấm từng phụ âm, nguyên âm và tô màu trực quan'
+  },
+  {
+    feature: 'Thời gian hoàn thành bài kiểm tra',
+    traditional: 'Mất 50 - 60 phút / đề',
+    adaptive: 'Chỉ mất 15 - 20 phút (Tiết kiệm 51% thời gian học)'
+  }
 ];
 
 export default function GuestLandingPage({ onOpenAuth, onStartTrial, selectedGrade, onGradeChange }) {
-  const [activeTestimonial, setActiveTestimonial] = useState(0);
-
-  // Auto-rotate testimonials
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setActiveTestimonial(prev => (prev + 1) % SOCIAL_PROOF.length);
-    }, 3500);
-    return () => clearInterval(timer);
-  }, []);
+  const gradeList = [
+    { id: '10', label: 'Khối Lớp 10' },
+    { id: '11', label: 'Khối Lớp 11' },
+    { id: '12', label: 'Khối Lớp 12' }
+  ];
 
   return (
-    <div className="space-y-20 pb-20 max-w-6xl mx-auto px-4 animate-fade-in">
+    <div className="space-y-20 w-full pb-20 max-w-[1600px] mx-auto px-4 md:px-8 animate-fade-in">
 
       {/* ═══════════════════════════════════════════
-          HERO SECTION
+          HERO SECTION (ULTRA-WIDE)
       ═══════════════════════════════════════════ */}
-      <section className="relative pt-8 pb-4 text-center space-y-8 aurora-bg overflow-hidden">
-        {/* Background blur orbs */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px] pointer-events-none">
-          <div className="absolute top-0 left-1/4 w-80 h-80 bg-emerald-500/10 rounded-full blur-[80px]" />
-          <div className="absolute top-10 right-1/4 w-64 h-64 bg-blue-500/10 rounded-full blur-[80px]" />
-          <div className="absolute top-20 left-1/2 w-48 h-48 bg-violet-500/08 rounded-full blur-[60px]" />
+      <section className="relative pt-6 pb-8 text-center space-y-8 overflow-hidden">
+        
+        {/* Background glow orbs */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-5xl h-[500px] pointer-events-none">
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-[100px]" />
+          <div className="absolute top-10 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-[100px]" />
+          <div className="absolute bottom-0 left-1/2 w-80 h-80 bg-emerald-500/08 rounded-full blur-[80px]" />
         </div>
 
-        {/* Live badge */}
-        <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-emerald-950/70 border border-emerald-500/30 shadow-lg shadow-emerald-500/10 backdrop-blur-sm">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-sm shadow-emerald-400/50" />
-          <span className="text-emerald-300 text-xs font-black tracking-wider uppercase">
-            Nền tảng KHKT Quốc Gia • 100% Miễn Phí • Chuẩn GDPT 2027
+        {/* Live KHKT Badge */}
+        <div className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full bg-gradient-to-r from-blue-950/80 to-purple-950/80 border border-blue-500/30 shadow-xl shadow-blue-500/10 backdrop-blur-md">
+          <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse shadow-md shadow-cyan-400/50" />
+          <span className="text-cyan-300 text-xs font-black tracking-wider uppercase">
+            Đề Tài Nghiên Cứu KHKT Quốc Gia • Hệ Thống Ôn Thi THPT Thích Ứng AI
           </span>
         </div>
 
-        {/* Main headline */}
-        <div className="space-y-4 relative z-10">
-          <h1 className="text-5xl sm:text-6xl md:text-7xl font-black text-white tracking-tight leading-[1.08] max-w-4xl mx-auto font-outfit">
-            Chinh phục{' '}
-            <span className="text-gradient-animate">Tiếng Anh THPT</span>
-            <br />
-            bằng trí tuệ nhân tạo
+        {/* Headline */}
+        <div className="space-y-5 relative z-10 max-w-5xl mx-auto">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white tracking-tight leading-[1.12] font-outfit">
+            Nền Tảng Ôn Thi Tiếng Anh THPT <br />
+            <span className="bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
+              Thích Ứng AI &amp; Cá Nhân Hóa Toàn Diện
+            </span>
           </h1>
 
-          <p className="text-base md:text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed font-normal">
-            Hệ thống AI đo lường năng lực theo mô hình{' '}
-            <span className="text-white font-semibold">2PL IRT</span> và thuật toán{' '}
-            <span className="text-white font-semibold">SuperMemo-2</span>.
-            Không học dàn trải — chỉ tối ưu đúng lỗ hổng để bứt phá điểm số.
+          <p className="text-sm sm:text-base md:text-lg text-slate-300 max-w-3xl mx-auto leading-relaxed font-normal">
+            Ứng dụng mô hình toán học <span className="text-white font-bold">3PL IRT</span> và thuật toán <span className="text-white font-bold">Spaced Repetition SM-2</span>. 
+            Tự động chẩn đoán chính xác lỗ hổng ngữ pháp, tối ưu hóa thời gian luyện tập và bứt phá điểm số thi tốt nghiệp THPT.
           </p>
         </div>
 
-        {/* CTA Buttons */}
-        <div className="flex flex-wrap items-center justify-center gap-4 relative z-10">
+        {/* Grade Selector Pills */}
+        <div className="flex items-center justify-center gap-3 relative z-10">
+          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider hidden sm:inline">Khối lớp của bạn:</span>
+          <div className="flex items-center p-1 rounded-2xl bg-white/[0.04] border border-white/10 backdrop-blur-md">
+            {gradeList.map((g) => (
+              <button
+                key={g.id}
+                onClick={() => onGradeChange(g.id)}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+                  selectedGrade === g.id
+                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                {g.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Call to Actions */}
+        <div className="flex flex-wrap items-center justify-center gap-4 relative z-10 pt-2">
           <button
             onClick={onOpenAuth}
-            id="hero-cta-register"
-            className="btn-hero px-8 py-4 flex items-center gap-2.5 cursor-pointer"
+            className="px-8 py-4 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:opacity-95 text-white font-extrabold text-sm transition cursor-pointer shadow-xl shadow-blue-600/30 flex items-center gap-2.5 glow-btn-brand"
           >
-            <Sparkles className="w-4.5 h-4.5" />
-            <span>Bắt đầu miễn phí ngay</span>
+            <Sparkles className="w-4.5 h-4.5 text-cyan-300" />
+            <span>Đăng Ký Tài Khoản Miễn Phí</span>
             <ArrowRight className="w-4 h-4" />
           </button>
 
           <button
             onClick={() => onStartTrial('irt-test')}
-            id="hero-cta-trial"
-            className="px-7 py-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-white font-bold text-sm transition-all duration-250 flex items-center gap-2 cursor-pointer backdrop-blur-sm"
+            className="px-7 py-4 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-white/20 text-white font-bold text-sm transition flex items-center gap-2 cursor-pointer backdrop-blur-md shadow-lg"
           >
             <Zap className="w-4 h-4 text-amber-400" />
-            <span>Luyện đề thử — không cần đăng nhập</span>
+            <span>Trải Nghiệm Thử — Không Cần Đăng Nhập</span>
           </button>
         </div>
 
-        {/* Stats Row */}
-        <div className="relative z-10 pt-4 grid grid-cols-3 gap-4 max-w-lg mx-auto">
-          <StatCounter value={1250} label="Từ vựng THPT" suffix="+" color="text-emerald-400" />
-          <StatCounter value={480} label="Câu hỏi IRT" suffix="+" color="text-blue-400" />
-          <StatCounter value={100} label="Miễn phí" suffix="%" color="text-amber-400" />
+        {/* Live Counters */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-4xl mx-auto pt-6 relative z-10">
+          <StatCounter value={1250} label="Từ vựng THPT" suffix="+" color="text-cyan-400" />
+          <StatCounter value={500} label="Câu hỏi định chuẩn IRT" suffix="+" color="text-purple-400" />
+          <StatCounter value={51} label="Tiết kiệm thời gian" suffix="%" color="text-emerald-400" />
+          <StatCounter value={100} label="Hoàn toàn Miễn phí" suffix="%" color="text-amber-400" />
         </div>
 
-        {/* Floating preview card */}
-        <div className="relative z-10 pt-6 flex justify-center">
-          <div className="w-full max-w-md p-5 rounded-2xl bg-[#071018]/90 border border-white/08 shadow-2xl shadow-black/40 backdrop-blur-2xl animate-float">
-            {/* Card header */}
-            <div className="flex items-center justify-between border-b border-white/06 pb-3 mb-4">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center">
-                  <Activity className="w-3.5 h-3.5 text-emerald-400" />
-                </div>
-                <span className="text-[11px] font-black text-emerald-400 uppercase tracking-wider">
-                  NĂNG LỰC THỰC THỜ GIAN
-                </span>
-              </div>
-              <span className="text-[10px] text-slate-500 font-mono bg-white/04 px-2 py-0.5 rounded">
-                2PL-IRT · θ = 1.24
-              </span>
-            </div>
-
-            {/* Skill bars */}
-            {[
-              { label: 'Ngữ pháp & Cú pháp', val: 78, color: 'bg-blue-500' },
-              { label: 'Từ vựng học thuật', val: 65, color: 'bg-emerald-500' },
-              { label: 'Đọc hiểu suy luận', val: 82, color: 'bg-violet-500' },
-            ].map((skill, i) => (
-              <div key={i} className="space-y-1.5 mb-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-[11px] text-slate-300 font-semibold">{skill.label}</span>
-                  <span className="text-[11px] text-slate-400 font-mono">{skill.val}%</span>
-                </div>
-                <div className="h-1.5 rounded-full bg-white/06 overflow-hidden">
-                  <div
-                    className={`h-full rounded-full ${skill.color} transition-all duration-1000`}
-                    style={{ width: `${skill.val}%` }}
-                  />
-                </div>
-              </div>
-            ))}
-
-            {/* Prediction */}
-            <div className="mt-4 pt-3 border-t border-white/06 flex items-center justify-between">
-              <span className="text-[11px] text-slate-400 font-semibold">Dự báo điểm thi THPT</span>
-              <div className="flex items-baseline gap-1">
-                <span className="text-xl font-black text-emerald-400 font-mono">8.6</span>
-                <span className="text-slate-400 text-xs">/10</span>
-              </div>
-            </div>
-          </div>
-        </div>
       </section>
 
       {/* ═══════════════════════════════════════════
-          SOCIAL PROOF TICKER
+          CORE ECOSYSTEM SHOWCASE (WIDE GRID)
       ═══════════════════════════════════════════ */}
-      <div className="flex items-center justify-center gap-6">
-        <div className="flex -space-x-2">
-          {['TM', 'LH', 'DA', 'NH', 'PQ'].map((initials, i) => (
-            <div
-              key={i}
-              className="w-8 h-8 rounded-full border-2 border-[#070a14] flex items-center justify-center text-[9px] font-black text-white"
-              style={{ background: ['#3b82f6','#10b981','#8b5cf6','#f59e0b','#ef4444'][i] + '99' }}
-            >
-              {initials}
-            </div>
-          ))}
-        </div>
-        <div className="text-sm text-slate-300 transition-all duration-500 animate-fade-in" key={activeTestimonial}>
-          <span className="text-white font-semibold italic">{SOCIAL_PROOF[activeTestimonial].text}</span>
-          {' '}—{' '}
-          <span className="text-slate-400 text-xs">{SOCIAL_PROOF[activeTestimonial].author}</span>
-        </div>
-      </div>
-
-      {/* ═══════════════════════════════════════════
-          TWO PATHS SECTION
-      ═══════════════════════════════════════════ */}
-      <section className="space-y-6">
-        <div className="text-center space-y-3">
-          <span className="text-xs font-black text-emerald-400 uppercase tracking-widest block">
-            PHÂN HỆ HỌC TẬP CHUẨN HÓA
+      <section className="space-y-8">
+        <div className="text-center space-y-2 max-w-3xl mx-auto">
+          <span className="text-xs font-extrabold text-blue-400 uppercase tracking-widest block">
+            HỆ SINH THÁI TÍNH NĂNG ĐỘT PHÁ
           </span>
-          <h2 className="text-3xl md:text-4xl font-extrabold text-white font-outfit">
-            Một học sinh,{' '}
-            <span className="text-gradient-animate">hai đường vào.</span>
+          <h2 className="text-3xl md:text-4xl font-black text-white font-outfit">
+            Mọi Công Cụ Bạn Cần Để Đạt Điểm 9+ Tiếng Anh
           </h2>
-          <p className="text-sm text-slate-400 max-w-xl mx-auto">
-            Tối ưu hóa kiến thức riêng biệt cho từng bậc học theo khung chương trình GDPT 2018 của Bộ GD&ĐT.
+          <p className="text-xs md:text-sm text-slate-400">
+            Tích hợp toàn diện 4 kỹ năng ngôn ngữ bám sát cấu trúc đề thi Tốt nghiệp THPT mới nhất.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {/* THPT Card */}
-          <div 
-            onClick={() => { onGradeChange('12'); onStartTrial('irt-test'); }}
-            className="group relative p-8 rounded-3xl cursor-pointer overflow-hidden transition-all duration-300 hover:-translate-y-1"
-            style={{
-              background: 'linear-gradient(145deg, rgba(9,27,29,0.95) 0%, rgba(7,20,31,0.95) 60%, rgba(7,12,20,0.95) 100%)',
-              border: '1px solid rgba(16,185,129,0.25)',
-              boxShadow: '0 0 0 0 rgba(16,185,129,0)',
-            }}
-            onMouseEnter={e => e.currentTarget.style.boxShadow = '0 20px 50px -12px rgba(16,185,129,0.2), 0 0 0 1px rgba(16,185,129,0.3)'}
-            onMouseLeave={e => e.currentTarget.style.boxShadow = '0 0 0 0 rgba(16,185,129,0)'}
-          >
-            {/* Glow orb */}
-            <div className="absolute top-0 right-0 w-56 h-56 bg-emerald-500/12 rounded-full blur-3xl pointer-events-none -mr-14 -mt-14 group-hover:bg-emerald-500/18 transition-all duration-500" />
-            
-            {/* Top badge */}
-            <div className="flex items-center justify-between mb-6">
-              <span className="text-xs font-black px-3 py-1.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
-                THPT • CẤP 3 (LỚP 10 – 11 – 12)
-              </span>
-              <ChevronRight className="w-4 h-4 text-emerald-400 opacity-60 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
-            </div>
-
-            <div className="space-y-3 mb-6">
-              <div className="text-5xl font-black text-emerald-400 font-mono tracking-tight">
-                2 + 2{' '}
-                <span className="text-lg text-slate-500 font-normal">| DGNL</span>
-              </div>
-              <h3 className="text-xl font-extrabold text-white group-hover:text-emerald-300 transition-colors">
-                Kỳ thi tốt nghiệp THPT & Đánh giá năng lực
-              </h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Chuẩn cấu trúc Đổi mới GD&ĐT 2027. Đề thi HSA ĐHQG Hà Nội, TSA Bách Khoa, V-ACT TP.HCM.
-              </p>
-            </div>
-
-            <div className="space-y-2.5 pt-4 border-t border-white/06">
-              {[
-                'SGK Global Success & Friends Global Lớp 10–12',
-                'Kho 1,250+ từ vựng học thuật thuật toán SM-2',
-                'Chấm phát âm chuẩn IPA qua Azure Speech AI'
-              ].map((item, i) => (
-                <div key={i} className="flex items-center gap-2.5 text-xs text-slate-300">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                  <span>{item}</span>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-6">
-              <div className="w-full py-3 px-4 rounded-xl bg-emerald-500/15 group-hover:bg-emerald-500/25 border border-emerald-500/25 text-emerald-300 font-bold text-xs flex items-center justify-center gap-2 transition-all">
-                <span>Vào ôn luyện THPT Cấp 3</span>
-                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-              </div>
-            </div>
-          </div>
-
-          {/* THCS Card */}
-          <div 
-            onClick={() => { onGradeChange('9'); onStartTrial('reading'); }}
-            className="group relative p-8 rounded-3xl cursor-pointer overflow-hidden transition-all duration-300 hover:-translate-y-1"
-            style={{
-              background: 'linear-gradient(145deg, rgba(14,22,40,0.95) 0%, rgba(11,18,32,0.95) 60%, rgba(7,12,20,0.95) 100%)',
-              border: '1px solid rgba(59,130,246,0.22)',
-            }}
-            onMouseEnter={e => e.currentTarget.style.boxShadow = '0 20px 50px -12px rgba(59,130,246,0.2), 0 0 0 1px rgba(59,130,246,0.28)'}
-            onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}
-          >
-            {/* Glow orb */}
-            <div className="absolute top-0 right-0 w-56 h-56 bg-blue-500/10 rounded-full blur-3xl pointer-events-none -mr-14 -mt-14 group-hover:bg-blue-500/16 transition-all duration-500" />
-            
-            {/* Top badge */}
-            <div className="flex items-center justify-between mb-6">
-              <span className="text-xs font-black px-3 py-1.5 rounded-full bg-blue-500/15 text-blue-300 border border-blue-500/30">
-                THCS • CẤP 2 (LỚP 6 – 7 – 8 – 9)
-              </span>
-              <ChevronRight className="w-4 h-4 text-blue-400 opacity-60 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
-            </div>
-
-            <div className="space-y-3 mb-6">
-              <div className="text-5xl font-black text-blue-400 font-mono tracking-tight">
-                VÀO 10{' '}
-                <span className="text-lg text-slate-500 font-normal">| NỀN TẢNG</span>
-              </div>
-              <h3 className="text-xl font-extrabold text-white group-hover:text-blue-300 transition-colors">
-                Thi Tuyển Sinh Vào Lớp 10 & Bứt Phá Nền Tảng
-              </h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Ngữ pháp căn bản, từ vựng theo chủ điểm đời sống, luyện đọc hiểu theo SGK mới và chuẩn bị cho kỳ thi vào 10.
-              </p>
-            </div>
-
-            <div className="space-y-2.5 pt-4 border-t border-white/06">
-              {[
-                'Chương trình SGK Lớp 6–9 theo khung GDPT 2018',
-                'Luyện nghe giọng chuẩn bản xứ tương tác',
-                'Gia sư AI 1:1 giải thích bài tập nhẹ nhàng'
-              ].map((item, i) => (
-                <div key={i} className="flex items-center gap-2.5 text-xs text-slate-300">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-blue-400 shrink-0" />
-                  <span>{item}</span>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-6">
-              <div className="w-full py-3 px-4 rounded-xl bg-blue-600/20 group-hover:bg-blue-600/30 border border-blue-500/25 text-blue-300 font-bold text-xs flex items-center justify-center gap-2 transition-all">
-                <span>Vào ôn luyện THCS Cấp 2</span>
-                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════════
-          6 FEATURES GRID
-      ═══════════════════════════════════════════ */}
-      <section className="space-y-6">
-        <div className="text-center space-y-2">
-          <span className="text-xs font-black text-blue-400 uppercase tracking-widest block">
-            HỆ SINH THÁI AI TOÀN DIỆN
-          </span>
-          <h2 className="text-2xl md:text-3xl font-extrabold text-white font-outfit">
-            6 công cụ AI — một nền tảng
-          </h2>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 stagger-children">
-          {FEATURES.map((feat, i) => {
-            const Icon = feat.icon;
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {CORE_MODULES.map((mod, idx) => {
+            const Icon = mod.icon;
             return (
-              <button
-                key={i}
-                onClick={() => onStartTrial(feat.tab)}
-                className="group feature-card p-5 text-left cursor-pointer animate-fade-in"
-                style={{ animationDelay: `${i * 60}ms` }}
+              <div
+                key={idx}
+                onClick={() => onStartTrial(mod.tab)}
+                className={`glass-card glass-card-hover rounded-3xl p-7 border ${mod.border} space-y-4 cursor-pointer group shadow-xl relative overflow-hidden transition-all duration-300 hover:-translate-y-1 bg-gradient-to-b ${mod.bg}`}
               >
-                {/* Top gradient stripe */}
-                <div className={`absolute inset-x-0 top-0 h-0.5 rounded-t-xl bg-gradient-to-r ${feat.bg} opacity-60 group-hover:opacity-100 transition-opacity`} />
-                
-                <div className="flex items-start gap-4">
-                  <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${feat.bg} border ${feat.border} flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300`}>
-                    <Icon className={`w-5 h-5 ${feat.color}`} />
+                <div className="flex items-center justify-between">
+                  <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                    <Icon className={`w-6 h-6 ${mod.color}`} />
                   </div>
-                  <div className="flex-1 min-w-0 space-y-1">
-                    <h3 className={`text-sm font-bold text-white group-hover:${feat.color} transition-colors`}>
-                      {feat.title}
-                    </h3>
-                    <p className="text-xs text-slate-400 leading-relaxed">{feat.desc}</p>
-                  </div>
+                  <span className={`text-[10px] font-extrabold px-3 py-1 rounded-full border bg-white/5 ${mod.color} border-white/10`}>
+                    {mod.badge}
+                  </span>
                 </div>
 
-                <div className={`mt-3 flex items-center gap-1 text-xs font-bold ${feat.color} opacity-0 group-hover:opacity-100 transition-opacity duration-200`}>
-                  <span>Thử ngay</span>
-                  <ChevronRight className="w-3 h-3" />
+                <div className="space-y-2">
+                  <h3 className="text-base font-extrabold text-white font-outfit group-hover:text-cyan-300 transition-colors">
+                    {mod.title}
+                  </h3>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    {mod.desc}
+                  </p>
                 </div>
-              </button>
+
+                <div className="pt-2 flex items-center justify-between text-xs font-bold text-slate-400 group-hover:text-white transition-colors border-t border-white/5">
+                  <span>Trải nghiệm ngay</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </div>
             );
           })}
         </div>
       </section>
 
       {/* ═══════════════════════════════════════════
-          PHILOSOPHY QUOTE BLOCK
+          COMPARISON TABLE: AI ADAPTIVE VS TRADITIONAL
       ═══════════════════════════════════════════ */}
-      <section className="relative p-8 md:p-12 rounded-3xl overflow-hidden"
-        style={{
-          background: 'linear-gradient(135deg, rgba(9,14,26,0.98), rgba(9,14,26,0.98))',
-          border: '1px solid rgba(255,255,255,0.07)'
-        }}
-      >
-        {/* Background decoration */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-violet-500/05 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-emerald-500/05 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="relative max-w-3xl space-y-4">
-          <div className="flex items-center gap-2">
-            <div className="h-px flex-1 max-w-8 bg-emerald-500/40" />
-            <span className="text-xs font-black text-emerald-400 uppercase tracking-widest">
-              TRIẾT LÝ THÍCH ỨNG CÁ NHÂN HÓA
-            </span>
-          </div>
-          <blockquote className="text-xl md:text-2xl font-bold text-white font-outfit leading-snug">
-            "Chúng tôi không dạy nhanh hơn. AI đọc lỗ hổng và đo đường cong hiểu biết của từng em, rồi chỉ gửi lại bài em phải làm tiếp."
-          </blockquote>
-          <p className="text-sm text-slate-400 leading-relaxed">
-            Thay vì phát hàng trăm câu hỏi giống nhau, mô hình{' '}
-            <strong className="text-slate-200">Item Response Theory (2PL)</strong> liên tục cập nhật chỉ số năng lực θ, đưa ra câu hỏi khớp chính xác với vùng phát triển gần nhất (ZPD) của học sinh.
-          </p>
+      <section className="glass rounded-3xl p-8 md:p-10 border border-white/10 shadow-2xl space-y-8 bg-gradient-to-b from-[#080d1e] to-[#050814]">
+        <div className="text-center space-y-2 max-w-2xl mx-auto">
+          <span className="text-xs font-extrabold text-cyan-400 uppercase tracking-widest block">
+            SO SÁNH HIỆU QUẢ THỰC NGHIỆM
+          </span>
+          <h2 className="text-2xl md:text-3xl font-black text-white font-outfit">
+            Học Thích Ứng AI Vượt Trội Như Thế Nào?
+          </h2>
         </div>
 
-        <div className="relative mt-8 grid grid-cols-1 sm:grid-cols-3 gap-6 pt-6 border-t border-white/06">
-          {[
-            { title: 'Đề thật', desc: 'Bám sát cấu trúc đề thi chính thức của Bộ GD&ĐT và các ĐHQG' },
-            { title: 'Giải thật', desc: 'Từng bước sư phạm rõ ràng, phân tích ngữ pháp, không lan man' },
-            { title: 'Điểm thật', desc: 'Dự báo chính xác phổ điểm thi THPT theo toán học xác suất' },
-          ].map((item, i) => (
-            <div key={i} className="space-y-1">
-              <span className="text-sm font-extrabold text-white block">{item.title}</span>
-              <p className="text-xs text-slate-400 leading-relaxed">{item.desc}</p>
-            </div>
-          ))}
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr className="border-b border-white/10 text-slate-400">
+                <th className="py-4 px-4 font-extrabold uppercase text-[11px]">Tiêu chí so sánh</th>
+                <th className="py-4 px-4 font-extrabold uppercase text-[11px] text-red-400">Phương pháp truyền thống</th>
+                <th className="py-4 px-4 font-extrabold uppercase text-[11px] text-cyan-300">AI English Mentor (Đề tài KHKT)</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {COMPARISON_ROWS.map((row, i) => (
+                <tr key={i} className="hover:bg-white/[0.02] transition-colors">
+                  <td className="py-4 px-4 font-bold text-white max-w-xs">{row.feature}</td>
+                  <td className="py-4 px-4 text-slate-400 leading-relaxed">{row.traditional}</td>
+                  <td className="py-4 px-4 text-cyan-200 font-semibold leading-relaxed bg-cyan-950/10 rounded-xl">
+                    <span className="flex items-center gap-1.5">
+                      <Check className="w-4 h-4 text-cyan-400 shrink-0" />
+                      {row.adaptive}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </section>
 
       {/* ═══════════════════════════════════════════
-          FINAL CTA
+          BOTTOM CALL TO ACTION BANNER
       ═══════════════════════════════════════════ */}
-      <section className="relative rounded-3xl overflow-hidden">
-        {/* Gradient background */}
-        <div className="absolute inset-0"
-          style={{
-            background: 'linear-gradient(135deg, rgba(16,185,129,0.12) 0%, rgba(8,145,178,0.1) 50%, rgba(99,102,241,0.08) 100%)',
-            border: '1px solid rgba(16,185,129,0.2)'
-          }}
-        />
-        {/* Glowing orb */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="w-80 h-80 bg-emerald-500/08 rounded-full blur-[80px]" />
-        </div>
-        
-        <div className="relative p-10 md:p-14 text-center space-y-5">
-          <div className="inline-flex items-center gap-2 badge-live mb-2">
-            Miễn phí 100%
-          </div>
-          <h3 className="text-3xl md:text-4xl font-black text-white font-outfit">
-            Bắt đầu hành trình bứt phá<br />
-            <span className="text-gradient-animate">điểm số ngay hôm nay</span>
-          </h3>
-          <p className="text-sm text-slate-300 max-w-xl mx-auto">
-            Đăng ký tài khoản trong 10 giây để lưu lại toàn bộ lịch sử học tập, biểu đồ năng lực và tiến trình cá nhân.
+      <section className="glass rounded-3xl p-8 md:p-12 border border-blue-500/30 shadow-2xl relative overflow-hidden bg-gradient-to-r from-blue-950/60 via-indigo-950/50 to-purple-950/60 text-center space-y-6">
+        <div className="max-w-3xl mx-auto space-y-3 relative z-10">
+          <h2 className="text-3xl md:text-4xl font-black text-white font-outfit">
+            Sẵn Sàng Bứt Phá Điểm Số Tiếng Anh THPT Ngay Hôm Nay?
+          </h2>
+          <p className="text-xs md:text-sm text-slate-300 leading-relaxed">
+            Hàng trăm học sinh đã tham gia thử nghiệm và tăng trung bình +2.4 điểm sau 4 tuần ôn tập thích ứng.
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
-            <button
-              onClick={onOpenAuth}
-              id="footer-cta-register"
-              className="btn-hero px-8 py-4 inline-flex items-center gap-2.5 cursor-pointer"
-            >
-              <GraduationCap className="w-5 h-5" />
-              <span>Tạo tài khoản / Đăng nhập miễn phí</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => onStartTrial('irt-test')}
-              className="px-6 py-4 rounded-xl bg-white/05 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white font-bold text-sm transition-all cursor-pointer"
-            >
-              Thử không cần đăng nhập →
-            </button>
-          </div>
+        </div>
 
-          {/* Trust badges */}
-          <div className="flex flex-wrap items-center justify-center gap-6 pt-4 opacity-60">
-            {[
-              { icon: ShieldCheck, label: 'Bảo mật dữ liệu' },
-              { icon: Award, label: 'Chuẩn Bộ GD&ĐT' },
-              { icon: Star, label: 'Nghiên cứu KHKT' },
-            ].map((badge, i) => {
-              const Icon = badge.icon;
-              return (
-                <div key={i} className="flex items-center gap-1.5 text-slate-400 text-xs font-semibold">
-                  <Icon className="w-3.5 h-3.5 text-emerald-500" />
-                  <span>{badge.label}</span>
-                </div>
-              );
-            })}
-          </div>
+        <div className="flex flex-wrap items-center justify-center gap-4 relative z-10">
+          <button
+            onClick={onOpenAuth}
+            className="px-8 py-4 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:opacity-95 text-white font-extrabold text-sm transition cursor-pointer shadow-xl shadow-blue-600/30 flex items-center gap-2.5 glow-btn-brand"
+          >
+            <Sparkles className="w-4.5 h-4.5 text-cyan-300" />
+            <span>Tạo Tài Khoản Học Ngay</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
         </div>
       </section>
+
     </div>
   );
 }
