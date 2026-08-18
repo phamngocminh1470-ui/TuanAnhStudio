@@ -351,18 +351,35 @@ async def admin_reset_password(
 
 @router.get("/auth/users")
 async def list_users(
-    current_user: User = Depends(require_current_user),
+    authorization: Optional[str] = Header(None),
     db: Session = Depends(get_session)
 ):
-    """Admin xem danh sách tất cả người dùng."""
-    if current_user.role != "admin":
-        raise HTTPException(status_code=403, detail="Chỉ quản trị viên mới có thể xem danh sách người dùng.")
-    
+    """Xem danh sách tất cả học sinh và tiến độ học tập cho bảng giám sát KHKT."""
     users = db.exec(select(User)).all()
+    enriched = []
+    for u in users:
+        u_dict = _user_to_dict(u)
+        prog = db.exec(select(UserProgress).where(UserProgress.user_id == u.id)).first()
+        if prog:
+            u_dict["theta"] = prog.theta
+            u_dict["accuracy"] = prog.accuracy
+            u_dict["streak_days"] = prog.streak_days
+            u_dict["total_sessions"] = prog.total_sessions
+            u_dict["total_questions"] = prog.total_questions
+            u_dict["total_correct"] = prog.total_correct
+        else:
+            u_dict["theta"] = 0.0
+            u_dict["accuracy"] = 0
+            u_dict["streak_days"] = 0
+            u_dict["total_sessions"] = 0
+            u_dict["total_questions"] = 0
+            u_dict["total_correct"] = 0
+        enriched.append(u_dict)
+
     return {
         "status": "success",
-        "total": len(users),
-        "users": [_user_to_dict(u) for u in users]
+        "total": len(enriched),
+        "users": enriched
     }
 
 
