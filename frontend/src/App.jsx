@@ -120,12 +120,21 @@ function App() {
     localStorage.setItem('selected_level', level);
   };
 
-  const handleSaveKeys = (e) => {
-    e.preventDefault();
+  const handleSaveKeys = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
     localStorage.setItem('api_gemini', keys.gemini);
     localStorage.setItem('api_groq', keys.groq);
     localStorage.setItem('api_azure', keys.azure);
     setShowSaveAlert(true);
+    try {
+      await axios.post('/api/save-keys', {
+        gemini: keys.gemini,
+        groq: keys.groq,
+        azure: keys.azure
+      });
+    } catch (err) {
+      console.warn('Lưu API key lên máy chủ:', err.message);
+    }
     setTimeout(() => setShowSaveAlert(false), 3000);
   };
 

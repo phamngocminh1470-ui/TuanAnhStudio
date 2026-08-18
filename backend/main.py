@@ -108,6 +108,40 @@ async def health_check():
     }
 
 
+class SaveKeysRequest(BaseModel):
+    gemini: Optional[str] = ""
+    groq: Optional[str] = ""
+    azure: Optional[str] = ""
+
+@app.post("/api/save-keys")
+async def save_keys_endpoint(request: SaveKeysRequest):
+    """
+    Lưu khóa API vào tệp .env trên máy chủ và cập nhật runtime memory cho toàn hệ thống.
+    """
+    env_path = os.path.join(os.path.dirname(__file__), ".env")
+    
+    if request.gemini and request.gemini.strip():
+        os.environ["GEMINI_API_KEY"] = request.gemini.strip()
+    if request.groq and request.groq.strip():
+        os.environ["GROQ_API_KEY"] = request.groq.strip()
+    if request.azure and request.azure.strip():
+        os.environ["AZURE_SPEECH_KEY"] = request.azure.strip()
+        
+    try:
+        lines = [
+            f"GEMINI_API_KEY={os.environ.get('GEMINI_API_KEY', '')}\n",
+            f"GROQ_API_KEY={os.environ.get('GROQ_API_KEY', '')}\n",
+            f"AZURE_SPEECH_KEY={os.environ.get('AZURE_SPEECH_KEY', '')}\n",
+            f"AZURE_SPEECH_REGION={os.environ.get('AZURE_SPEECH_REGION', 'southeastasia')}\n"
+        ]
+        with open(env_path, "w", encoding="utf-8") as f:
+            f.writelines(lines)
+            
+        return {"status": "success", "message": "Đã lưu API Keys lên máy chủ thành công!"}
+    except Exception as e:
+        return {"status": "partial", "message": f"Đã nạp vào bộ nhớ (lỗi ghi file: {e})"}
+
+
 
 @app.post("/api/chat")
 async def chat_endpoint(
