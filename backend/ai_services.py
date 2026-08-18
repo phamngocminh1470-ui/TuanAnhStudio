@@ -103,11 +103,47 @@ Em hãy gõ câu trả lời để thầy nhận xét nhé!"""
 
 Em muốn viết thử câu mở bài hoặc đoạn thân bài nào trước không?"""
 
-    return f"""Chào em! Thầy là **Socrates AI Mentor**. Thầy đã nhận được câu hỏi: *"{last_user_msg}"*.
+    # Đánh giá bài tập tương tác nhiều lượt (Multi-turn Socratic exercise)
+    if any(k in last_user_msg for k in ["drived", "tako", "drives", "took", "drive", "take"]):
+        return """Thầy nhận xét câu trả lời của em nhé:
 
-💡 **Phương pháp Socratic gợi mở tư duy:**
-1. Em hãy xác định xem trong câu hỏi này, **từ khóa chính (keyword)** và **ngữ cảnh ngữ pháp** là gì?
-2. Em đang phân vân giữa phương án nào hoặc gặp khó khăn ở bước suy luận nào?
+### 1. Phân tích chi tiết từng vế câu
+* 📌 **Vế 1:** *"My father usually (drive) ______ to work"*
+  * Có từ khóa nhận biết: **usually** (thường xuyên $\rightarrow$ Hiện tại đơn).
+  * Chủ ngữ **My father** là ngôi thứ 3 số ít $\rightarrow$ Động từ cần thêm đuôi **-s**: **`drives`** *(em viết 'drived' là bị nhầm sang dạng thêm -ed của quá khứ)*.
+
+* 📌 **Vế 2:** *"but yesterday he (take) ______ the bus"*
+  * Có từ khóa nhận biết: **yesterday** (ngày hôm qua $\rightarrow$ Quá khứ đơn).
+  * Động từ **take** là động từ bất quy tắc trong tiếng Anh, dạng V2 quá khứ của nó là: **`took`** *(take $\rightarrow$ took $\rightarrow$ taken, không tồn tại 'tako' hay 'taked')*.
+
+---
+
+✅ **Đáp án chính xác:** **`drives / took`**
+👉 *Câu hoàn chỉnh:* *"My father usually **drives** to work, but yesterday he **took** the bus."*
+
+---
+
+💡 **Câu hỏi tiếp theo để em làm chủ dạng này:**
+Em hãy thử chia động từ trong câu tương tự này nhé:
+*"Lan always (buy) ______ books online, but last Sunday she (go) ______ to the bookstore."*
+
+Em hãy gõ đáp án để thầy chấm tiếp nhé!"""
+
+    if any(k in last_user_msg for k in ["bought", "went", "buys", "goed"]):
+        return """Xuất sắc lắm em! Thầy nhận xét câu vừa rồi nhé:
+
+### 1. Đánh giá đáp án
+* 📌 **Lan always (buy):** Chủ ngữ *Lan* + *always* $\rightarrow$ Hiện tại đơn: **`buys`** (thêm -s).
+* 📌 **last Sunday she (go):** Từ khóa *last Sunday* $\rightarrow$ Quá khứ đơn của động từ bất quy tắc *go* là **`went`** *(go $\rightarrow$ went $\rightarrow$ gone)*.
+
+---
+
+✅ **Đáp án chuẩn:** **`buys / went`**
+👉 *"Lan always **buys** books online, but last Sunday she **went** to the bookstore."*
+
+🎉 Em đã nắm rất vững sự khác biệt giữa **Thói quen hiện tại (Thêm -s/-es)** và **Hành động quá khứ (Động từ Bất quy tắc)** rồi đấy!
+
+Em có muốn thầy hướng dẫn tiếp sang dạng bài **Thì Hiện tại hoàn thành vs Quá khứ đơn (have/has + V3)** không?"""
 
 Em hãy chia sẻ suy nghĩ ban đầu của mình để thầy hướng dẫn em tìm ra câu trả lời chính xác nhất nhé!"""
 
