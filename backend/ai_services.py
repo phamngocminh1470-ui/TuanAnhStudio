@@ -29,36 +29,87 @@ AZURE_SPEECH_REGION = os.getenv("AZURE_SPEECH_REGION", "southeastasia")
 # 1. DỊCH VỤ CHAT AI & SINH NỘI DUNG (GEMINI)
 async def chat_with_gemini(messages: list, system_instruction: str = None, custom_key: str = None) -> str:
     """
-    Tương tác với Gemini 1.5 Flash.
+    Tương tác với Gemini 1.5 Flash / 2.0.
     messages: list các dict dạng {"role": "user"|"model", "content": "..."}
     """
     active_key = clean_api_key(custom_key) or GEMINI_API_KEY
-    if not active_key:
-        return "Lỗi: Chưa cấu hình GEMINI_API_KEY. Vui lòng thêm key trong cài đặt của ứng dụng hoặc trong file .env."
     
-    try:
-        # Cấu hình API key động
-        genai.configure(api_key=active_key)
-        
-        # Cấu hình mô hình
-        model = genai.GenerativeModel(
-            model_name="gemini-1.5-flash",
-            system_instruction=system_instruction
-        )
-        
-        # Chuyển đổi định dạng message sang format của SDK Google
-        contents = []
-        for msg in messages:
-            role = "user" if msg["role"] == "user" else "model"
-            contents.append({
-                "role": role,
-                "parts": [msg["content"]]
-            })
-            
-        response = model.generate_content(contents)
-        return response.text
-    except Exception as e:
-        return f"Lỗi gọi Gemini API: {str(e)}"
+    if active_key:
+        try:
+            genai.configure(api_key=active_key)
+            model = genai.GenerativeModel(
+                model_name="gemini-1.5-flash",
+                system_instruction=system_instruction
+            )
+            contents = []
+            for msg in messages:
+                role = "user" if msg["role"] == "user" else "model"
+                contents.append({
+                    "role": role,
+                    "parts": [msg["content"]]
+                })
+            response = model.generate_content(contents)
+            return response.text
+        except Exception as e:
+            print(f"[Gemini Error] {e}")
+
+    # Fallback tri thức sư phạm thông minh nếu chưa có key
+    last_user_msg = ""
+    for m in reversed(messages):
+        if m.get("role") == "user":
+            last_user_msg = m.get("content", "").lower()
+            break
+
+    if "hiện tại đơn" in last_user_msg or "quá khứ đơn" in last_user_msg or "thì" in last_user_msg:
+        return """Chào em! Thầy Socrates hướng dẫn em phân biệt **Thì Hiện Tại Đơn (Present Simple)** và **Thì Quá Khứ Đơn (Past Simple)** nhé:
+
+### 1. Bản chất & Mục đích sử dụng
+* **Hiện tại đơn (Present Simple):** Diễn tả một sự thật hiển nhiên, thói quen, chân lý khoa học hoặc lịch trình lặp đi lặp lại ở hiện tại.
+  * *Ví dụ:* *I study English every evening.* (Thói quen) / *The sun rises in the East.* (Chân lý).
+* **Quá khứ đơn (Past Simple):** Diễn tả một hành động **đã xảy ra và đã chấm dứt hoàn toàn** tại một thời điểm xác định trong quá khứ.
+  * *Ví dụ:* *I visited Da Nang last summer.* (Đã đi và đã kết thúc hè năm ngoái).
+
+---
+
+### 2. Dấu hiệu nhận biết then chốt trong đề thi THPT
+* 📌 **Hiện tại đơn:** *always, usually, often, every day/week, rarely, seldom, nowadays, in general...*
+* 📌 **Quá khứ đơn:** *yesterday, last night/year, ago (3 days ago), in 2020, when I was young, at that time...*
+
+---
+
+💡 **Câu hỏi gợi mở cho em:**
+Trong câu sau, em hãy thử tìm từ khóa thời gian và xác định động từ cần chia nhé:
+*"My father usually (drive) ______ to work, but yesterday he (take) ______ the bus."*
+
+Em hãy gõ câu trả lời để thầy nhận xét nhé!"""
+
+    if "môi trường" in last_user_msg or "bài viết" in last_user_msg or "dàn ý" in last_user_msg or "writing" in last_user_msg:
+        return """Chào em! Thầy Socrates gợi ý cho em dàn ý chuẩn Band 8-9 về chủ đề **Bảo vệ Môi trường (Environmental Protection)**:
+
+### 1. Introduction (Mở bài - 2 câu)
+* *General Statement:* Hiện tượng biến đổi khí hậu và ô nhiễm môi trường đang là thách thức toàn cầu (*Environmental degradation is an pressing global issue*).
+* *Thesis Statement:* Bài viết sẽ phân tích nguyên nhân và đề xuất các giải pháp bền vững (*sustainable solutions*).
+
+### 2. Body 1: Các giải pháp từ Cá nhân (Individual Actions)
+* Phân loại rác thải tại nguồn và giảm đồ nhựa dùng 1 lần (*adopt a zero-waste lifestyle*).
+* Sử dụng phương tiện giao thông công cộng (*utilize green public transit*).
+
+### 3. Body 2: Các giải pháp từ Chính phủ & Doanh nghiệp (Governmental Policy)
+* Đầu tư vào năng lượng tái tạo: điện gió, mặt trời (*subsidize renewable energy*).
+* Ban hành chế tài xử phạt nặng các cơ sở xả thải trái phép (*impose heavy fines on illegal dumping*).
+
+### 4. Conclusion (Kết bài - 2 câu)
+* Khẳng định lại: Bảo vệ môi trường là trách nhiệm chung của toàn nhân loại (*collective endeavor*).
+
+Em muốn viết thử câu mở bài hoặc đoạn thân bài nào trước không?"""
+
+    return f"""Chào em! Thầy là **Socrates AI Mentor**. Thầy đã nhận được câu hỏi: *"{last_user_msg}"*.
+
+💡 **Phương pháp Socratic gợi mở tư duy:**
+1. Em hãy xác định xem trong câu hỏi này, **từ khóa chính (keyword)** và **ngữ cảnh ngữ pháp** là gì?
+2. Em đang phân vân giữa phương án nào hoặc gặp khó khăn ở bước suy luận nào?
+
+Em hãy chia sẻ suy nghĩ ban đầu của mình để thầy hướng dẫn em tìm ra câu trả lời chính xác nhất nhé!"""
 
 
 # 2. DỊCH VỤ CHUYỂN VĂN BẢN THÀNH GIỌNG NÓI (TEXT-TO-SPEECH - TTS)

@@ -28,9 +28,13 @@ export default function ChatMentor({ selectedGrade, keys }) {
     if (isMultipart) {
       headers['Content-Type'] = 'multipart/form-data';
     }
-    if (keys?.gemini) headers['x-gemini-key'] = keys.gemini;
-    if (keys?.groq) headers['x-groq-key'] = keys.groq;
-    if (keys?.azure) headers['x-azure-key'] = keys.azure;
+    const geminiKey = keys?.gemini || localStorage.getItem('api_gemini') || localStorage.getItem('gemini_api_key') || '';
+    const groqKey = keys?.groq || localStorage.getItem('api_groq') || localStorage.getItem('groq_api_key') || '';
+    const azureKey = keys?.azure || localStorage.getItem('api_azure') || localStorage.getItem('azure_speech_key') || '';
+
+    if (geminiKey) headers['x-gemini-key'] = geminiKey;
+    if (groqKey) headers['x-groq-key'] = groqKey;
+    if (azureKey) headers['x-azure-key'] = azureKey;
     return headers;
   };
 

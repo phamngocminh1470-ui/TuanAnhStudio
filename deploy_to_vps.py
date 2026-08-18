@@ -1,6 +1,12 @@
 import paramiko
 import sys
 
+# Khac phuc loi cp1258 tren Windows console
+try:
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+except Exception:
+    pass
+
 HOST = "103.15.222.216"
 USER = "root"
 PORT = 22
@@ -14,9 +20,9 @@ COMMANDS = [
     "unzip -o /var/www/tuananhstudio/frontend/dist.zip -d /var/www/tuananhstudio/dist",
     "pkill -9 -f uvicorn || true",
     "pkill -9 -f gunicorn || true",
-    "cd /var/www/tuananhstudio/backend && ../venv/bin/pip install passlib bcrypt python-jose sqlmodel pydantic requests uvicorn fastapi 'bcrypt<4.1.0'",
+    "cd /var/www/tuananhstudio/backend && ../venv/bin/pip install -r requirements.txt",
     "cd /var/www/tuananhstudio/backend && ../venv/bin/python3 -c \"import database, auth_api; database.create_db_and_tables(); print('TABLES_INITIALIZED')\"",
-    "cd /var/www/tuananhstudio/backend && nohup ../venv/bin/python3 -m uvicorn main:app --host 127.0.0.1 --port 8000 > backend.log 2>&1 &",
+    "cd /var/www/tuananhstudio/backend && nohup ../venv/bin/python3 -m uvicorn main:app --host 127.0.0.1 --port 8000 > backend.log 2>&1 < /dev/null &",
     "sleep 2",
     "systemctl restart nginx",
     "echo '=== DA CAP NHAT FRONTEND VA RESTART BACKEND THANH CONG 100% ==='"
@@ -41,11 +47,11 @@ def run_deploy():
 
     for cmd in COMMANDS:
         print(f">> {cmd}")
-        stdin, stdout, stderr = client.exec_command(cmd, timeout=90)
+        stdin, stdout, stderr = client.exec_command(cmd, timeout=120)
         out = stdout.read().decode('utf-8', errors='replace').strip()
         err = stderr.read().decode('utf-8', errors='replace').strip()
         if out:
-            print(out)
+            print(out[:300])
         if err:
             print(f"[Thong tin] {err[:200]}")
 
