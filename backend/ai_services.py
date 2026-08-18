@@ -71,7 +71,7 @@ async def chat_with_gemini(messages: list, system_instruction: str = None, custo
         except Exception as e:
             print(f"[Gemini Chat Error] {e}")
 
-    # 2. Thử gọi Groq AI (Llama 3.3 70B Versatile) nếu có Key
+    # 2. Thử gọi Groq AI (Mô hình tạo sinh thông minh thời gian thực 24/7)
     active_groq = clean_api_key(custom_groq_key) or GROQ_API_KEY
     if active_groq and sanitized_messages:
         try:
@@ -82,19 +82,33 @@ async def chat_with_gemini(messages: list, system_instruction: str = None, custo
                 role = "assistant" if msg["role"] == "model" else "user"
                 groq_messages.append({"role": role, "content": msg["content"]})
             
-            async with httpx.AsyncClient(timeout=25.0) as client:
-                res = await client.post(
-                    "https://api.groq.com/openai/v1/chat/completions",
-                    headers={"Authorization": f"Bearer {active_groq}"},
-                    json={
-                        "model": "llama-3.3-70b-versatile",
-                        "messages": groq_messages,
-                        "temperature": 0.4
-                    }
-                )
-                if res.status_code == 200:
-                    data = res.json()
-                    return data["choices"][0]["message"]["content"]
+            models_to_try = ["qwen/qwen3.6-27b", "openai/gpt-oss-120b", "openai/gpt-oss-20b", "llama-3.3-70b-versatile"]
+            import re
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                for mod in models_to_try:
+                    try:
+                        res = await client.post(
+                            "https://api.groq.com/openai/v1/chat/completions",
+                            headers={
+                                "Authorization": f"Bearer {active_groq}",
+                                "Content-Type": "application/json",
+                                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+                            },
+                            json={
+                                "model": mod,
+                                "messages": groq_messages,
+                                "temperature": 0.4
+                            }
+                        )
+                        if res.status_code == 200:
+                            data = res.json()
+                            raw_reply = data["choices"][0]["message"]["content"]
+                            clean_reply = re.sub(r'<think>.*?</think>', '', raw_reply, flags=re.DOTALL).strip()
+                            if clean_reply:
+                                return clean_reply
+                    except Exception as err:
+                        print(f"[Groq Try Model {mod} Error] {err}")
+                        continue
         except Exception as e:
             print(f"[Groq Chat Error] {e}")
 
@@ -1015,19 +1029,32 @@ async def execute_writing_ai_prompt(prompt: str, custom_gemini_key: str = None, 
     active_groq = clean_api_key(custom_groq_key) or GROQ_API_KEY
     if active_groq:
         try:
+            models_to_try = ["qwen/qwen3.6-27b", "openai/gpt-oss-120b", "openai/gpt-oss-20b", "llama-3.3-70b-versatile"]
+            import re
             async with httpx.AsyncClient(timeout=30.0) as client:
-                res = await client.post(
-                    "https://api.groq.com/openai/v1/chat/completions",
-                    headers={"Authorization": f"Bearer {active_groq}"},
-                    json={
-                        "model": "llama-3.3-70b-versatile",
-                        "messages": [{"role": "user", "content": prompt}],
-                        "temperature": 0.3
-                    }
-                )
-                if res.status_code == 200:
-                    data = res.json()
-                    return data["choices"][0]["message"]["content"]
+                for mod in models_to_try:
+                    try:
+                        res = await client.post(
+                            "https://api.groq.com/openai/v1/chat/completions",
+                            headers={
+                                "Authorization": f"Bearer {active_groq}",
+                                "Content-Type": "application/json",
+                                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+                            },
+                            json={
+                                "model": mod,
+                                "messages": [{"role": "user", "content": prompt}],
+                                "temperature": 0.3
+                            }
+                        )
+                        if res.status_code == 200:
+                            data = res.json()
+                            raw_reply = data["choices"][0]["message"]["content"]
+                            clean_reply = re.sub(r'<think>.*?</think>', '', raw_reply, flags=re.DOTALL).strip()
+                            if clean_reply:
+                                return clean_reply
+                    except Exception:
+                        continue
         except Exception as e:
             print(f"[Writing AI Groq Error] {e}")
 
