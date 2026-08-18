@@ -22,7 +22,7 @@ from ai_services import (
     chat_with_gemini, text_to_speech, speech_to_text, assess_pronunciation, 
     generate_adaptive_question_with_gemini, generate_pronunciation_sentence_with_gemini,
     generate_adaptive_reading, generate_adaptive_listening, calculate_predicted_exam_scores, evaluate_writing_with_gemini,
-    generate_writing_sample_with_gemini, solve_exam_by_image
+    generate_writing_sample_with_gemini, solve_exam_by_image, execute_writing_ai_prompt
 )
 from adaptive_learning import (
     IRTEngine, IRTQuestion, SpacedRepetitionEngine, ItemBank, KnowledgeGraph, 
@@ -942,8 +942,27 @@ async def sample_writing_endpoint(request: SampleWritingRequest, x_gemini_key: O
             "status": "success",
             "sample": data
         }
+class WritingPracticeAIRequest(BaseModel):
+    prompt: str
+
+@app.post("/api/writing/practice-ai")
+async def writing_practice_ai_endpoint(
+    request: WritingPracticeAIRequest,
+    x_gemini_key: Optional[str] = Header(None),
+    x_groq_key: Optional[str] = Header(None)
+):
+    """
+    API đa năng phục vụ Luyện viết câu, Chấm luận, Sinh bài mẫu và Dàn ý AI.
+    """
+    try:
+        reply = await execute_writing_ai_prompt(
+            prompt=request.prompt,
+            custom_gemini_key=x_gemini_key,
+            custom_groq_key=x_groq_key
+        )
+        return {"reply": reply}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Lỗi khi sinh bài mẫu tham khảo: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Lỗi xử lý AI viết: {str(e)}")
 
 
 class AdaptiveListeningRequest(BaseModel):

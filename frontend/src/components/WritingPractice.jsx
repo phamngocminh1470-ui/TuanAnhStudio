@@ -105,6 +105,14 @@ export default function WritingPractice({ selectedGrade, keys }) {
   const [sessionCount, setSessionCount] = useState(0);
 
   const geminiKey = keys?.gemini || localStorage.getItem('api_gemini') || '';
+  const groqKey = keys?.groq || localStorage.getItem('api_groq') || '';
+
+  const getHeaders = () => {
+    const h = {};
+    if (geminiKey) h['X-Gemini-Key'] = geminiKey;
+    if (groqKey) h['X-Groq-Key'] = groqKey;
+    return h;
+  };
 
   // Tính số từ trong bài viết
   const wordCount = essayContent.trim() ? essayContent.trim().split(/\s+/).length : 0;
@@ -165,7 +173,7 @@ Create a comprehensive writing guide for Vietnamese students in STRICT JSON form
 Return ONLY pure JSON.`;
 
     try {
-      const headers = geminiKey ? { 'X-Gemini-Key': geminiKey } : {};
+      const headers = getHeaders();
       const res = await axios.post(`${API_BASE}/writing/practice-ai`, { prompt }, { headers });
       const raw = res.data?.reply || '';
       const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
@@ -204,7 +212,7 @@ Return ONLY a pure JSON object with this exact structure:
 }`;
 
     try {
-      const headers = geminiKey ? { 'X-Gemini-Key': geminiKey } : {};
+      const headers = getHeaders();
       const res = await axios.post(`${API_BASE}/writing/practice-ai`, { prompt }, { headers });
       const raw = res.data?.reply || '';
       const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
@@ -258,7 +266,7 @@ Return ONLY pure JSON (no markdown):
 }`;
 
     try {
-      const headers = geminiKey ? { 'X-Gemini-Key': geminiKey } : {};
+      const headers = getHeaders();
       const res = await axios.post(`${API_BASE}/writing/practice-ai`, { prompt }, { headers });
       const raw = res.data?.reply || '';
       const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
@@ -299,7 +307,7 @@ Return JSON: {"original_wrong_sentence": "wrong sentence", "correct_rewrite": "c
     }
 
     try {
-      const headers = geminiKey ? { 'X-Gemini-Key': geminiKey } : {};
+      const headers = getHeaders();
       const res = await axios.post(`${API_BASE}/writing/practice-ai`, { prompt }, { headers });
       const raw = res.data?.reply || '';
       const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
