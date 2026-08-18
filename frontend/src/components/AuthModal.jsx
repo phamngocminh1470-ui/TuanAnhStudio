@@ -138,7 +138,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
               <div className="relative">
                 <Mail className="w-4 h-4 text-gray-500 absolute left-4 top-3.5" />
                 <input type="email" value={form.email} onChange={e => setField('email', e.target.value)}
-                  placeholder="email@truong.edu.vn"
+                  placeholder="ban@gmail.com (tùy chọn)"
                   className="w-full bg-[#070a16] border border-white/10 focus:border-indigo-500 outline-none rounded-2xl pl-11 pr-4 py-3 text-sm text-gray-200" />
               </div>
             </div>

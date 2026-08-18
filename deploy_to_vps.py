@@ -12,8 +12,14 @@ COMMANDS = [
     "unzip -o /var/www/tuananhstudio/frontend/dist.zip -d /var/www/tuananhstudio/frontend/dist",
     "rm -rf /var/www/tuananhstudio/dist && mkdir -p /var/www/tuananhstudio/dist",
     "unzip -o /var/www/tuananhstudio/frontend/dist.zip -d /var/www/tuananhstudio/dist",
+    "pkill -9 -f uvicorn || true",
+    "pkill -9 -f gunicorn || true",
+    "cd /var/www/tuananhstudio/backend && ../venv/bin/pip install passlib bcrypt python-jose sqlmodel pydantic requests uvicorn fastapi 'bcrypt<4.1.0'",
+    "cd /var/www/tuananhstudio/backend && ../venv/bin/python3 -c \"import database, auth_api; database.create_db_and_tables(); print('TABLES_INITIALIZED')\"",
+    "cd /var/www/tuananhstudio/backend && nohup ../venv/bin/python3 -m uvicorn main:app --host 127.0.0.1 --port 8000 > backend.log 2>&1 &",
+    "sleep 2",
     "systemctl restart nginx",
-    "echo '=== DA CAP NHAT CODE MOI THANH CONG 100% ==='"
+    "echo '=== DA CAP NHAT FRONTEND VA RESTART BACKEND THANH CONG 100% ==='"
 ]
 
 def run_deploy():
@@ -35,13 +41,13 @@ def run_deploy():
 
     for cmd in COMMANDS:
         print(f">> {cmd}")
-        stdin, stdout, stderr = client.exec_command(cmd, timeout=60)
+        stdin, stdout, stderr = client.exec_command(cmd, timeout=90)
         out = stdout.read().decode('utf-8', errors='replace').strip()
         err = stderr.read().decode('utf-8', errors='replace').strip()
         if out:
             print(out)
         if err:
-            print(f"[Thong tin] {err}")
+            print(f"[Thong tin] {err[:200]}")
 
     client.close()
     print("\n[3/3] HOAN TAT! Vui long vao https://tuananhstudio.top va bam F5 de xem ket qua moi!")

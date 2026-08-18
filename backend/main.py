@@ -967,6 +967,9 @@ async def generate_adaptive_listening_endpoint(request: AdaptiveListeningRequest
             "status": "success",
             "listening": data
         }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Lỗi khi sinh bài nghe thích ứng: {str(e)}")
+
 @app.post("/api/ai/solve-photo")
 async def solve_photo_endpoint(
     file: UploadFile = File(...),
