@@ -141,9 +141,11 @@ Em hãy gõ đáp án để thầy chấm tiếp nhé!"""
 ✅ **Đáp án chuẩn:** **`buys / went`**
 👉 *"Lan always **buys** books online, but last Sunday she **went** to the bookstore."*
 
-🎉 Em đã nắm rất vững sự khác biệt giữa **Thói quen hiện tại (Thêm -s/-es)** và **Hành động quá khứ (Động từ Bất quy tắc)** rồi đấy!
+    return f"""Chào em! Thầy là **Socrates AI Mentor**. Thầy đã nhận được câu hỏi/câu trả lời của em: *"{last_user_msg}"*.
 
-Em có muốn thầy hướng dẫn tiếp sang dạng bài **Thì Hiện tại hoàn thành vs Quá khứ đơn (have/has + V3)** không?"""
+💡 **Phương pháp Socratic gợi mở tư duy:**
+1. Em hãy xác định xem trong câu này, **từ khóa chính (keyword)** và **ngữ cảnh ngữ pháp** là gì?
+2. Em đang phân vân giữa phương án nào hoặc gặp khó khăn ở bước suy luận nào?
 
 Em hãy chia sẻ suy nghĩ ban đầu của mình để thầy hướng dẫn em tìm ra câu trả lời chính xác nhất nhé!"""
 
