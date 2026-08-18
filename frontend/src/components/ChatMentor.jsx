@@ -7,6 +7,115 @@ import {
 
 const API_BASE = '/api';
 
+function formatInline(text) {
+  if (!text) return '';
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '<strong class="text-amber-300 font-bold">$1</strong>')
+    .replace(/\*(.*?)\*/g, '<span class="text-cyan-300 font-medium">$1</span>')
+    .replace(/`(.*?)`/g, '<code class="px-1.5 py-0.5 rounded bg-white/10 text-cyan-200 font-mono text-xs">$1</code>');
+}
+
+function AIMessageBody({ content }) {
+  if (!content) return null;
+  const lines = content.split('\n');
+  const elements = [];
+  let currentList = [];
+  let inCallout = false;
+  let calloutLines = [];
+
+  const flushList = (key) => {
+    if (currentList.length > 0) {
+      elements.push(
+        <ul key={`ul-${key}`} className="space-y-2 my-2.5 pl-1">
+          {currentList.map((item, idx) => (
+            <li key={idx} className="flex items-start gap-2.5 text-xs md:text-sm text-slate-200 leading-relaxed">
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 mt-2 shrink-0 shadow-[0_0_8px_rgba(6,182,212,0.8)]"></span>
+              <span dangerouslySetInnerHTML={{ __html: formatInline(item) }} />
+            </li>
+          ))}
+        </ul>
+      );
+      currentList = [];
+    }
+  };
+
+  const flushCallout = (key) => {
+    if (calloutLines.length > 0) {
+      elements.push(
+        <div key={`callout-${key}`} className="p-4 rounded-2xl bg-gradient-to-r from-blue-950/70 to-indigo-950/50 border border-blue-500/30 text-blue-100 text-xs md:text-sm font-medium my-3 shadow-lg space-y-1.5">
+          {calloutLines.map((line, idx) => (
+            <p key={idx} className="leading-relaxed" dangerouslySetInnerHTML={{ __html: formatInline(line) }} />
+          ))}
+        </div>
+      );
+      calloutLines = [];
+      inCallout = false;
+    }
+  };
+
+  lines.forEach((line, index) => {
+    const trimmed = line.trim();
+
+    // Phân cách ---
+    if (trimmed === '---') {
+      flushList(index);
+      flushCallout(index);
+      elements.push(<hr key={`hr-${index}`} className="border-slate-800 my-3" />);
+      return;
+    }
+
+    // Khối Chú ý / Mẹo bẫy (bắt đầu bằng 💡 hoặc 📌 hoặc >)
+    if (trimmed.startsWith('💡') || trimmed.startsWith('📌') || trimmed.startsWith('>')) {
+      flushList(index);
+      inCallout = true;
+      calloutLines.push(trimmed.replace(/^>\s*/, ''));
+      return;
+    }
+
+    if (inCallout) {
+      if (trimmed === '') {
+        flushCallout(index);
+      } else {
+        calloutLines.push(trimmed);
+      }
+      return;
+    }
+
+    // Tiêu đề ### hoặc ## hoặc "1. Bản chất & Mục đích"
+    if (trimmed.startsWith('###') || trimmed.startsWith('##') || /^[1-9]\.\s+[A-ZÀ-Ỹ]/.test(trimmed)) {
+      flushList(index);
+      flushCallout(index);
+      const title = trimmed.replace(/^#+\s*/, '');
+      elements.push(
+        <h4 key={`h-${index}`} className="text-sm md:text-base font-bold text-cyan-400 pt-3 pb-1 border-b border-white/5 flex items-center gap-2">
+          <span className="w-1.5 h-3.5 rounded-full bg-cyan-400 inline-block shadow-[0_0_8px_rgba(6,182,212,0.8)]"></span>
+          <span dangerouslySetInnerHTML={{ __html: formatInline(title) }} />
+        </h4>
+      );
+      return;
+    }
+
+    // Danh sách đầu dòng (* hoặc -)
+    if (trimmed.startsWith('* ') || trimmed.startsWith('- ') || /^[•\-]\s*/.test(trimmed)) {
+      const cleanItem = trimmed.replace(/^[\*\-•]\s*/, '');
+      currentList.push(cleanItem);
+      return;
+    }
+
+    // Dòng thông thường
+    flushList(index);
+    if (trimmed) {
+      elements.push(
+        <p key={`p-${index}`} className="text-xs md:text-sm text-slate-200 leading-relaxed my-1.5" dangerouslySetInnerHTML={{ __html: formatInline(trimmed) }} />
+      );
+    }
+  });
+
+  flushList('end');
+  flushCallout('end');
+  return <div className="space-y-1">{elements}</div>;
+}
+
 export default function ChatMentor({ selectedGrade, keys }) {
   const [mentorMode, setMentorMode] = useState('socratic'); // 'socratic' | 'direct'
   const [messages, setMessages] = useState([
@@ -42,25 +151,26 @@ export default function ChatMentor({ selectedGrade, keys }) {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
 
-  // Gửi tin nhắn
-  const handleSendMessage = async (textToSend) => {
-    const text = textToSend || inputText;
-    if (!text.trim()) return;
+  const handleSendMessage = async (customText = null) => {
+    const textToSend = customText || inputText;
+    if (!textToSend.trim()) return;
 
-    if (!textToSend) setInputText('');
-    
-    const newMessages = [...messages, { role: 'user', content: text }];
+    const newMessages = [
+      ...messages,
+      { role: 'user', content: textToSend }
+    ];
+
     setMessages(newMessages);
+    if (!customText) setInputText('');
     setIsLoading(true);
 
-    // Xây dựng System Instruction theo triết lý Socratic
     const getSystemInstruction = (grade, mode) => {
-      let instruction = "You are Socrates AI Mentor, an elite, patient and inspiring English Teacher for Vietnamese High School Students (Grade " + (grade || "12") + "). ";
+      let instruction = `You are Socrates AI English Mentor, an expert pedagogical tutor for Vietnamese high school students (Grade ${grade || '12'}) preparing for the National High School Graduation Exam (THPT Quốc Gia).\n`;
       
       if (mode === 'socratic') {
-        instruction += "METHODOLOGY: SOCRATIC TEACHING METHOD. " +
-          "1. NEVER give the full answer immediately if the student asks for a solution to an exercise or question. " +
-          "2. Instead, ask guided, thought-provoking questions, highlight key grammar clues or signal words in the sentence, and encourage the student to think step-by-step. " +
+        instruction += "METHODOLOGY: PURE SOCRATIC GUIDANCE (GỢI MỞ TƯ DUY TỪNG BƯỚC). " +
+          "1. NEVER give the direct final answer immediately unless the student has tried multiple times. " +
+          "2. Ask guiding questions, point out grammar clues, explain root causes of errors, and scaffold their reasoning step-by-step. " +
           "3. Praise their effort when they make progress. " +
           "4. You can explain terms in Vietnamese to ensure deep pedagogical understanding while encouraging English responses.";
       } else {
@@ -104,19 +214,20 @@ export default function ChatMentor({ selectedGrade, keys }) {
   ];
 
   return (
-    <div className="space-y-6 w-full pb-16 animate-fade-in max-w-[1600px] mx-auto">
-      
-      {/* Header */}
-      <div className="glass rounded-3xl p-6 md:p-8 border border-blue-500/25 shadow-2xl relative overflow-hidden bg-gradient-to-r from-slate-950 via-[#0a1028] to-blue-950/40">
+    <div className="space-y-6 max-w-5xl mx-auto animate-fade-in">
+      {/* Header Banner */}
+      <div className="glass-card rounded-3xl p-6 border border-white/10 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+        
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 flex items-center justify-center text-white shadow-xl shadow-blue-500/20 shrink-0">
+          <div className="flex items-center space-x-4">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-xl shadow-blue-500/20">
               <Compass className="w-7 h-7" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-black text-white font-outfit">Socrates AI Tutor</h1>
-                <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">
+              <div className="flex items-center space-x-2">
+                <h3 className="text-xl font-bold text-white font-outfit">Socrates AI Tutor</h3>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-500/20 text-blue-300 border border-blue-500/30 uppercase tracking-wider">
                   Gia sư Socratic 1:1
                 </span>
               </div>
@@ -156,98 +267,29 @@ export default function ChatMentor({ selectedGrade, keys }) {
 
       {/* Main Chat Box */}
       <div className="glass-card rounded-3xl border border-white/10 shadow-2xl flex flex-col h-[650px] overflow-hidden">
-        
         {/* Messages Area */}
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
           {messages.map((msg, index) => {
             const isUser = msg.role === 'user';
             return (
               <div key={index} className={`flex items-start gap-3 ${isUser ? 'flex-row-reverse' : ''}`}>
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 font-black text-xs ${
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 font-bold text-xs ${
                   isUser 
-                    ? 'bg-purple-600 text-white shadow-md' 
-                    : 'bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-md'
+                    ? 'bg-blue-600 text-white shadow-md' 
+                    : 'bg-gradient-to-tr from-cyan-500 to-blue-600 text-white shadow-md'
                 }`}>
                   {isUser ? <User className="w-4 h-4" /> : <Compass className="w-4 h-4" />}
                 </div>
 
                 <div className={`max-w-[85%] rounded-2xl p-5 text-sm leading-relaxed shadow-xl ${
                   isUser
-                    ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-tr-none font-medium'
-                    : 'bg-[#0a0f26] text-gray-100 border border-white/10 rounded-tl-none space-y-3'
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-tr-none font-medium'
+                    : 'bg-[#0c1222] text-slate-100 border border-slate-800/80 rounded-tl-none space-y-2'
                 }`}>
                   {isUser ? (
                     <p className="whitespace-pre-wrap">{msg.content}</p>
                   ) : (
-                    <div className="space-y-3 text-gray-200">
-                      {msg.content.split('\n\n').map((block, bIdx) => {
-                        const trimmed = block.trim();
-                        if (!trimmed) return null;
-
-                        // Tiêu đề ###
-                        if (trimmed.startsWith('###') || trimmed.startsWith('##')) {
-                          const title = trimmed.replace(/^#+\s*/, '');
-                          return (
-                            <h4 key={bIdx} className="text-base font-extrabold text-blue-400 border-b border-white/10 pb-1.5 mt-2 flex items-center gap-2">
-                              <span className="w-1.5 h-4 rounded-full bg-blue-500 inline-block"></span>
-                              <span>{title}</span>
-                            </h4>
-                          );
-                        }
-
-                        // Phân cách ---
-                        if (trimmed === '---') {
-                          return <hr key={bIdx} className="border-white/10 my-2" />;
-                        }
-
-                        // Hộp chú ý / Gợi mở / Mẹo bẫy (bắt đầu bằng 💡 hoặc 📌)
-                        if (trimmed.includes('💡') || trimmed.includes('📌') || trimmed.startsWith('>')) {
-                          return (
-                            <div key={bIdx} className="p-3.5 rounded-xl bg-blue-950/40 border border-blue-500/30 text-blue-200 text-xs md:text-sm font-medium my-2">
-                              {trimmed.split('\n').map((line, lIdx) => (
-                                <p key={lIdx} className="leading-relaxed" dangerouslySetInnerHTML={{
-                                  __html: line
-                                    .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-bold">$1</strong>')
-                                    .replace(/\*(.*?)\*/g, '<em class="text-emerald-300 not-italic font-semibold">$1</em>')
-                                }} />
-                              ))}
-                            </div>
-                          );
-                        }
-
-                        // Danh sách gạch đầu dòng (* hoặc -)
-                        if (trimmed.includes('\n* ') || trimmed.startsWith('* ') || trimmed.includes('\n- ') || trimmed.startsWith('- ')) {
-                          const lines = trimmed.split('\n');
-                          return (
-                            <ul key={bIdx} className="space-y-1.5 pl-1">
-                              {lines.map((line, lIdx) => {
-                                const cleanLine = line.replace(/^[\*\-]\s*/, '');
-                                if (!cleanLine) return null;
-                                return (
-                                  <li key={lIdx} className="flex items-start gap-2 text-xs md:text-sm text-gray-300">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-2 shrink-0"></span>
-                                    <span dangerouslySetInnerHTML={{
-                                      __html: cleanLine
-                                        .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-bold">$1</strong>')
-                                        .replace(/\*(.*?)\*/g, '<span class="text-emerald-300 font-medium">$1</span>')
-                                    }} />
-                                  </li>
-                                );
-                              })}
-                            </ul>
-                          );
-                        }
-
-                        // Đoạn văn thông thường
-                        return (
-                          <p key={bIdx} className="text-xs md:text-sm leading-relaxed text-gray-200" dangerouslySetInnerHTML={{
-                            __html: trimmed
-                              .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-bold">$1</strong>')
-                              .replace(/\*(.*?)\*/g, '<span class="text-emerald-300 font-medium">$1</span>')
-                          }} />
-                        );
-                      })}
-                    </div>
+                    <AIMessageBody content={msg.content} />
                   )}
                 </div>
               </div>
@@ -259,7 +301,7 @@ export default function ChatMentor({ selectedGrade, keys }) {
               <div className="w-9 h-9 rounded-xl bg-blue-600/30 border border-blue-500/30 flex items-center justify-center text-blue-400">
                 <Compass className="w-4 h-4 animate-spin" />
               </div>
-              <div className="p-3 rounded-2xl bg-[#090e22] border border-white/10 text-xs text-gray-400 flex items-center gap-2">
+              <div className="p-3 rounded-2xl bg-[#0c1222] border border-slate-800/80 text-xs text-gray-400 flex items-center gap-2">
                 <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-400" />
                 <span>Gia sư AI đang suy nghĩ câu hỏi gợi ý cho em...</span>
               </div>
@@ -284,29 +326,31 @@ export default function ChatMentor({ selectedGrade, keys }) {
         </div>
 
         {/* Input Bar */}
-        <div className="p-4 border-t border-white/10 bg-slate-950/60">
-          <div className="flex items-center gap-3">
+        <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="p-4 border-t border-white/10 bg-[#070a16] flex items-center gap-3">
+          <div className="flex-1 relative">
             <input
+              type="text"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage(); } }}
-              placeholder={mentorMode === 'socratic' ? "Hỏi bài tập hoặc chia sẻ suy nghĩ của em để thầy hướng dẫn từng bước..." : "Nhập câu hỏi ngữ pháp, đề thi hoặc yêu cầu dịch..."}
-              className="flex-1 px-5 py-3.5 bg-white/[0.04] border border-white/10 rounded-2xl text-xs md:text-sm text-white placeholder-gray-500 outline-none focus:border-blue-500 transition font-medium"
+              placeholder="Hỏi bài tập hoặc chia sẻ suy nghĩ của em để thầy hướng dẫn từng bước..."
+              disabled={isLoading}
+              className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500/50 transition pr-12"
             />
-
-            <button
-              onClick={() => handleSendMessage()}
-              disabled={isLoading || !inputText.trim()}
-              className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold text-xs shadow-xl cursor-pointer transition flex items-center gap-2 shrink-0 disabled:opacity-40"
-            >
-              <Send className="w-4 h-4" />
-              <span className="hidden sm:inline">Gửi</span>
-            </button>
           </div>
-        </div>
 
+          <button
+            type="submit"
+            disabled={isLoading || !inputText.trim()}
+            className={`p-3.5 rounded-2xl flex items-center justify-center transition cursor-pointer ${
+              inputText.trim() && !isLoading
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30'
+                : 'bg-white/5 text-gray-500 cursor-not-allowed'
+            }`}
+          >
+            <Send className="w-5 h-5" />
+          </button>
+        </form>
       </div>
-
     </div>
   );
 }
