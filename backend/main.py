@@ -942,6 +942,10 @@ async def sample_writing_endpoint(request: SampleWritingRequest, x_gemini_key: O
             "status": "success",
             "sample": data
         }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Lỗi khi sinh bài mẫu tham khảo: {str(e)}")
+
+
 class WritingPracticeAIRequest(BaseModel):
     prompt: str
 
