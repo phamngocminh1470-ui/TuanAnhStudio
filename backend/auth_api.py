@@ -361,15 +361,15 @@ async def list_users(
         u_dict = _user_to_dict(u)
         prog = db.exec(select(UserProgress).where(UserProgress.user_id == u.id)).first()
         if prog:
-            u_dict["theta"] = prog.theta
-            u_dict["accuracy"] = prog.accuracy
-            u_dict["streak_days"] = prog.streak_days
-            u_dict["total_sessions"] = prog.total_sessions
-            u_dict["total_questions"] = prog.total_questions
-            u_dict["total_correct"] = prog.total_correct
+            u_dict["theta"] = getattr(prog, 'theta', 0.0)
+            u_dict["streak_days"] = getattr(prog, 'streak_days', 0)
+            u_dict["total_sessions"] = getattr(prog, 'total_sessions', 0)
+            u_dict["total_questions"] = getattr(prog, 'total_questions', 0)
+            u_dict["total_correct"] = getattr(prog, 'total_correct', 0)
+            u_dict["accuracy"] = round((prog.total_correct / prog.total_questions * 100), 1) if prog.total_questions > 0 else 0.0
         else:
             u_dict["theta"] = 0.0
-            u_dict["accuracy"] = 0
+            u_dict["accuracy"] = 0.0
             u_dict["streak_days"] = 0
             u_dict["total_sessions"] = 0
             u_dict["total_questions"] = 0
