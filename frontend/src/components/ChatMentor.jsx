@@ -171,12 +171,84 @@ export default function ChatMentor({ selectedGrade, keys }) {
                   {isUser ? <User className="w-4 h-4" /> : <Compass className="w-4 h-4" />}
                 </div>
 
-                <div className={`max-w-[80%] rounded-2xl p-4 text-xs md:text-sm leading-relaxed shadow-lg ${
+                <div className={`max-w-[85%] rounded-2xl p-5 text-sm leading-relaxed shadow-xl ${
                   isUser
-                    ? 'bg-purple-600 text-white rounded-tr-none'
-                    : 'bg-[#090e22] text-gray-100 border border-white/10 rounded-tl-none space-y-2'
+                    ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-tr-none font-medium'
+                    : 'bg-[#0a0f26] text-gray-100 border border-white/10 rounded-tl-none space-y-3'
                 }`}>
-                  <p className="whitespace-pre-wrap">{msg.content}</p>
+                  {isUser ? (
+                    <p className="whitespace-pre-wrap">{msg.content}</p>
+                  ) : (
+                    <div className="space-y-3 text-gray-200">
+                      {msg.content.split('\n\n').map((block, bIdx) => {
+                        const trimmed = block.trim();
+                        if (!trimmed) return null;
+
+                        // Tiêu đề ###
+                        if (trimmed.startsWith('###') || trimmed.startsWith('##')) {
+                          const title = trimmed.replace(/^#+\s*/, '');
+                          return (
+                            <h4 key={bIdx} className="text-base font-extrabold text-blue-400 border-b border-white/10 pb-1.5 mt-2 flex items-center gap-2">
+                              <span className="w-1.5 h-4 rounded-full bg-blue-500 inline-block"></span>
+                              <span>{title}</span>
+                            </h4>
+                          );
+                        }
+
+                        // Phân cách ---
+                        if (trimmed === '---') {
+                          return <hr key={bIdx} className="border-white/10 my-2" />;
+                        }
+
+                        // Hộp chú ý / Gợi mở / Mẹo bẫy (bắt đầu bằng 💡 hoặc 📌)
+                        if (trimmed.includes('💡') || trimmed.includes('📌') || trimmed.startsWith('>')) {
+                          return (
+                            <div key={bIdx} className="p-3.5 rounded-xl bg-blue-950/40 border border-blue-500/30 text-blue-200 text-xs md:text-sm font-medium my-2">
+                              {trimmed.split('\n').map((line, lIdx) => (
+                                <p key={lIdx} className="leading-relaxed" dangerouslySetInnerHTML={{
+                                  __html: line
+                                    .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-bold">$1</strong>')
+                                    .replace(/\*(.*?)\*/g, '<em class="text-emerald-300 not-italic font-semibold">$1</em>')
+                                }} />
+                              ))}
+                            </div>
+                          );
+                        }
+
+                        // Danh sách gạch đầu dòng (* hoặc -)
+                        if (trimmed.includes('\n* ') || trimmed.startsWith('* ') || trimmed.includes('\n- ') || trimmed.startsWith('- ')) {
+                          const lines = trimmed.split('\n');
+                          return (
+                            <ul key={bIdx} className="space-y-1.5 pl-1">
+                              {lines.map((line, lIdx) => {
+                                const cleanLine = line.replace(/^[\*\-]\s*/, '');
+                                if (!cleanLine) return null;
+                                return (
+                                  <li key={lIdx} className="flex items-start gap-2 text-xs md:text-sm text-gray-300">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-2 shrink-0"></span>
+                                    <span dangerouslySetInnerHTML={{
+                                      __html: cleanLine
+                                        .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-bold">$1</strong>')
+                                        .replace(/\*(.*?)\*/g, '<span class="text-emerald-300 font-medium">$1</span>')
+                                    }} />
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          );
+                        }
+
+                        // Đoạn văn thông thường
+                        return (
+                          <p key={bIdx} className="text-xs md:text-sm leading-relaxed text-gray-200" dangerouslySetInnerHTML={{
+                            __html: trimmed
+                              .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-bold">$1</strong>')
+                              .replace(/\*(.*?)\*/g, '<span class="text-emerald-300 font-medium">$1</span>')
+                          }} />
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
             );
