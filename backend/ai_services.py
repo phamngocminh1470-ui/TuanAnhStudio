@@ -997,17 +997,5 @@ Nhiệm vụ của bạn:
             ],
             "exam_tip": "Khi làm bài sắp xếp thư (Email), luôn xác định 2 vị trí then chốt: Lời chào (Dear...) ở đầu tiên và Lời chào kết (Yours sincerely / Best regards) ở cuối cùng để loại trừ nhanh các phương án sai."
         }
-
-    return {
-        "status": "success",
-        "data": {
-            "recognized_question": "Sắp xếp các câu (a-e) để tạo thành lá thư điện tử: (a) First, I would like to express my gratitude... (b) Dear Mr. Williams, (c) I am writing to ask if you could kindly give me some advice... (d) Thank you very much for your time... (e) Yours sincerely, Nguyen Van Nam",
-            "task_type": "Sắp xếp các câu tạo thành bức thư hoàn chỉnh",
-            "correct_answer": "B. b - c - a - d - e",
-            "step_by_step_explanation": "1. Mở đầu thư trang trọng luôn là lời chào: (b) Dear Mr. Williams.\n2. Tiếp theo là nêu mục đích viết thư: (c) I am writing to ask...\n3. Trình bày chi tiết lý do và lời cảm ơn trước: (a) First, I would like...\n4. Câu kết thư cảm ơn và mong phản hồi: (d) Thank you very much for your time and guidance...\n5. Ký tên trang trọng: (e) Yours sincerely, Nguyen Van Nam.",
-            "key_vocabulary": [ 
-                {"word": "express gratitude", "ipa": "/ɪkˈspres ˈɡrætɪtjuːd/", "meaning": "bày tỏ lòng biết ơn"}
-            ]
-        }
     }
 
