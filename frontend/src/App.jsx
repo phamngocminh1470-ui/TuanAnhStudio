@@ -46,9 +46,9 @@ function App() {
   const { loadFromServer, syncStatus, serverStats } = useUserProgress();
 
   const [keys, setKeys] = useState({
-    gemini: '',
-    groq: '',
-    azure: ''
+    gemini: localStorage.getItem('api_gemini') || '',
+    groq: localStorage.getItem('api_groq') || '',
+    azure: localStorage.getItem('api_azure') || ''
   });
   const [showSaveAlert, setShowSaveAlert] = useState(false);
 

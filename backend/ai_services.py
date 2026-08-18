@@ -207,6 +207,47 @@ $$S + \\text{be} + V3/ed + (\\text{by } O)$$
 * **Hiện tại hoàn thành:** $S + \\text{have/has been} + V3/ed$ (*The report has been completed.*)
 * **Động từ khuyết thiếu (can/must/should):** $S + \\text{modal} + \\text{be} + V3/ed$ (*This rule must be followed.*)"""
 
+    # Chủ đề 6: CÁCH DÙNG ĐỘNG TỪ TO BE (IS / ARE / AM)
+    if any(k in last_user_msg for k in ["is & are", "is và are", "is va are", "dùng is", "dùng are", "khi nào dùng is", "khi nào dùng are", "to be"]):
+        return """Trong tiếng Anh, **`IS`**, **`ARE`** và **`AM`** là các dạng biến chia ở **Thì Hiện Tại Đơn** của động từ **`TO BE`** (nghĩa là: *thì, là, ở*).
+
+---
+
+### 1. Nguyên tắc vàng chia theo Chủ ngữ ($S$):
+
+| Động từ To Be | Đi với các Chủ ngữ | Ví dụ cụ thể |
+| :--- | :--- | :--- |
+| **`AM`** | Duy nhất **`I`** *(Tôi)* | *I **am** a student.* (Tôi là học sinh). |
+| **`IS`** | **Ngôi thứ 3 số ít:**<br>• *He* (anh ấy), *She* (cô ấy), *It* (nó)<br>• Danh từ số ít: *a cat, my father, Lan*<br>• Danh từ không đếm được: *water, money, milk* | • *He **is** handsome.*<br>• *She **is** a doctor.*<br>• *My father **is** at home.*<br>• *Water **is** necessary for life.* |
+| **`ARE`** | **Số nhiều & Ngôi thứ 2:**<br>• *You* (bạn/các bạn)<br>• *We* (chúng tôi), *They* (họ/chúng nó)<br>• Danh từ số nhiều: *cats, students, people* | • *You **are** welcome.*<br>• *We **are** ready.*<br>• *They **are** playing football.*<br>• *These books **are** interesting.* |
+
+---
+
+### 2. Các dạng câu với To Be:
+* ➕ **Khẳng định:** $S + \\text{am / is / are} + (\\text{Tính từ / Danh từ / Cụm giới từ})$
+  * *Ví dụ:* *She **is** happy.*
+* ➖ **Phủ định (thêm NOT):** $S + \\text{am not / is not (isn't) / are not (aren't)} + \\dots$
+  * *Ví dụ:* *They **aren't** late.*
+* ❓ **Nghi vấn (đảo To Be lên đầu):** $\\text{Am / Is / Are} + S + \\dots?$
+  * *Ví dụ:* ***Are** you ready?* / ***Is** he your brother?*
+
+---
+
+💡 **Mẹo nhớ nhanh trong 3 giây:**
+* Chủ ngữ **1 người / 1 vật / không đếm được** $\\rightarrow$ Dùng **`IS`**
+* Chủ ngữ **nhiều người / nhiều vật / You** $\\rightarrow$ Dùng **`ARE`**
+* Riêng bản thân **"Tôi" ($I$)** $\\rightarrow$ Luôn đi với **`AM`**
+
+Bạn có câu nào đang phân vân cần điền *is* hay *are* không? Hãy gửi vào đây nhé!"""
+
+    # Chủ đề 7: CÁCH DÙNG DO / DOES / DID
+    if any(k in last_user_msg for k in ["do và does", "do & does", "khi nào dùng do", "khi nào dùng does"]):
+        return """Trong tiếng Anh, **`DO`** và **`DOES`** là trợ động từ dùng trong câu Phủ định và Nghi vấn ở thì Hiện tại đơn:
+* **`DO`**: Đi với chủ ngữ số nhiều (*I, You, We, They, Danh từ số nhiều*). Phủ định là *don't*.
+  * *Ví dụ:* *Do you speak English?* / *I don't know.*
+* **`DOES`**: Đi với chủ ngữ số ít (*He, She, It, Danh từ số ít*). Phủ định là *doesn't*. Khi đã mượn *does*, động từ chính trở về nguyên thể!
+  * *Ví dụ:* *Does he like coffee?* / *She doesn't eat meat.*"""
+
     # Tra cứu từ vựng chính xác bằng cụm từ độc lập (tránh nhầm lẫn chuỗi con)
     import re
     if re.search(r'\b(con cá|con ca|con chó|con mèo|quyển sách)\b', last_user_msg) or last_user_msg in ["cá", "con cá", "chó", "mèo", "sách"]:
@@ -218,11 +259,13 @@ $$S + \\text{be} + V3/ed + (\\text{by } O)$$
             return "Từ **\"con mèo\"** trong tiếng Anh là **`Cat`** (/kæt/).\n* Ví dụ: *\"The cat is sleeping on the mat.\"*"
 
     # Phản hồi tổng quát tự nhiên, thông minh
-    return f"""Tôi đã nhận được câu hỏi của bạn: **"{last_raw}"**.
+    return f"""Chào bạn! Về câu hỏi: **"{last_raw}"**:
 
-Để giải đáp chi tiết và chuẩn xác nhất:
-* Trong chương trình Tiếng Anh và đề thi THPT, nội dung này cần được xem xét trong ngữ cảnh và cấu trúc câu cụ thể.
-* Bạn có thể gửi toàn bộ câu hỏi trắc nghiệm, đoạn văn hoặc câu bài tập bạn đang làm vào đây để tôi phân tích, dịch nghĩa và giải thích cặn kẽ từng bước nhé!"""
+Trong tiếng Anh, nội dung này được sử dụng theo các quy tắc sau:
+1. **Bản chất ngữ pháp:** Luôn chú ý đến mối quan hệ giữa chủ ngữ chính ($S$), động từ chính ($V$) và ngữ cảnh thời gian của câu.
+2. **Ứng dụng thực tế:** Khi làm bài thi, bạn nên gạch chân từ khóa nhận biết (keywords) và loại trừ các phương án sai về số ít/số nhiều hoặc sai thì.
+
+Bạn có thể gửi câu bài tập cụ thể bạn đang làm để tôi hướng dẫn giải chi tiết từng bước nhé!"""
 
 
 # 2. DỊCH VỤ CHUYỂN VĂN BẢN THÀNH GIỌNG NÓI (TEXT-TO-SPEECH - TTS)
