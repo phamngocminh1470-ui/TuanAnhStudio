@@ -110,14 +110,23 @@ async def health_check():
 
 
 @app.post("/api/chat")
-async def chat_endpoint(request: ChatRequest, x_gemini_key: Optional[str] = Header(None)):
+async def chat_endpoint(
+    request: ChatRequest,
+    x_gemini_key: Optional[str] = Header(None),
+    x_groq_key: Optional[str] = Header(None)
+):
     """
-    Endpoint nhận cuộc hội thoại và trả về phản hồi từ Gemini.
+    Endpoint nhận cuộc hội thoại và trả về phản hồi từ Socrates AI (Gemini + Groq + Socratic Knowledge Engine).
     """
     messages_dict = [{"role": msg.role, "content": msg.content} for msg in request.messages]
     
     try:
-        reply = await chat_with_gemini(messages_dict, system_instruction=request.system_instruction, custom_key=x_gemini_key)
+        reply = await chat_with_gemini(
+            messages_dict,
+            system_instruction=request.system_instruction,
+            custom_key=x_gemini_key,
+            custom_groq_key=x_groq_key
+        )
         return {"reply": reply}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Lỗi khi xử lý chatbot: {str(e)}")

@@ -27,16 +27,18 @@ AZURE_SPEECH_KEY = clean_api_key(os.getenv("AZURE_SPEECH_KEY"))
 AZURE_SPEECH_REGION = os.getenv("AZURE_SPEECH_REGION", "southeastasia")
 
 # 1. DỊCH VỤ CHAT AI & SINH NỘI DUNG (GEMINI)
-async def chat_with_gemini(messages: list, system_instruction: str = None, custom_key: str = None) -> str:
+async def chat_with_gemini(messages: list, system_instruction: str = None, custom_key: str = None, custom_groq_key: str = None) -> str:
     """
-    Tương tác với Gemini 1.5 Flash / 2.0.
-    messages: list các dict dạng {"role": "user"|"model", "content": "..."}
+    Tương tác với Gia sư AI Socrates:
+    1. Ưu tiên Gemini 1.5 Flash (Google AI).
+    2. Fallback sang Groq LLama 3.3 70B (tốc độ cao, suy luận sắc bén).
+    3. Fallback sang Hệ tri thức Socratic AI sâu rộng cho mọi chủ điểm ngữ pháp và bài tập THPT.
     """
-    active_key = clean_api_key(custom_key) or GEMINI_API_KEY
-    
-    if active_key:
+    # 1. Thử gọi Gemini AI nếu có Key
+    active_gemini = clean_api_key(custom_key) or GEMINI_API_KEY
+    if active_gemini:
         try:
-            genai.configure(api_key=active_key)
+            genai.configure(api_key=active_gemini)
             model = genai.GenerativeModel(
                 model_name="gemini-1.5-flash",
                 system_instruction=system_instruction
@@ -49,17 +51,82 @@ async def chat_with_gemini(messages: list, system_instruction: str = None, custo
                     "parts": [msg["content"]]
                 })
             response = model.generate_content(contents)
-            return response.text
+            if response and response.text:
+                return response.text
         except Exception as e:
-            print(f"[Gemini Error] {e}")
+            print(f"[Gemini Chat Error] {e}")
 
-    # Fallback tri thức sư phạm thông minh nếu chưa có key
+    # 2. Thử gọi Groq AI (Llama 3.3 70B Versatile) nếu có Key
+    active_groq = clean_api_key(custom_groq_key) or GROQ_API_KEY
+    if active_groq:
+        try:
+            groq_messages = []
+            if system_instruction:
+                groq_messages.append({"role": "system", "content": system_instruction})
+            for msg in messages:
+                groq_messages.append({"role": msg["role"] if msg["role"] != "model" else "assistant", "content": msg["content"]})
+            
+            async with httpx.AsyncClient(timeout=25.0) as client:
+                res = await client.post(
+                    "https://api.groq.com/openai/v1/chat/completions",
+                    headers={"Authorization": f"Bearer {active_groq}"},
+                    json={
+                        "model": "llama-3.3-70b-versatile",
+                        "messages": groq_messages,
+                        "temperature": 0.4
+                    }
+                )
+                if res.status_code == 200:
+                    data = res.json()
+                    return data["choices"][0]["message"]["content"]
+        except Exception as e:
+            print(f"[Groq Chat Error] {e}")
+
+    # 3. Fallback Tri thức Socratic Sư phạm Sâu rộng
     last_user_msg = ""
     for m in reversed(messages):
         if m.get("role") == "user":
-            last_user_msg = m.get("content", "").lower()
+            last_user_msg = m.get("content", "").lower().strip()
             break
 
+    # Chủ đề: Đại từ quan hệ / Mệnh đề quan hệ
+    if any(k in last_user_msg for k in ["đại từ quan hệ", "mệnh đề quan hệ", "relative pronoun", "relative clause", "who", "whom", "which", "whose", "that"]):
+        return """Chào em! Thầy **Socrates AI Mentor** hướng dẫn em trọn bộ kiến thức về **Đại từ quan hệ (Relative Pronouns)** trong tiếng Anh nhé:
+
+### 1. Đại từ quan hệ là gì?
+* **Đại từ quan hệ** được dùng để nối 2 mệnh đề lại với nhau và thay thế cho một danh từ đứng ngay trước nó nhằm tránh lặp từ.
+
+---
+
+### 2. Bảng phân loại các Đại từ quan hệ cốt lõi
+* 👤 **`WHO`** — Thay thế cho **Danh từ chỉ Người**, đóng vai trò làm **Chủ ngữ (S)** hoặc **Tân ngữ (O)** trong mệnh đề quan hệ.
+  * *Ví dụ:* *The teacher **who** teaches us English is very kind.* (Cô giáo người mà dạy chúng tôi...)
+* 👤 **`WHOM`** — Thay thế cho **Danh từ chỉ Người**, đóng vai trò làm **Tân ngữ (O)** (sau Whom luôn là một mệnh đề $S + V$).
+  * *Ví dụ:* *The boy **whom** you met yesterday is my cousin.* (Cậu bé người mà bạn gặp hôm qua...)
+* 📦 **`WHICH`** — Thay thế cho **Danh từ chỉ Vật/Sự việc**, làm **Chủ ngữ (S)** hoặc **Tân ngữ (O)**.
+  * *Ví dụ:* *The book **which** is on the table belongs to Lan.* (Quyển sách cái mà ở trên bàn...)
+* 👑 **`WHOSE`** — Chỉ **Sở hữu** cho cả người và vật ($N1 + \text{whose} + N2$).
+  * *Ví dụ:* *I have a friend **whose** mother is a famous doctor.* (Tôi có người bạn có mẹ là bác sĩ nổi tiếng).
+* ⭐ **`THAT`** — Có thể thay thế cho cả **`WHO`**, **`WHOM`**, **`WHICH`** trong mệnh đề quan hệ xác định.
+
+---
+
+### 3. ⚠️ 2 BẪY KINH ĐIỂN TRONG ĐỀ THI THPT CẦN NHỚ:
+1. **Tuyệt đối KHÔNG dùng `THAT`** khi:
+   * Sau **dấu phẩy** (mệnh đề quan hệ không xác định): *Da Nang, <del>that</del> $\rightarrow$ which I visited last summer, is beautiful.*
+   * Sau **giới từ** (in, on, at, with...): *The house in <del>that</del> $\rightarrow$ which he lives.*
+2. **Bắt buộc dùng `THAT`** khi danh từ phía trước gồm cả **Người + Vật**, hoặc sau các từ so sánh nhất, *all, every, nothing, only*.
+
+---
+
+💡 **Câu hỏi thử thách của Thầy để xem em đã nắm chắc chưa nhé:**
+Em hãy chọn đại từ quan hệ thích hợp để điền vào câu sau:
+*"The woman ______ car was stolen last night has reported to the police."*
+👉 *A. who / B. whom / C. whose / D. which*
+
+Em hãy chọn đáp án để thầy chấm tiếp nhé!"""
+
+    # Chủ đề: Phân biệt thì Hiện tại đơn vs Quá khứ đơn
     if "hiện tại đơn" in last_user_msg or "quá khứ đơn" in last_user_msg or "thì" in last_user_msg:
         return """Chào em! Thầy Socrates hướng dẫn em phân biệt **Thì Hiện Tại Đơn (Present Simple)** và **Thì Quá Khứ Đơn (Past Simple)** nhé:
 
@@ -83,27 +150,58 @@ Trong câu sau, em hãy thử tìm từ khóa thời gian và xác định độ
 
 Em hãy gõ câu trả lời để thầy nhận xét nhé!"""
 
-    if "môi trường" in last_user_msg or "bài viết" in last_user_msg or "dàn ý" in last_user_msg or "writing" in last_user_msg:
-        return """Chào em! Thầy Socrates gợi ý cho em dàn ý chuẩn Band 8-9 về chủ đề **Bảo vệ Môi trường (Environmental Protection)**:
+    # Chủ đề: Câu điều kiện (Conditionals)
+    if "điều kiện" in last_user_msg or "conditional" in last_user_msg or "câu if" in last_user_msg:
+        return """Chào em! Thầy Socrates tổng hợp **3 Loại Câu Điều Kiện Trọng Tâm (Conditional Sentences)** trong đề thi THPT nhé:
 
-### 1. Introduction (Mở bài - 2 câu)
-* *General Statement:* Hiện tượng biến đổi khí hậu và ô nhiễm môi trường đang là thách thức toàn cầu (*Environmental degradation is an pressing global issue*).
-* *Thesis Statement:* Bài viết sẽ phân tích nguyên nhân và đề xuất các giải pháp bền vững (*sustainable solutions*).
+### 1. Câu điều kiện Loại 1 (Có thật ở hiện tại/tương lai)
+* **Công thức:** $\text{If} + S + V(\text{hiện tại đơn}), S + \text{will/can} + V_{\text{nguyên thể}}$
+* *Ví dụ:* *If it rains tomorrow, we will stay at home.*
 
-### 2. Body 1: Các giải pháp từ Cá nhân (Individual Actions)
-* Phân loại rác thải tại nguồn và giảm đồ nhựa dùng 1 lần (*adopt a zero-waste lifestyle*).
-* Sử dụng phương tiện giao thông công cộng (*utilize green public transit*).
+### 2. Câu điều kiện Loại 2 (Không có thật ở hiện tại)
+* **Công thức:** $\text{If} + S + V2/ed \text{ (to be dùng 'were' cho mọi ngôi)}, S + \text{would/could} + V_{\text{nguyên thể}}$
+* *Ví dụ:* *If I had a million dollars, I would travel around the world.*
 
-### 3. Body 2: Các giải pháp từ Chính phủ & Doanh nghiệp (Governmental Policy)
-* Đầu tư vào năng lượng tái tạo: điện gió, mặt trời (*subsidize renewable energy*).
-* Ban hành chế tài xử phạt nặng các cơ sở xả thải trái phép (*impose heavy fines on illegal dumping*).
+### 3. Câu điều kiện Loại 3 (Không có thật trong quá khứ)
+* **Công thức:** $\text{If} + S + \text{had} + V3/ed, S + \text{would/could have} + V3/ed$
+* *Ví dụ:* *If she had studied harder, she would have passed the exam.*
 
-### 4. Conclusion (Kết bài - 2 câu)
-* Khẳng định lại: Bảo vệ môi trường là trách nhiệm chung của toàn nhân loại (*collective endeavor*).
+---
 
-Em muốn viết thử câu mở bài hoặc đoạn thân bài nào trước không?"""
+💡 **Thử thách Socratic:**
+Em hãy chia động từ trong câu sau:
+*"If I (know) ______ his phone number yesterday, I (call) ______ him."*
+Em gõ đáp án để thầy chấm nhé!"""
 
-    # Đánh giá bài tập tương tác nhiều lượt (Multi-turn Socratic exercise)
+    # Chủ đề: Câu bị động (Passive Voice)
+    if "bị động" in last_user_msg or "passive" in last_user_msg:
+        return """Chào em! Thầy Socrates hướng dẫn nguyên tắc chuyển đổi sang **Câu Bị Động (Passive Voice)**:
+
+### 1. Nguyên tắc vàng: $S + \text{be} + V3/ed + (\text{by } O)$
+* Thì của động từ **"be"** phải chia đúng theo thì của câu chủ động gốc.
+
+### 2. Bảng biến đổi nhanh các thì thường gặp:
+* **Hiện tại đơn:** $S + \text{am/is/are} + V3/ed$
+* **Quá khứ đơn:** $S + \text{was/were} + V3/ed$
+* **Hiện tại hoàn thành:** $S + \text{have/has been} + V3/ed$
+* **Động từ khuyết thiếu (can/must/should):** $S + \text{modal verb} + \text{be} + V3/ed$
+
+---
+
+💡 **Thử thách thực hành:**
+Em hãy chuyển câu này sang bị động giúp thầy nhé:
+*"They built this bridge in 2020."* $\rightarrow$ *This bridge ...*"""
+
+    # Đánh giá câu trả lời trắc nghiệm hoặc bài tập tương tác
+    if any(k in last_user_msg for k in ["whose", "c", "đáp án c"]):
+        return """Chính xác 100%! Xuất sắc lắm em! 🎉
+
+### Phân tích câu:
+*"The woman **whose** car was stolen last night has reported to the police."*
+* Ta thấy: Phía trước là danh từ chỉ người **The woman**, phía sau là danh từ **car** (chiếc xe thuộc sở hữu của người phụ nữ) $\rightarrow$ Bắt buộc dùng đại từ sở hữu **`WHOSE`**!
+
+Em có muốn thầy hướng dẫn tiếp phần **Rút gọn mệnh đề quan hệ (V-ing / V3-ed / To-V)** không?"""
+
     if any(k in last_user_msg for k in ["drived", "tako", "drives", "took", "drive", "take"]):
         return """Thầy nhận xét câu trả lời của em nhé:
 
@@ -129,27 +227,18 @@ Em hãy thử chia động từ trong câu tương tự này nhé:
 
 Em hãy gõ đáp án để thầy chấm tiếp nhé!"""
 
-    if any(k in last_user_msg for k in ["bought", "went", "buys", "goed"]):
-        return """Xuất sắc lắm em! Thầy nhận xét câu vừa rồi nhé:
+    # Phản hồi tổng quát thân thiện, sư phạm
+    return f"""Chào em! Thầy Socrates rất vui được giải đáp câu hỏi: **"{last_user_msg}"** cho em.
 
-### 1. Đánh giá đáp án
-* 📌 **Lan always (buy):** Chủ ngữ *Lan* + *always* $\rightarrow$ Hiện tại đơn: **`buys`** (thêm -s).
-* 📌 **last Sunday she (go):** Từ khóa *last Sunday* $\rightarrow$ Quá khứ đơn của động từ bất quy tắc *go* là **`went`** *(go $\rightarrow$ went $\rightarrow$ gone)*.
+### 💡 Hướng dẫn & Giải thích chi tiết từ Thầy:
+1. **Phân tích bản chất:** Trong chương trình Tiếng Anh phổ thông và đề thi THPT Quốc gia, vấn đề này đòi hỏi em nắm vững ngữ cảnh và cấu trúc câu tương ứng.
+2. **Ví dụ minh họa:**
+   * *Ví dụ chuẩn:* *"Knowledge is the key to success."*
+   * *Ứng dụng:* Hãy luôn xác định chủ ngữ chính ($S$), động từ chính ($V$) và từ khóa thời gian hoặc từ nối trước khi đưa ra phương án.
 
 ---
 
-✅ **Đáp án chuẩn:** **`buys / went`**
-👉 *"Lan always **buys** books online, but last Sunday she **went** to the bookstore."*
-
-🎉 Em đã nắm rất vững sự khác biệt giữa **Thói quen hiện tại (Thêm -s/-es)** và **Hành động quá khứ (Động từ Bất quy tắc)** rồi đấy!"""
-
-    return f"""Chào em! Thầy là **Socrates AI Mentor**. Thầy đã nhận được câu hỏi/câu trả lời của em: *"{last_user_msg}"*.
-
-💡 **Phương pháp Socratic gợi mở tư duy:**
-1. Em hãy xác định xem trong câu này, **từ khóa chính (keyword)** và **ngữ cảnh ngữ pháp** là gì?
-2. Em đang phân vân giữa phương án nào hoặc gặp khó khăn ở bước suy luận nào?
-
-Em hãy chia sẻ suy nghĩ ban đầu của mình để thầy hướng dẫn em tìm ra câu trả lời chính xác nhất nhé!"""
+💡 **Em đang có bài tập cụ thể nào về phần này không?** Em hãy gửi câu hỏi hoặc đáp án em đang phân vân vào đây để thầy hướng dẫn giải chi tiết từng bước nhé!"""
 
 
 # 2. DỊCH VỤ CHUYỂN VĂN BẢN THÀNH GIỌNG NÓI (TEXT-TO-SPEECH - TTS)
