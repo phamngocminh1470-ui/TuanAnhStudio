@@ -68,7 +68,7 @@ export default function MegaNavbar({
     { id: 'listening-ai', title: 'Luyện nghe tương tác', desc: 'Audio bản ngữ tự sinh câu hỏi bắt từ khóa', icon: Headphones, action: () => { onNavigate('listening'); setOpenDropdown(null); } },
     { id: 'analytics', title: 'Báo cáo & Dự báo điểm', desc: 'Biểu đồ tăng trưởng theta & dự báo điểm thi', icon: Activity, action: () => { onNavigate('analytics'); setOpenDropdown(null); } },
     { id: 'vocab-lib', title: 'Học liệu & Từ vựng SGK', desc: 'Tra cứu từ vựng kèm phát âm IPA chuẩn', icon: BookMarked, action: () => { onNavigate('vocab-library'); setOpenDropdown(null); } },
-    { id: 'item-bank', title: 'Ngân hàng câu hỏi Item Bank', desc: 'Kho câu hỏi chuẩn hóa phục vụ nghiên cứu', icon: Database, action: () => { onNavigate('item-bank'); setOpenDropdown(null); } }
+    { id: 'official-exams', title: 'Kho Đề Thi Chuẩn Hóa', desc: 'Đề thi trích nguồn chính thức từ các Sở GD&ĐT', badge: 'HOT', icon: FileText, action: () => { onNavigate('official-exams'); setOpenDropdown(null); } }
   ];
 
   const congDongItems = [

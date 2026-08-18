@@ -368,20 +368,8 @@ function App() {
             {/* Group 3: Hệ thống & Trợ giúp */}
             <div className="space-y-1">
               <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 pb-1">
-                Hệ Thống &amp; Nghiên Cứu
+                Hệ Thống &amp; Trợ Giúp
               </div>
-
-              <button
-                onClick={() => setActiveTab('item-bank')}
-                className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
-                  activeTab === 'item-bank'
-                    ? 'bg-blue-600/15 text-blue-400 border border-blue-500/25 font-bold'
-                    : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
-                }`}
-              >
-                <Database className="w-4 h-4 text-slate-400" />
-                <span>Ngân Hàng Câu Hỏi (Item Bank)</span>
-              </button>
 
               <button
                 onClick={() => setActiveTab('guide')}
@@ -397,6 +385,22 @@ function App() {
 
               {currentUser && currentUser.role === 'admin' && (
                 <>
+                  <div className="pt-2 text-[10px] font-bold text-emerald-400 uppercase tracking-wider px-3 pb-1">
+                    Quản Trị Viên (Admin)
+                  </div>
+
+                  <button
+                    onClick={() => setActiveTab('item-bank')}
+                    className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
+                      activeTab === 'item-bank'
+                        ? 'bg-blue-600/15 text-blue-400 border border-blue-500/25 font-bold'
+                        : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
+                    }`}
+                  >
+                    <Database className="w-4 h-4 text-emerald-400" />
+                    <span>Ngân Hàng Câu Hỏi (Item Bank)</span>
+                  </button>
+
                   <button
                     onClick={() => setActiveTab('admin-panel')}
                     className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
