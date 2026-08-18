@@ -34,9 +34,25 @@ async def chat_with_gemini(messages: list, system_instruction: str = None, custo
     2. Fallback sang Groq LLama 3.3 70B (tốc độ cao, suy luận sắc bén).
     3. Fallback sang Hệ tri thức Socratic AI sâu rộng cho mọi chủ điểm ngữ pháp và bài tập THPT.
     """
+    # Chuẩn hóa lịch sử tin nhắn (bỏ tin nhắn chào của model ở đầu nếu có)
+    sanitized_messages = []
+    for msg in messages:
+        c = str(msg.get("content", "")).strip()
+        if not c:
+            continue
+        r = "user" if msg.get("role") == "user" else "model"
+        if not sanitized_messages and r == "model":
+            continue
+        sanitized_messages.append({"role": r, "content": c})
+
+    if not sanitized_messages and messages:
+        last_c = str(messages[-1].get("content", "")).strip()
+        if last_c:
+            sanitized_messages = [{"role": "user", "content": last_c}]
+
     # 1. Thử gọi Gemini AI nếu có Key
     active_gemini = clean_api_key(custom_key) or GEMINI_API_KEY
-    if active_gemini:
+    if active_gemini and sanitized_messages:
         try:
             genai.configure(api_key=active_gemini)
             model = genai.GenerativeModel(
@@ -44,10 +60,9 @@ async def chat_with_gemini(messages: list, system_instruction: str = None, custo
                 system_instruction=system_instruction
             )
             contents = []
-            for msg in messages:
-                role = "user" if msg["role"] == "user" else "model"
+            for msg in sanitized_messages:
                 contents.append({
-                    "role": role,
+                    "role": msg["role"],
                     "parts": [msg["content"]]
                 })
             response = model.generate_content(contents)
@@ -58,13 +73,14 @@ async def chat_with_gemini(messages: list, system_instruction: str = None, custo
 
     # 2. Thử gọi Groq AI (Llama 3.3 70B Versatile) nếu có Key
     active_groq = clean_api_key(custom_groq_key) or GROQ_API_KEY
-    if active_groq:
+    if active_groq and sanitized_messages:
         try:
             groq_messages = []
             if system_instruction:
                 groq_messages.append({"role": "system", "content": system_instruction})
-            for msg in messages:
-                groq_messages.append({"role": msg["role"] if msg["role"] != "model" else "assistant", "content": msg["content"]})
+            for msg in sanitized_messages:
+                role = "assistant" if msg["role"] == "model" else "user"
+                groq_messages.append({"role": role, "content": msg["content"]})
             
             async with httpx.AsyncClient(timeout=25.0) as client:
                 res = await client.post(
