@@ -126,15 +126,18 @@ async def chat_endpoint(request: ChatRequest, x_gemini_key: Optional[str] = Head
 @app.post("/api/writing/practice-ai")
 async def writing_practice_ai_endpoint(
     request: WritingPracticeRequest,
-    x_gemini_key: Optional[str] = Header(None)
+    x_gemini_key: Optional[str] = Header(None),
+    x_groq_key: Optional[str] = Header(None)
 ):
     """
-    Proxy endpoint để gọi Gemini AI cho phần Luyện viết câu,
-    tránh lỗi CORS và bảo mật API Key dưới client.
+    Proxy endpoint gọi AI cho Luyện viết câu, Chấm luận 4 tiêu chí, Dàn ý & Bài mẫu.
     """
     try:
-        messages = [{"role": "user", "content": request.prompt}]
-        reply = await chat_with_gemini(messages, custom_key=x_gemini_key)
+        reply = await execute_writing_ai_prompt(
+            prompt=request.prompt,
+            custom_gemini_key=x_gemini_key,
+            custom_groq_key=x_groq_key
+        )
         return {"reply": reply}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -944,29 +947,6 @@ async def sample_writing_endpoint(request: SampleWritingRequest, x_gemini_key: O
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Lỗi khi sinh bài mẫu tham khảo: {str(e)}")
-
-
-class WritingPracticeAIRequest(BaseModel):
-    prompt: str
-
-@app.post("/api/writing/practice-ai")
-async def writing_practice_ai_endpoint(
-    request: WritingPracticeAIRequest,
-    x_gemini_key: Optional[str] = Header(None),
-    x_groq_key: Optional[str] = Header(None)
-):
-    """
-    API đa năng phục vụ Luyện viết câu, Chấm luận, Sinh bài mẫu và Dàn ý AI.
-    """
-    try:
-        reply = await execute_writing_ai_prompt(
-            prompt=request.prompt,
-            custom_gemini_key=x_gemini_key,
-            custom_groq_key=x_groq_key
-        )
-        return {"reply": reply}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Lỗi xử lý AI viết: {str(e)}")
 
 
 class AdaptiveListeningRequest(BaseModel):
