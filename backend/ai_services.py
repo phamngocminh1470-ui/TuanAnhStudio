@@ -98,19 +98,19 @@ async def chat_with_gemini(messages: list, system_instruction: str = None, custo
         except Exception as e:
             print(f"[Groq Chat Error] {e}")
 
-    # 3. Phản hồi tự nhiên, linh hoạt như Gemini Pro khi chưa có kết nối mạng
+    # 3. Phản hồi tự nhiên, chuyên sâu như Gemini Pro khi chưa có kết nối mạng
     last_raw = str(messages[-1].get("content", "")).strip() if messages else ""
     last_user_msg = last_raw.lower()
 
     # Chào hỏi tự nhiên
     if last_user_msg in ["hello", "hi", "hey", "hello there", "hi there"]:
-        return "Hello! How can I help you today?"
+        return "Hello! How can I help you today? Bạn đang cần hỗ trợ học tập hay giải đáp câu hỏi tiếng Anh nào?"
 
-    if last_user_msg in ["chào", "xin chào", "chào bạn", "chào thầy", "alo", "hi bạn"]:
-        return "Xin chào! Tôi là AI English Mentor. Tôi có thể giúp gì cho bạn hôm nay?"
+    if last_user_msg in ["chào", "xin chào", "chào bạn", "chào thầy", "alo", "hi bạn", "ê"]:
+        return "Xin chào! Tôi là Socrates AI Tutor. Tôi có thể giúp gì cho bạn hôm nay? Bạn cứ đặt câu hỏi hoặc gửi bài tập tiếng Anh nhé!"
 
     if any(k in last_user_msg for k in ["trl tiếng việt", "nói tiếng việt", "tiếng việt đi", "tiếng việt nhé", "nói bằng tiếng việt"]):
-        return "Dạ được chứ! Tôi có thể giúp gì cho bạn bằng tiếng Việt hôm nay?"
+        return "Dạ được chứ! Tôi có thể giúp gì cho bạn bằng tiếng Việt hôm nay? Bạn đang thắc mắc về chủ điểm ngữ pháp hay bài tập nào?"
 
     if any(k in last_user_msg for k in ["speak english", "talk in english", "english please", "in english"]):
         return "Certainly! I'm happy to chat in English with you. What topic or grammar question would you like to practice today?"
@@ -118,55 +118,111 @@ async def chat_with_gemini(messages: list, system_instruction: str = None, custo
     if any(k in last_user_msg for k in ["bạn là ai", "bạn là gì", "who are you"]):
         return "Tôi là **Socrates AI English Mentor** — Trợ lý Trí tuệ Nhân tạo hỗ trợ học tập, luyện thi và giải đáp mọi thắc mắc tiếng Anh của bạn 24/7. Bạn cần tôi hỗ trợ bài tập hay chủ đề nào hôm nay?"
 
-    # Tra cứu từ vựng / Dịch thuật trực tiếp
-    if any(k in last_user_msg for k in ["tiếng anh là", "tiếng a là", "nghĩa là gì", "nghĩa là j", "là j"]):
-        if "cá" in last_user_msg:
-            return """Từ **"cá"** trong tiếng Anh là **`Fish`** (/fɪʃ/).
+    # Chủ đề 1: ĐẠI TỪ SỞ HỮU (Possessive Pronouns) & TÍNH TỪ SỞ HỮU
+    if any(k in last_user_msg for k in ["đại từ sở hữu", "possessive pronoun", "possessive", "tính từ sở hữu"]):
+        return """Trong tiếng Anh, **Đại từ sở hữu (Possessive Pronouns)** là từ dùng để **thay thế cho cụm [Tính từ sở hữu + Danh từ]** nhằm tránh lặp lại danh từ đã được nhắc trước đó.
 
-* **Danh từ:** *a fish* (một con cá), *fish* (nhiều con cá).
-* **Động từ:** *to fish* (câu cá).
-* **Ví dụ:** *"My family enjoys eating fresh fish for dinner."* (Gia đình tôi thích ăn cá tươi vào bữa tối).
-* **Thành ngữ thú vị:** *A big fish in a small pond* (Nhân vật có tầm ảnh hưởng trong một nhóm nhỏ)."""
+---
 
-        if "chó" in last_user_msg:
-            return "Từ **\"chó\"** trong tiếng Anh là **`Dog`** (/dɒɡ/).\n* Ví dụ: *\"Dogs are known as man's best friend.\"*"
+### 1. Bảng so sánh Tính từ sở hữu vs Đại từ sở hữu:
 
-        if "mèo" in last_user_msg:
-            return "Từ **\"mèo\"** trong tiếng Anh là **`Cat`** (/kæt/).\n* Ví dụ: *\"The cat is sleeping peacefully on the sofa.\"*"
+| Đại từ nhân xưng ($S$) | Tính từ sở hữu ($+ N$) | Đại từ sở hữu (Đứng độc lập) | Nghĩa tiếng Việt |
+| :--- | :--- | :--- | :--- |
+| **I** | **My** book | **Mine** | Của tôi |
+| **You** | **Your** car | **Yours** | Của bạn |
+| **He** | **His** pen | **His** | Của anh ấy |
+| **She** | **Her** bag | **Hers** | Của cô ấy |
+| **It** | **Its** tail | *(không dùng)* | Của nó |
+| **We** | **Our** house | **Ours** | Của chúng tôi |
+| **They** | **Their** dog | **Theirs** | Của họ |
 
-    # Chủ đề: Đại từ quan hệ / Mệnh đề quan hệ
+---
+
+### 2. Công thức cốt lõi:
+$$\\text{Đại từ sở hữu} = \\text{Tính từ sở hữu} + \\text{Danh từ}$$
+
+* 📌 *Ví dụ 1:* *"This is **my** phone, and that one is **yours**."*
+  *(yours = your phone, dùng để tránh lặp lại từ 'phone').*
+* 📌 *Ví dụ 2:* *"Her room is bigger than **mine**."*
+  *(mine = my room).*
+
+---
+
+### 3. Lưu ý then chốt trong đề thi:
+* **Tính từ sở hữu (my, your, their...)** BẮT BUỘC phải có danh từ theo sau: *This is **my** pen.*
+* **Đại từ sở hữu (mine, yours, theirs...)** ĐỨNG MỘT MÌNH, KHÔNG BAO GIỜ có danh từ đi kèm: *This pen is **mine**.* *(Sai: This is mine pen).*
+
+Bạn có câu bài tập cụ thể nào về phần này cần tôi hỗ trợ giải thích không?"""
+
+    # Chủ đề 2: ĐẠI TỪ QUAN HỆ (Relative Pronouns) & MỆNH ĐỀ QUAN HỆ
     if any(k in last_user_msg for k in ["đại từ quan hệ", "mệnh đề quan hệ", "relative pronoun", "relative clause"]):
-        return """Trong tiếng Anh, **Đại từ quan hệ (Relative Pronouns)** dùng để liên kết các mệnh đề và thay thế cho danh từ đứng trước nó:
+        return """Trong tiếng Anh, **Đại từ quan hệ (Relative Pronouns)** dùng để liên kết 2 mệnh đề và thay thế cho danh từ đứng trước nó:
 
-1. **`WHO`**: Thay thế cho Người (làm Chủ ngữ hoặc Tân ngữ).
-   * *Ví dụ:* The teacher **who** teaches us English is very dedicated.
-2. **`WHOM`**: Thay thế cho Người (chỉ làm Tân ngữ $S + V$).
-   * *Ví dụ:* The girl **whom** you met yesterday is my sister.
-3. **`WHICH`**: Thay thế cho Vật / Sự việc.
-   * *Ví dụ:* The laptop **which** I bought last week works very fast.
-4. **`WHOSE`**: Chỉ sự sở hữu ($N1 + \text{whose} + N2$).
-   * *Ví dụ:* A student **whose** assignment was excellent got an A.
-5. **`THAT`**: Thay thế cho cả người và vật trong mệnh đề xác định (không dùng sau dấu phẩy `,` hoặc sau giới từ).
+1. **`WHO`**: Thay thế cho **Người** (đóng vai trò làm Chủ ngữ $S$ hoặc Tân ngữ $O$).
+   * *Ví dụ:* *The teacher **who** teaches us English is very kind.*
+2. **`WHOM`**: Thay thế cho **Người** (chỉ làm Tân ngữ $O$, theo sau là mệnh đề $S + V$).
+   * *Ví dụ:* *The girl **whom** you met yesterday is my sister.*
+3. **`WHICH`**: Thay thế cho **Vật / Sự việc** (làm Chủ ngữ $S$ hoặc Tân ngữ $O$).
+   * *Ví dụ:* *The laptop **which** I bought last week works very well.*
+4. **`WHOSE`**: Chỉ **Sở hữu** cho cả người và vật ($N1 + \\text{whose} + N2$).
+   * *Ví dụ:* *I have a friend **whose** mother is a doctor.*
+5. **`THAT`**: Thay thế cho *Who, Whom, Which* trong mệnh đề xác định (không dùng sau dấu phẩy `,` hoặc sau giới từ).
 
-Bạn có câu bài tập nào về phần này cần giải đáp cụ thể không?"""
+Bạn có bài tập trắc nghiệm nào về mệnh đề quan hệ cần giải thích không?"""
 
-    # Chủ đề: Câu điều kiện (Conditionals)
+    # Chủ đề 3: CÁC THÌ TRONG TIẾNG ANH (Tenses)
+    if any(k in last_user_msg for k in ["thì trong tiếng anh", "các thì", "hiện tại hoàn thành", "quá khứ đơn", "hiện tại đơn", "quá khứ hoàn thành", "tenses"]):
+        return """Dưới đây là tóm tắt các **Thì trọng tâm trong đề thi THPT Quốc gia**:
+
+1. **Hiện tại đơn (Present Simple):** Thói quen, chân lý.
+   * Công thức: $S + V(s/es)$ | Dấu hiệu: *always, usually, often, every day...*
+2. **Hiện tại tiếp diễn (Present Continuous):** Hành động đang diễn ra tại thời điểm nói.
+   * Công thức: $S + \\text{am/is/are} + V\\text{-ing}$ | Dấu hiệu: *now, at the moment, look!...*
+3. **Hiện tại hoàn thành (Present Perfect):** Hành động xảy ra trong quá khứ kéo dài đến hiện tại hoặc vừa mới xảy ra.
+   * Công thức: $S + \\text{have/has} + V3/ed$ | Dấu hiệu: *since, for, already, yet, just, ever...*
+4. **Quá khứ đơn (Past Simple):** Hành động đã chấm dứt hoàn toàn trong quá khứ.
+   * Công thức: $S + V2/ed$ | Dấu hiệu: *yesterday, last year, in 2020, ago...*
+5. **Quá khứ tiếp diễn (Past Continuous):** Hành động đang diễn ra tại một thời điểm trong quá khứ hoặc bị hành động khác xen vào.
+   * Công thức: $S + \\text{was/were} + V\\text{-ing}$ | Dấu hiệu: *while, when, at 8 PM yesterday...*
+
+Bạn muốn tìm hiểu chi tiết hơn về thì nào?"""
+
+    # Chủ đề 4: CÂU ĐIỀU KIỆN (Conditionals)
     if "điều kiện" in last_user_msg or "conditional" in last_user_msg or "câu if" in last_user_msg:
-        return """Dưới đây là 3 loại **Câu Điều Kiện (Conditional Sentences)** trọng tâm:
+        return """Dưới đây là 3 loại **Câu Điều Kiện (Conditional Sentences)** cốt lõi:
 
-* **Loại 1 (Có thật ở hiện tại/tương lai):** $\text{If} + S + V(\text{hiện tại}), S + \text{will} + V$
-  * *Ví dụ:* *If it rains, we will stay home.*
-* **Loại 2 (Không có thật ở hiện tại):** $\text{If} + S + V2/ed \text{ (were)}, S + \text{would} + V$
-  * *Ví dụ:* *If I had more time, I would learn Spanish.*
-* **Loại 3 (Không có thật trong quá khứ):** $\text{If} + S + \text{had } V3/ed, S + \text{would have } V3/ed$
-  * *Ví dụ:* *If she had studied, she would have passed.*"""
+* **Loại 1 (Có thật ở hiện tại/tương lai):** $\\text{If} + S + V(\\text{hiện tại đơn}), S + \\text{will/can} + V_{\\text{nguyên thể}}$
+  * *Ví dụ:* *If it rains tomorrow, we will stay at home.*
+* **Loại 2 (Không có thật ở hiện tại):** $\\text{If} + S + V2/ed \\text{ (were)}, S + \\text{would/could} + V_{\\text{nguyên thể}}$
+  * *Ví dụ:* *If I had a million dollars, I would travel the world.*
+* **Loại 3 (Không có thật trong quá khứ):** $\\text{If} + S + \\text{had } V3/ed, S + \\text{would/could have } V3/ed$
+  * *Ví dụ:* *If she had studied harder, she would have passed the exam.*"""
+
+    # Chủ đề 5: CÂU BỊ ĐỘNG (Passive Voice)
+    if "bị động" in last_user_msg or "passive" in last_user_msg:
+        return """Nguyên tắc vàng của **Câu Bị Động (Passive Voice)**:
+$$S + \\text{be} + V3/ed + (\\text{by } O)$$
+* **Hiện tại đơn:** $S + \\text{am/is/are} + V3/ed$ (*English is spoken worldwide.*)
+* **Quá khứ đơn:** $S + \\text{was/were} + V3/ed$ (*The house was built in 2020.*)
+* **Hiện tại hoàn thành:** $S + \\text{have/has been} + V3/ed$ (*The report has been completed.*)
+* **Động từ khuyết thiếu (can/must/should):** $S + \\text{modal} + \\text{be} + V3/ed$ (*This rule must be followed.*)"""
+
+    # Tra cứu từ vựng chính xác bằng cụm từ độc lập (tránh nhầm lẫn chuỗi con)
+    import re
+    if re.search(r'\b(con cá|con ca|con chó|con mèo|quyển sách)\b', last_user_msg) or last_user_msg in ["cá", "con cá", "chó", "mèo", "sách"]:
+        if "cá" in last_user_msg:
+            return "Từ **\"con cá\"** trong tiếng Anh là **`Fish`** (/fɪʃ/).\n* Danh từ số nhiều vẫn là *fish*.\n* Ví dụ: *\"My brother caught a big fish yesterday.\"*"
+        if "chó" in last_user_msg:
+            return "Từ **\"con chó\"** trong tiếng Anh là **`Dog`** (/dɒɡ/).\n* Ví dụ: *\"Dogs are loyal pets.\"*"
+        if "mèo" in last_user_msg:
+            return "Từ **\"con mèo\"** trong tiếng Anh là **`Cat`** (/kæt/).\n* Ví dụ: *\"The cat is sleeping on the mat.\"*"
 
     # Phản hồi tổng quát tự nhiên, thông minh
-    return f"""Tôi đã hiểu câu hỏi của bạn về: **"{last_raw}"**.
+    return f"""Tôi đã nhận được câu hỏi của bạn: **"{last_raw}"**.
 
-Để trả lời chi tiết và chuẩn xác nhất:
-* Trong tiếng Anh, nội dung này thường phụ thuộc vào ngữ cảnh và cấu trúc câu cụ thể.
-* Bạn có thể gửi toàn bộ câu hỏi trắc nghiệm, đoạn văn hoặc câu bài tập em đang làm vào đây để tôi phân tích và giải thích cặn kẽ từng bước nhé!"""
+Để giải đáp chi tiết và chuẩn xác nhất:
+* Trong chương trình Tiếng Anh và đề thi THPT, nội dung này cần được xem xét trong ngữ cảnh và cấu trúc câu cụ thể.
+* Bạn có thể gửi toàn bộ câu hỏi trắc nghiệm, đoạn văn hoặc câu bài tập bạn đang làm vào đây để tôi phân tích, dịch nghĩa và giải thích cặn kẽ từng bước nhé!"""
 
 
 # 2. DỊCH VỤ CHUYỂN VĂN BẢN THÀNH GIỌNG NÓI (TEXT-TO-SPEECH - TTS)
