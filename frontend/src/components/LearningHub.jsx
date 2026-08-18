@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { 
   Sparkles, Zap, BookOpen, Headphones, Trophy, 
-  ChevronDown, ChevronRight, Clock, Award, Compass, 
+  ChevronRight, Clock, Award, Compass, 
   BrainCircuit, FileText, CheckCircle2, Flame, ArrowRight,
   Target, GraduationCap, Layers, Bot, Mic, PenLine, Database,
-  Download, Camera, Eye, Lock, RefreshCw, BarChart3
+  Download, Camera, Eye, Lock, RefreshCw, BarChart3, Star, Check
 } from 'lucide-react';
 
 export default function LearningHub({
@@ -15,263 +15,229 @@ export default function LearningHub({
   serverStats,
   onOpenPhotoSolver
 }) {
-  const [openTrack, setOpenTrack] = useState(0);
   const isC3 = parseInt(selectedGrade) >= 10;
+  const [activeCategory, setActiveCategory] = useState(isC3 ? 'thpt' : 'thcs');
 
-  // Dynamic tracks based on C3 (THPT) or C2 (THCS)
-  const examTracks = isC3 ? [
+  // Categories & their curated cards
+  const categories = isC3 ? [
     {
-      id: 'thpt2027',
-      num: '01',
-      tag: 'KỲ THI TỐT NGHIỆP THPT QUỐC GIA',
-      title: 'Đề Thi & Học Liệu Chuẩn THPT 2027',
-      desc: 'Mỗi môn • Quiz • AI riêng • Sách SGK Global Success & Friends Global Lớp 10-11-12',
-      items: [
+      id: 'thpt',
+      name: '🎓 THPT Quốc Gia 2027',
+      desc: 'Bộ đề thi chuẩn cấu trúc Bộ GD&ĐT & Sách giáo khoa Lớp 10-11-12',
+      badge: 'Trọng tâm',
+      cards: [
         {
-          id: 'thpt-mock',
-          title: 'Đề thi thử THPT Quốc Gia Chuẩn Cấu Trúc',
-          desc: '50 câu trắc nghiệm đa năng: Đọc điền, Đọc hiểu, Ngữ pháp, Viết lại câu',
-          badge: 'Đề Chuẩn Bộ GD',
+          id: 'official-exams',
+          title: 'Kho Đề Chuẩn Hóa Đa Tỉnh Thành',
+          desc: 'Bộ đề thi chính thức Hà Nội, TP.HCM, Nghệ An, Nam Định có lời giải chi tiết và mẹo tránh bẫy.',
+          badge: 'Đề Thi Thật',
           badgeColor: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
-          count: '480 câu',
+          meta: '50 Câu / Đề • Có đáp án',
           action: () => onNavigate('official-exams'),
-          icon: FileText
+          icon: FileText,
+          accent: 'from-blue-600/20 to-indigo-600/10 border-blue-500/30'
         },
         {
-          id: 'reading-adaptive',
-          title: 'Luyện đọc hiểu theo chủ đề SGK Mới',
-          desc: 'Đoạn văn thích ứng AI theo sở thích: Công nghệ, Môi trường, Văn hóa, Khoa học',
+          id: 'adaptive-reading',
+          title: 'Đọc Hiểu Thích Ứng Chủ Đề SGK Mới',
+          desc: 'Bài đọc AI phân tầng theo sở thích: Công nghệ, Môi trường, Văn hóa, Khoa học theo chương trình GDPT 2018.',
           badge: 'AI Adaptive',
           badgeColor: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
-          count: '12 Units',
+          meta: '12 Units SGK • Tự động đổi độ khó',
           action: () => onNavigate('reading'),
-          icon: BookOpen
+          icon: BookOpen,
+          accent: 'from-emerald-600/20 to-teal-600/10 border-emerald-500/30'
         },
         {
-          id: 'listening-adaptive',
-          title: 'Luyện nghe thích ứng & Ngữ điệu bản xứ',
-          desc: 'Bài nghe phân tầng độ khó, tự động sinh câu hỏi kiểm tra khả năng bắt từ khóa',
+          id: 'adaptive-listening',
+          title: 'Luyện Nghe Thích Ứng & Ngữ Điệu Bản Xứ',
+          desc: 'Luyện nghe phân tầng độ khó, tự động sinh câu hỏi kiểm tra khả năng bắt từ khóa và phản xạ âm thanh.',
           badge: 'Interactive Audio',
           badgeColor: 'text-purple-400 bg-purple-500/10 border-purple-500/20',
-          count: '36 Bài nghe',
+          meta: '36 Bài nghe • Tốc độ linh hoạt',
           action: () => onNavigate('listening'),
-          icon: Headphones
+          icon: Headphones,
+          accent: 'from-purple-600/20 to-pink-600/10 border-purple-500/30'
         },
         {
-          id: 'vocab-sm2',
-          title: 'Ghi nhớ từ vựng THPT siêu tốc (SM-2)',
-          desc: 'Spaced Repetition tự động nhắc lại từ vựng đúng thời điểm trước khi quên',
+          id: 'sm2-vocab',
+          title: 'Siêu Trí Nhớ Từ Vựng Não Bộ (SM-2)',
+          desc: 'Thuật toán Spaced Repetition tính toán chính xác chu kỳ quên lãng để nhắc lại từ vựng đúng thời điểm vàng.',
           badge: 'Khoa học Não bộ',
           badgeColor: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
-          count: '1,250 Từ',
+          meta: '1,500+ Từ vựng • 100% Nhớ sâu',
           action: () => onNavigate('sm2-flashcards'),
-          icon: BrainCircuit
+          icon: BrainCircuit,
+          accent: 'from-amber-600/20 to-orange-600/10 border-amber-500/30'
         }
       ]
     },
     {
       id: 'dgnl',
-      num: '02',
-      tag: 'HSA • V-ACT • TSA • SƯ PHẠM • CÔNG AN',
-      title: 'ĐGNL & Đánh Giá Tư Duy',
-      desc: 'ĐHQG Hà Nội • ĐHQG-HCM • Bách Khoa HN • HNUE • HCMUE • Bộ Công an',
-      items: [
+      name: '🚀 ĐGNL & Tư Duy (HSA / TSA)',
+      desc: 'Luyện đề thi ĐHQG Hà Nội, ĐHQG-HCM, Bách Khoa, Sư phạm & Bộ Công an',
+      badge: 'Vận dụng cao',
+      cards: [
         {
           id: 'dgnl-reading',
-          title: 'Đọc hiểu suy luận & Phân tích ngữ cảnh',
-          desc: 'Dạng bài suy luận ý tác giả, tìm thông tin ngầm định, phân tích lập luận',
-          badge: 'Vận dụng cao',
+          title: 'Đọc Hiểu Suy Luận & Phân Tích Lập Luận',
+          desc: 'Chuyên đề giải mã các câu hỏi suy luận ý tác giả, tìm thông tin ngầm định và phân tích phản đề học thuật.',
+          badge: 'HSA • TSA ĐHQG',
           badgeColor: 'text-rose-400 bg-rose-500/10 border-rose-500/20',
-          count: '24 Chuyên đề',
+          meta: '24 Chuyên đề • Đạt 850+ Điểm',
           action: () => onNavigate('reading'),
-          icon: FileText
+          icon: Target,
+          accent: 'from-rose-600/20 to-red-600/10 border-rose-500/30'
         },
         {
-          id: 'writing-logic',
-          title: 'Luyện viết & Biến đổi cấu trúc câu',
-          desc: 'Chữa lỗi ngữ pháp và gợi ý nâng cấp từ vựng C1/C2 bằng AI',
-          badge: 'AI Chữa bài',
+          id: 'writing-academic',
+          title: 'Luyện Viết & Biến Đổi Cấu Trúc Câu',
+          desc: 'Viết luận và viết lại câu học thuật, AI chấm 4 tiêu chí và gợi ý nâng cấp từ vựng Band 8.0+ tức thì.',
+          badge: 'AI Chữa bài 4 tiêu chí',
           badgeColor: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20',
-          count: 'Không giới hạn',
+          meta: 'Sửa lỗi tức thì • Không giới hạn',
           action: () => onNavigate('writing-practice'),
-          icon: PenLine
+          icon: PenLine,
+          accent: 'from-cyan-600/20 to-blue-600/10 border-cyan-500/30'
         },
         {
-          id: 'socrates-ai',
-          title: 'Socrates AI Tutor - Gia sư gợi mở',
-          desc: 'Hướng dẫn giải chi tiết từng bước, gợi mở phương pháp suy luận',
+          id: 'socrates-mentor',
+          title: 'Socrates AI Mentor - Gia Sư Gợi Mở 1:1',
+          desc: 'Hướng dẫn giải chi tiết từng bước, gợi mở phương pháp suy luận thay vì đưa đáp án thô 24/7.',
           badge: 'Socratic Method',
           badgeColor: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
-          count: '24/7 Tương tác',
+          meta: '24/7 Sẵn sàng • Chẩn đoán bẫy',
           action: () => onNavigate('chat'),
-          icon: Sparkles
+          icon: Bot,
+          accent: 'from-amber-600/20 to-yellow-600/10 border-amber-500/30'
+        },
+        {
+          id: 'analytics-irt',
+          title: 'Báo Cáo Năng Lực & Dự Báo Điểm Thi',
+          desc: 'Bản đồ Radar phân tích điểm mạnh, điểm yếu theo 2PL IRT và xuất báo cáo học tập PDF hoàn chỉnh.',
+          badge: 'Báo cáo năng lực',
+          badgeColor: 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20',
+          meta: 'Xuất PDF • Phân tích chuyên sâu',
+          action: () => onNavigate('analytics'),
+          icon: BarChart3,
+          accent: 'from-indigo-600/20 to-violet-600/10 border-indigo-500/30'
         }
       ]
     },
     {
-      id: 'ielts-skills',
-      num: '03',
-      tag: 'LUYỆN THI 4 KỸ NĂNG & CHUẨN QUỐC TẾ',
-      title: 'IELTS & Kỹ Năng Ngôn Ngữ Toàn Diện',
-      desc: 'Listening • Reading • Writing • Speaking • LIVE AI Examiner',
-      items: [
+      id: 'skills',
+      name: '🌍 IELTS & Kỹ Năng Toàn Diện',
+      desc: 'Listening • Reading • Writing • Speaking chuẩn khung năng lực KNLNNVN',
+      badge: 'Quốc tế',
+      cards: [
         {
-          id: 'ielts-hub',
-          title: 'Luyện 4 Kỹ Năng Chuẩn KNLNNVN',
-          desc: 'Bài tập phân bậc B1 - B2 - C1 theo khung năng lực quốc tế',
-          badge: 'IELTS Hub',
-          badgeColor: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
-          count: '4 Kỹ năng',
-          action: () => onNavigate('reading'),
-          icon: BookOpen
-        },
-        {
-          id: 'pronounce-ai',
-          title: 'Chấm điểm phát âm & Nhận diện lỗi IPA',
-          desc: 'Phân tích sóng âm nhận diện chính xác từng phụ âm cuối, nguyên âm đôi, trọng âm',
+          id: 'pronounce-speech',
+          title: 'Chấm Điểm Phát Âm Chuẩn 44 Âm IPA',
+          desc: 'Azure Speech AI phân tích sóng âm nhận diện chính xác từng phụ âm cuối, nguyên âm đôi và trọng âm câu.',
           badge: 'Azure Speech AI',
           badgeColor: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
-          count: '44 Âm IPA + Câu',
+          meta: '44 Âm IPA • Chấm điểm chi tiết',
           action: () => onNavigate('pronounce'),
-          icon: Mic
+          icon: Mic,
+          accent: 'from-emerald-600/20 to-green-600/10 border-emerald-500/30'
         },
         {
-          id: 'chat-mentor',
-          title: 'Hội thoại trực tiếp với Gia sư AI 1:1',
-          desc: 'Giải thích ngữ pháp sâu, giải đáp bài tập trên lớp 24/7',
-          badge: 'Gemini / Groq',
-          badgeColor: 'text-purple-400 bg-purple-500/10 border-purple-500/20',
-          count: '24/7 Sẵn sàng',
-          action: () => onNavigate('chat'),
-          icon: Bot
-        }
-      ]
-    },
-    {
-      id: 'tools-more',
-      num: '04',
-      tag: 'TIỆN ÍCH & HỌC LIỆU NGHIÊN CỨU',
-      title: 'Kho Từ Vựng & Báo Cáo Năng Lực',
-      desc: 'Tra cứu từ vựng SGK Mới • Báo cáo năng lực tâm trắc học IRT',
-      items: [
-        {
-          id: 'vocab-lib',
+          id: 'vocab-sgk-library',
           title: 'Kho Từ Vựng Toàn Diện Theo Sách SGK',
-          desc: 'Học từ vựng theo Unit SGK Lớp 10, 11, 12 kèm phát âm mẫu và ví dụ',
-          badge: 'SGK Mới',
-          badgeColor: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
-          count: '1,500+ Từ vựng',
-          action: () => onNavigate('vocab-library'),
-          icon: BookOpen
-        },
-        {
-          id: 'official-exams-repo',
-          title: 'Kho Đề Chuẩn Hóa Đa Tỉnh Thành',
-          desc: 'Bộ đề thi chính thức Hà Nội, TP.HCM, Nghệ An, Nam Định có đáp án chi tiết',
-          badge: 'Đề Các Tỉnh',
+          desc: 'Tra cứu và học từ vựng theo Unit SGK Global Success & Friends Global Lớp 10, 11, 12 kèm audio mẫu.',
+          badge: 'Học liệu SGK Mới',
           badgeColor: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20',
-          count: 'Đề chuẩn',
-          action: () => onNavigate('official-exams'),
-          icon: FileText
+          meta: '1,500+ Từ • Kèm ví dụ & IPA',
+          action: () => onNavigate('vocab-library'),
+          icon: BookOpen,
+          accent: 'from-cyan-600/20 to-teal-600/10 border-cyan-500/30'
         },
         {
-          id: 'analytics-rep',
-          title: 'Báo Cáo Năng Lực & Dự Báo Điểm',
-          desc: 'Bản đồ Radar phân tích điểm mạnh, điểm yếu và xuất báo cáo học tập PDF',
-          badge: 'Báo Cáo Năng Lực',
+          id: 'irt-fast-sprint',
+          title: 'Sprint Luyện Đề Nhanh 10 Câu (IRT)',
+          desc: 'Bài test nhanh 10 phút tự động tính toán năng lực theta và xác định chính xác điểm số mục tiêu của bạn.',
+          badge: 'Đánh Giá Nhanh',
+          badgeColor: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
+          meta: '~10 Phút • Nhận xét năng lực',
+          action: () => onNavigate('irt-test'),
+          icon: Zap,
+          accent: 'from-blue-600/20 to-indigo-600/10 border-blue-500/30'
+        },
+        {
+          id: 'chat-ai-companion',
+          title: 'Hội Thoại 1:1 Cùng Trợ Lý Tiếng Anh AI',
+          desc: 'Luyện tập giao tiếp, giải thích ngữ pháp sâu và đồng hành giải đáp mọi bài tập trên lớp 24/7.',
+          badge: 'Gemini 1.5 Flash',
           badgeColor: 'text-purple-400 bg-purple-500/10 border-purple-500/20',
-          count: 'Phân tích sâu',
-          action: () => onNavigate('analytics'),
-          icon: BarChart3
+          meta: 'Trò chuyện 24/7 • Không giới hạn',
+          action: () => onNavigate('chat'),
+          icon: Sparkles,
+          accent: 'from-purple-600/20 to-pink-600/10 border-purple-500/30'
         }
       ]
     }
   ] : [
     {
-      id: 'thcs-grade9',
-      num: '01',
-      tag: 'TUYỂN SINH VÀO LỚP 10 • THCS',
-      title: 'Lộ Trình Bứt Phá Điểm 9+ Tuyển Sinh Vào 10',
-      desc: 'Kho đề tuyển sinh 63 tỉnh thành • Ngữ pháp trọng tâm • 800 từ vựng cốt lõi',
-      items: [
+      id: 'thcs',
+      name: '🎯 Tuyển Sinh Vào Lớp 10',
+      desc: 'Lộ trình bứt phá điểm 9+ kỳ thi tuyển sinh THPT công lập',
+      badge: 'Cấp 2 THCS',
+      cards: [
         {
           id: 'thcs-official-exams',
-          title: 'Kho Đề Thi Vào 10 Các Tỉnh Thành',
-          desc: 'Đề thi chính thức Hà Nội, TP.HCM, Đà Nẵng, Nghệ An có giải thích chi tiết',
-          badge: 'Đề Tuyển Sinh',
+          title: 'Kho Đề Tuyển Sinh Vào 10 Các Tỉnh',
+          desc: 'Bộ đề thi chính thức Hà Nội, TP.HCM, Đà Nẵng, Nghệ An có giải thích chi tiết và bảng từ vựng then chốt.',
+          badge: 'Đề 63 Tỉnh Thành',
           badgeColor: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
-          count: '63 Tỉnh Thành',
+          meta: 'Đầy đủ cấu trúc • Lời giải chi tiết',
           action: () => onNavigate('official-exams'),
-          icon: FileText
+          icon: FileText,
+          accent: 'from-blue-600/20 to-indigo-600/10 border-blue-500/30'
         },
         {
-          id: 'thcs-test',
+          id: 'thcs-irt-test',
           title: 'Thi Thử Vào 10 Thích Ứng AI',
-          desc: '40 câu trắc nghiệm chuẩn cấu trúc tuyển sinh THPT công lập',
-          badge: 'Đề Thi Thử',
+          desc: '40 câu trắc nghiệm chuẩn cấu trúc tuyển sinh THPT công lập, tự động điều chỉnh theo năng lực học sinh.',
+          badge: 'Chuẩn Cấu Trúc',
           badgeColor: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
-          count: '40 Câu/đề',
+          meta: '40 Câu / Đề • Dự báo điểm',
           action: () => onNavigate('irt-test'),
-          icon: Zap
+          icon: Zap,
+          accent: 'from-emerald-600/20 to-teal-600/10 border-emerald-500/30'
         },
         {
-          id: 'thcs-vocab',
-          title: 'Từ Vựng Căn Bản Não Bộ (SM-2 A1-A2)',
-          desc: '800 từ vựng cốt lõi thường xuất hiện trong đề thi tuyển sinh vào 10',
+          id: 'thcs-vocab-sm2',
+          title: 'Từ Vựng Não Bộ Tuyển Sinh Vào 10',
+          desc: '800 từ vựng cốt lõi thường xuất hiện trong đề thi vào 10, ghi nhớ sâu theo thuật toán SuperMemo-2.',
           badge: 'Trí Nhớ Não Bộ',
           badgeColor: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
-          count: '800 Từ',
+          meta: '800 Từ • Ghi nhớ dài hạn',
           action: () => onNavigate('sm2-flashcards'),
-          icon: BrainCircuit
-        }
-      ]
-    },
-    {
-      id: 'thcs-grammar',
-      num: '02',
-      tag: 'NỀN TẢNG NGỮ ÂM IPA & NGỮ PHÁP',
-      title: 'Bứt Phá Nền Tảng Ngữ Pháp & IPA Cấp 2',
-      desc: '12 thì cơ bản • Mệnh đề quan hệ • Câu điều kiện • Phát âm chuẩn 44 âm',
-      items: [
+          icon: BrainCircuit,
+          accent: 'from-amber-600/20 to-orange-600/10 border-amber-500/30'
+        },
         {
-          id: 'ipa-practice',
-          title: 'Luyện Phát Âm Chuẩn 44 Âm IPA',
-          desc: 'Azure Speech AI chấm điểm phát âm từng nguyên âm, phụ âm và trọng âm từ',
+          id: 'thcs-ipa-speech',
+          title: 'Luyện Phát Âm Chuẩn 44 Âm IPA Cấp 2',
+          desc: 'Azure Speech AI chấm điểm phát âm từng nguyên âm, phụ âm và câu giao tiếp cơ bản.',
           badge: 'Azure Speech',
-          badgeColor: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
-          count: '44 Âm IPA',
-          action: () => onNavigate('pronounce'),
-          icon: Mic
-        },
-        {
-          id: 'sentence-write',
-          title: 'Luyện Viết Lại Câu & Sửa Lỗi Ngữ Pháp',
-          desc: 'Dạng bài viết lại câu không đổi nghĩa xuất hiện trong 100% đề thi vào 10',
-          badge: 'AI Chữa bài',
-          badgeColor: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20',
-          count: 'Không giới hạn',
-          action: () => onNavigate('writing-practice'),
-          icon: PenLine
-        },
-        {
-          id: 'chat-tutor-thcs',
-          title: 'Gia Sư AI Giải Bài Tập Về Nhà 1:1',
-          desc: 'Hỏi đáp ngữ pháp bài học trên lớp nhẹ nhàng, dễ hiểu cho học sinh cấp 2',
-          badge: 'AI Gia Sư',
           badgeColor: 'text-purple-400 bg-purple-500/10 border-purple-500/20',
-          count: '24/7 Sẵn sàng',
-          action: () => onNavigate('chat'),
-          icon: Bot
+          meta: '44 Âm IPA • Tự tin phát âm',
+          action: () => onNavigate('pronounce'),
+          icon: Mic,
+          accent: 'from-purple-600/20 to-pink-600/10 border-purple-500/30'
         }
       ]
     }
   ];
 
+  const currentCategoryObj = categories.find(c => c.id === activeCategory) || categories[0];
+
   return (
-    <div className="space-y-8 animate-fade-in pb-16 max-w-6xl mx-auto">
+    <div className="space-y-10 animate-fade-in pb-16 max-w-6xl mx-auto">
       
       {/* ─── 1. HERO BANNER WITH LUXURY GLASSMORPHISM & COUNTDOWN ─────── */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0e1630] via-[#0a0f22] to-[#060914] border border-white/10 p-8 md:p-10 shadow-2xl">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0f172a] via-[#0b1222] to-[#070b16] border border-slate-800/80 p-8 md:p-10 shadow-2xl">
         {/* Subtle Ambient Glows */}
         <div className="absolute top-0 right-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
         <div className="absolute bottom-0 right-0 w-80 h-80 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none"></div>
@@ -322,7 +288,7 @@ export default function LearningHub({
           </div>
 
           {/* Right Hero: Circular Countdown Clock */}
-          <div className="shrink-0 flex flex-col items-center justify-center p-6 rounded-3xl bg-[#080d1a]/90 border border-white/10 shadow-2xl relative">
+          <div className="shrink-0 flex flex-col items-center justify-center p-6 rounded-3xl bg-[#090e1c]/90 border border-white/10 shadow-2xl relative">
             <div className="relative w-40 h-40 flex items-center justify-center">
               <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
                 <circle
@@ -367,39 +333,39 @@ export default function LearningHub({
         </div>
       </div>
 
-      {/* ─── 2. 4 TRỤ CỘT HỌC TẬP THÍCH ỨNG (AI CORE PILLARS GRID) ─────────────── */}
+      {/* ─── 2. TRỤ CỘT LUYỆN THI THÍCH ỨNG (AI CORE PILLARS GRID) ─────────────── */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg md:text-xl font-extrabold text-white">Trụ cột Luyện thi Thích ứng AI</h2>
-            <p className="text-xs text-slate-400 mt-0.5">Chọn chế độ học thông minh được cá nhân hóa theo tiến độ của bạn</p>
+            <h2 className="text-lg md:text-xl font-extrabold text-white">4 Trụ Cột Luyện Thi Thích Ứng AI</h2>
+            <p className="text-xs text-slate-400 mt-0.5">Học tập thông minh theo mô hình tâm trắc học và khoa học nhận thức</p>
           </div>
-          <span className="text-[11px] font-mono text-slate-500 uppercase tracking-wider">4 MODULES • TỰ ĐỘNG THÍCH ỨNG</span>
+          <span className="text-[11px] font-mono text-cyan-400 uppercase tracking-wider font-bold">CORE MODULES</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Card 1: Luyện đề thích ứng */}
           <div
             onClick={() => onNavigate('irt-test')}
-            className="glass-card glass-card-hover p-5 border border-emerald-500/20 hover:border-emerald-500/40 rounded-2xl cursor-pointer space-y-3 relative group overflow-hidden bg-[#0c1222]"
+            className="glass-card glass-card-hover p-6 border border-emerald-500/20 hover:border-emerald-500/50 rounded-2xl cursor-pointer space-y-3.5 relative group overflow-hidden bg-[#0a1020]"
           >
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                 THUẬT TOÁN IRT
               </span>
-              <div className="w-8 h-8 rounded-lg bg-emerald-500/15 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition">
+              <div className="w-9 h-9 rounded-xl bg-emerald-500/15 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition shadow-lg shadow-emerald-500/10">
                 <Zap className="w-4 h-4" />
               </div>
             </div>
             <div>
-              <h3 className="text-sm md:text-base font-extrabold text-white group-hover:text-emerald-300 transition">
+              <h3 className="text-base font-extrabold text-white group-hover:text-emerald-300 transition">
                 Luyện Đề Thích Ứng 10 Câu
               </h3>
-              <p className="text-xs text-slate-400 mt-1 line-clamp-2">
+              <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
                 Tự động tăng giảm độ khó theo từng câu để xác định đúng năng lực thực.
               </p>
             </div>
-            <div className="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-white/5">
+            <div className="flex items-center justify-between text-xs text-slate-500 pt-3 border-t border-white/5">
               <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> ~10 phút</span>
               <span className="text-emerald-400 font-bold group-hover:translate-x-1 transition flex items-center gap-1">
                 Luyện ngay <ArrowRight className="w-3 h-3" />
@@ -410,25 +376,25 @@ export default function LearningHub({
           {/* Card 2: Từ vựng não bộ SM-2 */}
           <div
             onClick={() => onNavigate('sm2-flashcards')}
-            className="glass-card glass-card-hover p-5 border border-amber-500/20 hover:border-amber-500/40 rounded-2xl cursor-pointer space-y-3 relative group overflow-hidden bg-[#0c1222]"
+            className="glass-card glass-card-hover p-6 border border-amber-500/20 hover:border-amber-500/50 rounded-2xl cursor-pointer space-y-3.5 relative group overflow-hidden bg-[#0a1020]"
           >
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
+              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
                 SUPERMEMO-2
               </span>
-              <div className="w-8 h-8 rounded-lg bg-amber-500/15 flex items-center justify-center text-amber-400 group-hover:scale-110 transition">
+              <div className="w-9 h-9 rounded-xl bg-amber-500/15 flex items-center justify-center text-amber-400 group-hover:scale-110 transition shadow-lg shadow-amber-500/10">
                 <BrainCircuit className="w-4 h-4" />
               </div>
             </div>
             <div>
-              <h3 className="text-sm md:text-base font-extrabold text-white group-hover:text-amber-300 transition">
+              <h3 className="text-base font-extrabold text-white group-hover:text-amber-300 transition">
                 Trí Nhớ Từ Vựng Não Bộ
               </h3>
-              <p className="text-xs text-slate-400 mt-1 line-clamp-2">
+              <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
                 Ghi nhớ sâu từ vựng SGK Mới theo quy luật nhắc lại ngắt quãng.
               </p>
             </div>
-            <div className="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-white/5">
+            <div className="flex items-center justify-between text-xs text-slate-500 pt-3 border-t border-white/5">
               <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> ~5-8 phút</span>
               <span className="text-amber-400 font-bold group-hover:translate-x-1 transition flex items-center gap-1">
                 Học từ <ArrowRight className="w-3 h-3" />
@@ -439,25 +405,25 @@ export default function LearningHub({
           {/* Card 3: Socrates AI Tutor */}
           <div
             onClick={() => onNavigate('chat')}
-            className="glass-card glass-card-hover p-5 border border-blue-500/20 hover:border-blue-500/40 rounded-2xl cursor-pointer space-y-3 relative group overflow-hidden bg-[#0c1222]"
+            className="glass-card glass-card-hover p-6 border border-blue-500/20 hover:border-blue-500/50 rounded-2xl cursor-pointer space-y-3.5 relative group overflow-hidden bg-[#0a1020]"
           >
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">
+              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
                 GIA SƯ 1:1
               </span>
-              <div className="w-8 h-8 rounded-lg bg-blue-500/15 flex items-center justify-center text-blue-400 group-hover:scale-110 transition">
+              <div className="w-9 h-9 rounded-xl bg-blue-500/15 flex items-center justify-center text-blue-400 group-hover:scale-110 transition shadow-lg shadow-blue-500/10">
                 <Bot className="w-4 h-4" />
               </div>
             </div>
             <div>
-              <h3 className="text-sm md:text-base font-extrabold text-white group-hover:text-blue-300 transition">
+              <h3 className="text-base font-extrabold text-white group-hover:text-blue-300 transition">
                 Gia Sư Socratic 1:1
               </h3>
-              <p className="text-xs text-slate-400 mt-1 line-clamp-2">
+              <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
                 Gợi mở tư duy từng bước, giải đáp thắc mắc và chỉ ra bẫy đề thi 24/7.
               </p>
             </div>
-            <div className="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-white/5">
+            <div className="flex items-center justify-between text-xs text-slate-500 pt-3 border-t border-white/5">
               <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> 24/7</span>
               <span className="text-blue-400 font-bold group-hover:translate-x-1 transition flex items-center gap-1">
                 Hỏi đáp <ArrowRight className="w-3 h-3" />
@@ -468,25 +434,25 @@ export default function LearningHub({
           {/* Card 4: Chấm phát âm IPA */}
           <div
             onClick={() => onNavigate('pronounce')}
-            className="glass-card glass-card-hover p-5 border border-cyan-500/20 hover:border-cyan-500/40 rounded-2xl cursor-pointer space-y-3 relative group overflow-hidden bg-[#0c1222]"
+            className="glass-card glass-card-hover p-6 border border-cyan-500/20 hover:border-cyan-500/50 rounded-2xl cursor-pointer space-y-3.5 relative group overflow-hidden bg-[#0a1020]"
           >
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
                 AZURE SPEECH AI
               </span>
-              <div className="w-8 h-8 rounded-lg bg-cyan-500/15 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition">
+              <div className="w-9 h-9 rounded-xl bg-cyan-500/15 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition shadow-lg shadow-cyan-500/10">
                 <Mic className="w-4 h-4" />
               </div>
             </div>
             <div>
-              <h3 className="text-sm md:text-base font-extrabold text-white group-hover:text-cyan-300 transition">
+              <h3 className="text-base font-extrabold text-white group-hover:text-cyan-300 transition">
                 Chấm Phát Âm Chuẩn IPA
               </h3>
-              <p className="text-xs text-slate-400 mt-1 line-clamp-2">
+              <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
                 Phân tích sóng âm chuẩn xác từng nguyên âm, phụ âm và ngữ điệu câu.
               </p>
             </div>
-            <div className="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-white/5">
+            <div className="flex items-center justify-between text-xs text-slate-500 pt-3 border-t border-white/5">
               <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> ~5 phút</span>
               <span className="text-cyan-400 font-bold group-hover:translate-x-1 transition flex items-center gap-1">
                 Luyện âm <ArrowRight className="w-3 h-3" />
@@ -496,105 +462,77 @@ export default function LearningHub({
         </div>
       </div>
 
-      {/* ─── 3. ĐƯỜNG ĐUA KỲ THI (EXAM TRACK ACCORDIONS) ────────────────── */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
+      {/* ─── 3. KHO HỌC LIỆU & ĐỀ THI TINH TUYỂN (TABBED SHOWCASE) ──────────── */}
+      <div className="space-y-6 pt-2">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h2 className="text-lg md:text-xl font-extrabold text-white">Đường đua Kỳ thi &amp; Học liệu</h2>
-            <p className="text-xs text-slate-400 mt-0.5">Chọn lộ trình ôn luyện chi tiết theo từng kỳ thi và mục tiêu điểm số</p>
+            <h2 className="text-lg md:text-xl font-extrabold text-white">Kho Học Liệu &amp; Đề Thi Tinh Tuyển</h2>
+            <p className="text-xs text-slate-400 mt-0.5">Chọn chuyên đề ôn luyện chi tiết theo từng mục tiêu điểm số</p>
           </div>
-          <span className="text-[11px] font-mono text-slate-500 uppercase tracking-wider">{examTracks.length} TRACKS • EXPANDABLE</span>
+
+          {/* Category Tabs Switcher */}
+          {categories.length > 1 && (
+            <div className="flex items-center bg-[#0a0f20] border border-slate-800/80 p-1.5 rounded-2xl gap-1.5 overflow-x-auto no-scrollbar shadow-xl">
+              {categories.map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => setActiveCategory(cat.id)}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer flex items-center gap-2 ${
+                    activeCategory === cat.id
+                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
+                      : 'text-slate-400 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <span>{cat.name}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
-        <div className="space-y-3.5">
-          {examTracks.map((track, idx) => {
-            const isOpen = openTrack === idx;
+        {/* 2x2 Balanced Deck Grid for Selected Category */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {currentCategoryObj.cards.map((card) => {
+            const Icon = card.icon;
             return (
-              <div 
-                key={track.id}
-                className={`rounded-2xl border transition-all duration-300 ${
-                  isOpen 
-                    ? 'bg-[#0f172a] border-white/15 shadow-xl' 
-                    : 'bg-[#0b1020]/70 border-white/5 hover:border-white/10'
-                }`}
+              <div
+                key={card.id}
+                onClick={card.action}
+                className={`glass-card p-6 rounded-3xl border transition-all duration-300 cursor-pointer flex flex-col justify-between group hover:scale-[1.01] hover:shadow-2xl bg-gradient-to-br ${card.accent}`}
               >
-                {/* Header Track Bar */}
-                <button
-                  onClick={() => setOpenTrack(isOpen ? -1 : idx)}
-                  className="w-full p-5 text-left flex items-center justify-between cursor-pointer"
-                >
-                  <div className="flex items-center gap-4">
-                    <span className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center font-mono font-black text-sm text-slate-300 shrink-0">
-                      {track.num}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className={`text-[10px] font-extrabold px-3 py-1 rounded-full border shadow-sm ${card.badgeColor}`}>
+                      {card.badge}
                     </span>
-                    <div>
-                      <div className="text-[10px] font-bold text-cyan-400 tracking-wider uppercase mb-0.5">
-                        {track.tag}
-                      </div>
-                      <h3 className="text-base font-bold text-white">
-                        {track.title}
-                      </h3>
-                      <p className="text-xs text-slate-400 mt-0.5 hidden sm:block">
-                        {track.desc}
-                      </p>
+                    <div className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-300 group-hover:text-white group-hover:scale-110 group-hover:bg-white/10 transition shadow-md">
+                      <Icon className="w-5 h-5" />
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3 shrink-0 ml-4">
-                    <span className="text-xs text-slate-400 hidden md:block">
-                      {track.items.length} Học phần
-                    </span>
-                    <div className={`p-1.5 rounded-lg bg-white/5 text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-180 text-white' : ''}`}>
-                      <ChevronDown className="w-4 h-4" />
-                    </div>
+                  <div>
+                    <h3 className="text-base md:text-lg font-black text-white group-hover:text-cyan-300 transition font-outfit">
+                      {card.title}
+                    </h3>
+                    <p className="text-xs md:text-sm text-slate-300 mt-1.5 leading-relaxed">
+                      {card.desc}
+                    </p>
                   </div>
-                </button>
+                </div>
 
-                {/* Accordion Body Items */}
-                {isOpen && (
-                  <div className="p-5 pt-0 border-t border-white/5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 mt-2 animate-fade-in">
-                    {track.items.map((item) => {
-                      const Icon = item.icon;
-                      return (
-                        <div
-                          key={item.id}
-                          onClick={item.action}
-                          className="glass-card p-4.5 border border-white/5 hover:border-cyan-500/40 hover:bg-[#131c33] transition-all cursor-pointer rounded-xl flex flex-col justify-between group"
-                        >
-                          <div>
-                            <div className="flex items-center justify-between mb-2.5">
-                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${item.badgeColor}`}>
-                                {item.badge}
-                              </span>
-                              <div className="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center text-slate-400 group-hover:text-cyan-400 group-hover:bg-cyan-500/10 transition">
-                                <Icon className="w-3.5 h-3.5" />
-                              </div>
-                            </div>
-
-                            <h4 className="text-sm font-bold text-white group-hover:text-cyan-300 transition">
-                              {item.title}
-                            </h4>
-                            <p className="text-xs text-slate-400 mt-1 leading-relaxed line-clamp-2">
-                              {item.desc}
-                            </p>
-                          </div>
-
-                          <div className="flex items-center justify-between pt-3 mt-3 border-t border-white/5 text-xs text-slate-500">
-                            <span>{item.count}</span>
-                            <span className="text-cyan-400 font-bold group-hover:translate-x-1 transition flex items-center gap-1">
-                              Mở học phần <ChevronRight className="w-3.5 h-3.5" />
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
+                <div className="flex items-center justify-between pt-4 mt-4 border-t border-white/10 text-xs">
+                  <span className="text-slate-400 font-medium">{card.meta}</span>
+                  <span className="text-cyan-400 font-bold group-hover:translate-x-1.5 transition-transform flex items-center gap-1.5">
+                    <span>Mở học phần</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </span>
+                </div>
               </div>
             );
           })}
         </div>
       </div>
+
     </div>
   );
 }
