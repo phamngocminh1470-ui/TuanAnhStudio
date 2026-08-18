@@ -141,6 +141,8 @@ Em hãy gõ đáp án để thầy chấm tiếp nhé!"""
 ✅ **Đáp án chuẩn:** **`buys / went`**
 👉 *"Lan always **buys** books online, but last Sunday she **went** to the bookstore."*
 
+🎉 Em đã nắm rất vững sự khác biệt giữa **Thói quen hiện tại (Thêm -s/-es)** và **Hành động quá khứ (Động từ Bất quy tắc)** rồi đấy!"""
+
     return f"""Chào em! Thầy là **Socrates AI Mentor**. Thầy đã nhận được câu hỏi/câu trả lời của em: *"{last_user_msg}"*.
 
 💡 **Phương pháp Socratic gợi mở tư duy:**
