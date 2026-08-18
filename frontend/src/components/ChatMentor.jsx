@@ -20,6 +20,8 @@ function AIMessageBody({ content }) {
   const lines = content.split('\n');
   const elements = [];
   let currentList = [];
+  let currentTable = [];
+  let currentCallout = [];
 
   const flushList = (key) => {
     if (currentList.length > 0) {
@@ -37,33 +39,114 @@ function AIMessageBody({ content }) {
     }
   };
 
+  const flushCallout = (key) => {
+    if (currentCallout.length > 0) {
+      elements.push(
+        <div key={`callout-${key}`} className="p-4 rounded-2xl bg-gradient-to-r from-blue-950/60 via-indigo-950/50 to-slate-900/60 border border-blue-500/30 text-slate-200 text-xs md:text-sm font-medium my-3 shadow-lg space-y-1.5">
+          {currentCallout.map((line, idx) => (
+            <p key={idx} className="leading-relaxed" dangerouslySetInnerHTML={{ __html: formatInline(line) }} />
+          ))}
+        </div>
+      );
+      currentCallout = [];
+    }
+  };
+
+  const flushTable = (key) => {
+    if (currentTable.length >= 2) {
+      // Dòng 0 là headers
+      const rawHeader = currentTable[0];
+      const headers = rawHeader.split('|').map(c => c.trim()).filter((c, i, arr) => i > 0 && i < arr.length - 1);
+      
+      // Các dòng còn lại bỏ dòng divider (|---|---|)
+      const rawRows = currentTable.slice(1).filter(r => !/^\|?\s*[-:]+[-| :]*\|?$/.test(r.trim()));
+      const rows = rawRows.map(r => r.split('|').map(c => c.trim()).filter((c, i, arr) => i > 0 && i < arr.length - 1));
+
+      elements.push(
+        <div key={`table-${key}`} className="overflow-x-auto my-4 rounded-2xl border border-white/15 shadow-xl bg-[#090f20]/80 backdrop-blur-md">
+          <table className="w-full text-left text-xs md:text-sm text-slate-200 border-collapse">
+            <thead className="bg-white/[0.08] border-b border-white/15 text-cyan-300 font-bold uppercase tracking-wider text-[11px]">
+              <tr>
+                {headers.map((h, i) => (
+                  <th key={i} className="px-4 py-3.5 border-r border-white/10 last:border-r-0 font-bold" dangerouslySetInnerHTML={{ __html: formatInline(h) }} />
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/10 font-medium">
+              {rows.map((row, rIdx) => (
+                <tr key={rIdx} className="hover:bg-white/[0.03] transition duration-150 odd:bg-transparent even:bg-white/[0.015]">
+                  {row.map((cell, cIdx) => (
+                    <td key={cIdx} className="px-4 py-3 border-r border-white/10 last:border-r-0" dangerouslySetInnerHTML={{ __html: formatInline(cell) }} />
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+    }
+    currentTable = [];
+  };
+
   lines.forEach((line, index) => {
     const trimmed = line.trim();
 
+    // Xử lý Table (dòng bắt đầu và kết thúc bằng | hoặc có chứa |)
+    if (trimmed.startsWith('|') && trimmed.endsWith('|') && trimmed.length > 2) {
+      flushList(index);
+      flushCallout(index);
+      currentTable.push(trimmed);
+      return;
+    } else if (currentTable.length > 0) {
+      flushTable(index);
+    }
+
+    // Xử lý Callout / Quote (bắt đầu bằng >)
+    if (trimmed.startsWith('>')) {
+      flushList(index);
+      flushTable(index);
+      currentCallout.push(trimmed.replace(/^>\s*/, ''));
+      return;
+    } else if (currentCallout.length > 0) {
+      flushCallout(index);
+    }
+
+    // Đường kẻ phân cách ---
     if (trimmed === '---') {
       flushList(index);
-      elements.push(<hr key={`hr-${index}`} className="border-white/10 my-3" />);
+      flushTable(index);
+      flushCallout(index);
+      elements.push(<hr key={`hr-${index}`} className="border-white/10 my-3.5" />);
       return;
     }
 
+    // Tiêu đề ## hoặc ### hoặc "1. Tiêu đề"
     if (trimmed.startsWith('###') || trimmed.startsWith('##') || /^[1-9]\.\s+[A-ZÀ-Ỹ]/.test(trimmed)) {
       flushList(index);
+      flushTable(index);
+      flushCallout(index);
       const title = trimmed.replace(/^#+\s*/, '');
       elements.push(
-        <h4 key={`h-${index}`} className="text-base font-bold text-white pt-3 pb-1 flex items-center gap-2">
+        <h4 key={`h-${index}`} className="text-base font-bold text-white pt-3.5 pb-1 flex items-center gap-2">
           <span dangerouslySetInnerHTML={{ __html: formatInline(title) }} />
         </h4>
       );
       return;
     }
 
+    // Danh sách đầu dòng (* hoặc -)
     if (trimmed.startsWith('* ') || trimmed.startsWith('- ') || /^[•\-]\s*/.test(trimmed)) {
+      flushTable(index);
+      flushCallout(index);
       const cleanItem = trimmed.replace(/^[\*\-•]\s*/, '');
       currentList.push(cleanItem);
       return;
     }
 
+    // Dòng văn bản thông thường
     flushList(index);
+    flushTable(index);
+    flushCallout(index);
     if (trimmed) {
       elements.push(
         <p key={`p-${index}`} className="text-sm text-slate-200 leading-relaxed my-1.5" dangerouslySetInnerHTML={{ __html: formatInline(trimmed) }} />
@@ -72,6 +155,8 @@ function AIMessageBody({ content }) {
   });
 
   flushList('end');
+  flushTable('end');
+  flushCallout('end');
   return <div className="space-y-1">{elements}</div>;
 }
 
