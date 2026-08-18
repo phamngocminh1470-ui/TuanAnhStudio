@@ -671,32 +671,6 @@ function App() {
 
         </div>
       </main>
-      {/* AUTH MODAL */}
-      <AuthModal
-        isOpen={isAuthOpen}
-        onClose={() => setIsAuthOpen(false)}
-        onLoginSuccess={(user) => {
-          setCurrentUser(user);
-          if (user.grade) setSelectedLevel(user.grade);
-        }}
-      />
-
-      {/* USER PROFILE MODAL */}
-      <UserProfileModal
-        isOpen={isProfileOpen}
-        onClose={() => setIsProfileOpen(false)}
-        currentUser={currentUser}
-        onUpdateUser={(updated) => setCurrentUser(updated)}
-      />
-
-      {/* PHOTO EXAM SOLVER MODAL */}
-      <PhotoExamSolverModal
-        isOpen={isPhotoSolverOpen}
-        onClose={() => setIsPhotoSolverOpen(false)}
-        selectedGrade={selectedLevel}
-        keys={keys}
-      />
-
       {/* PRINTABLE PROGRESS REPORT MODAL */}
       <ExportProgressReportModal 
         isOpen={isExportModalOpen} 
