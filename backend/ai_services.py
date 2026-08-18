@@ -1006,7 +1006,8 @@ Nhiệm vụ của bạn:
             "correct_answer": "B. b - c - a - d - e",
             "step_by_step_explanation": "1. Mở đầu thư trang trọng luôn là lời chào: (b) Dear Mr. Williams.\n2. Tiếp theo là nêu mục đích viết thư: (c) I am writing to ask...\n3. Trình bày chi tiết lý do và lời cảm ơn trước: (a) First, I would like...\n4. Câu kết thư cảm ơn và mong phản hồi: (d) Thank you very much for your time and guidance...\n5. Ký tên trang trọng: (e) Yours sincerely, Nguyen Van Nam.",
             "key_vocabulary": [ 
-                {"word" : "expess greart edt " , "ipa": "?iK 'n  "
-    }
+                {"word": "express gratitude", "ipa": "/ɪkˈspres ˈɡrætɪtjuːd/", "meaning": "bày tỏ lòng biết ơn"}
+            ]
+        }
     }
 
