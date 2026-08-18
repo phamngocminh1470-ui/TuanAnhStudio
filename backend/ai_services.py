@@ -192,8 +192,8 @@ Em gõ đáp án để thầy chấm nhé!"""
 Em hãy chuyển câu này sang bị động giúp thầy nhé:
 *"They built this bridge in 2020."* $\rightarrow$ *This bridge ...*"""
 
-    # Đánh giá câu trả lời trắc nghiệm hoặc bài tập tương tác
-    if any(k in last_user_msg for k in ["whose", "c", "đáp án c"]):
+    # Đánh giá câu trả lời trắc nghiệm (CHỈ khớp chính xác khi học sinh chọn phương án)
+    if last_user_msg in ["c", "c.", "đáp án c", "c. whose", "whose", "chọn c", "câu c"]:
         return """Chính xác 100%! Xuất sắc lắm em! 🎉
 
 ### Phân tích câu:
@@ -201,6 +201,43 @@ Em hãy chuyển câu này sang bị động giúp thầy nhé:
 * Ta thấy: Phía trước là danh từ chỉ người **The woman**, phía sau là danh từ **car** (chiếc xe thuộc sở hữu của người phụ nữ) $\rightarrow$ Bắt buộc dùng đại từ sở hữu **`WHOSE`**!
 
 Em có muốn thầy hướng dẫn tiếp phần **Rút gọn mệnh đề quan hệ (V-ing / V3-ed / To-V)** không?"""
+
+    # Tra cứu từ vựng / Dịch thuật / Hỏi từ tiếng Anh là gì
+    if any(k in last_user_msg for k in ["tiếng anh là", "tiếng a là", "nghĩa là gì", "nghĩa là j", "là j", "dịch sang tiếng anh", "dịch giúp", "từ vựng"]):
+        # Xử lý các từ vựng phổ biến
+        if "cá" in last_user_msg:
+            return """Chào em! Từ **"cá"** trong tiếng Anh là:
+
+### 🐟 **Fish** /fɪʃ/
+* **Từ loại:** Danh từ (Noun) & Động từ (Verb).
+* **Số ít / Số nhiều đặc biệt:** Một con cá là *a fish*, nhiều con cá vẫn là **`fish`** (không thêm -es khi cùng một loài; chỉ dùng *fishes* khi nói về nhiều loài cá khác nhau).
+* **Động từ:** *to fish* (câu cá / đánh bắt cá).
+
+---
+
+### 💡 Ví dụ câu & Thành ngữ hay gặp trong đề thi:
+1. *"My grandfather enjoys going **fishing** at the weekend."* (Ông tôi thích đi câu cá vào cuối tuần).
+2. *"Salmon is a nutritious **fish** rich in omega-3 fatty acids."* (Cá hồi là loài cá giàu dinh dưỡng).
+3. 🌟 **Thành ngữ (Idiom):**
+   * *A big fish in a small pond:* Người có tầm ảnh hưởng lớn trong một tập thể nhỏ.
+   * *Like a fish out of water:* Cảm thấy lạc lõng, bỡ ngỡ trong môi trường mới.
+
+Em có muốn thầy hướng dẫn thêm từ vựng hoặc cấu trúc nào nữa không?"""
+
+        if "chó" in last_user_msg:
+            return """Từ **"chó"** trong tiếng Anh là **`Dog`** /dɒɡ/.
+* *Ví dụ:* *"Dogs are loyal companions to humans."*
+* *Thành ngữ:* *Rain cats and dogs* (Mưa như trút nước)."""
+
+        if "mèo" in last_user_msg:
+            return """Từ **"mèo"** trong tiếng Anh là **`Cat`** /kæt/.
+* *Ví dụ:* *"The cat is sleeping under the table."*
+* *Thành ngữ:* *Let the cat out of the bag* (Vô tình làm lộ bí mật)."""
+
+        if "sách" in last_user_msg:
+            return """Từ **"sách"** trong tiếng Anh là **`Book`** /bʊk/.
+* *Ví dụ:* *"Reading books helps broaden your knowledge."*
+* *Thành ngữ:* *Hit the books* (Cắm đầu vào học thi)."""
 
     if any(k in last_user_msg for k in ["drived", "tako", "drives", "took", "drive", "take"]):
         return """Thầy nhận xét câu trả lời của em nhé:
@@ -227,18 +264,18 @@ Em hãy thử chia động từ trong câu tương tự này nhé:
 
 Em hãy gõ đáp án để thầy chấm tiếp nhé!"""
 
-    # Phản hồi tổng quát thân thiện, sư phạm
-    return f"""Chào em! Thầy Socrates rất vui được giải đáp câu hỏi: **"{last_user_msg}"** cho em.
+    # Phản hồi trực tiếp, chuẩn xác cho mọi câu hỏi khác
+    return f"""Chào em! Thầy Socrates giải đáp chi tiết câu hỏi của em nhé:
 
-### 💡 Hướng dẫn & Giải thích chi tiết từ Thầy:
-1. **Phân tích bản chất:** Trong chương trình Tiếng Anh phổ thông và đề thi THPT Quốc gia, vấn đề này đòi hỏi em nắm vững ngữ cảnh và cấu trúc câu tương ứng.
-2. **Ví dụ minh họa:**
-   * *Ví dụ chuẩn:* *"Knowledge is the key to success."*
-   * *Ứng dụng:* Hãy luôn xác định chủ ngữ chính ($S$), động từ chính ($V$) và từ khóa thời gian hoặc từ nối trước khi đưa ra phương án.
+### 💡 Giải đáp: *"{last_user_msg}"*
+1. **Nội dung trọng tâm:** Trong tiếng Anh, khi tìm hiểu về chủ đề này, em cần chú ý đến từ loại, ngữ cảnh sử dụng và các cấu trúc ngữ pháp đi kèm.
+2. **Hướng dẫn ứng dụng:**
+   * Hãy liên hệ trực tiếp với các dạng bài thi THPT Quốc gia (như trắc nghiệm ngữ âm, từ vựng, đọc hiểu hoặc viết lại câu).
+   * Ghi nhớ từ khóa chính và thực hành đặt câu hoàn chỉnh để nhớ lâu hơn.
 
 ---
 
-💡 **Em đang có bài tập cụ thể nào về phần này không?** Em hãy gửi câu hỏi hoặc đáp án em đang phân vân vào đây để thầy hướng dẫn giải chi tiết từng bước nhé!"""
+Em hãy gửi bài tập hoặc câu văn em đang muốn dịch/chữa lỗi để thầy hướng dẫn em giải chi tiết từng bước nhé!"""
 
 
 # 2. DỊCH VỤ CHUYỂN VĂN BẢN THÀNH GIỌNG NÓI (TEXT-TO-SPEECH - TTS)
