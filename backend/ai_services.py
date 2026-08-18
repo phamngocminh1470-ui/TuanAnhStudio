@@ -98,200 +98,75 @@ async def chat_with_gemini(messages: list, system_instruction: str = None, custo
         except Exception as e:
             print(f"[Groq Chat Error] {e}")
 
-    # 3. Fallback Tri thức Socratic Sư phạm Sâu rộng
-    last_user_msg = ""
-    for m in reversed(messages):
-        if m.get("role") == "user":
-            last_user_msg = m.get("content", "").lower().strip()
-            break
+    # 3. Phản hồi tự nhiên, linh hoạt như Gemini Pro khi chưa có kết nối mạng
+    last_raw = str(messages[-1].get("content", "")).strip() if messages else ""
+    last_user_msg = last_raw.lower()
+
+    # Chào hỏi tự nhiên
+    if last_user_msg in ["hello", "hi", "hey", "hello there", "hi there"]:
+        return "Hello! How can I help you today?"
+
+    if last_user_msg in ["chào", "xin chào", "chào bạn", "chào thầy", "alo", "hi bạn"]:
+        return "Xin chào! Tôi là AI English Mentor. Tôi có thể giúp gì cho bạn hôm nay?"
+
+    if any(k in last_user_msg for k in ["trl tiếng việt", "nói tiếng việt", "tiếng việt đi", "tiếng việt nhé", "nói bằng tiếng việt"]):
+        return "Dạ được chứ! Tôi có thể giúp gì cho bạn bằng tiếng Việt hôm nay?"
+
+    if any(k in last_user_msg for k in ["speak english", "talk in english", "english please", "in english"]):
+        return "Certainly! I'm happy to chat in English with you. What topic or grammar question would you like to practice today?"
+
+    if any(k in last_user_msg for k in ["bạn là ai", "bạn là gì", "who are you"]):
+        return "Tôi là **Socrates AI English Mentor** — Trợ lý Trí tuệ Nhân tạo hỗ trợ học tập, luyện thi và giải đáp mọi thắc mắc tiếng Anh của bạn 24/7. Bạn cần tôi hỗ trợ bài tập hay chủ đề nào hôm nay?"
+
+    # Tra cứu từ vựng / Dịch thuật trực tiếp
+    if any(k in last_user_msg for k in ["tiếng anh là", "tiếng a là", "nghĩa là gì", "nghĩa là j", "là j"]):
+        if "cá" in last_user_msg:
+            return """Từ **"cá"** trong tiếng Anh là **`Fish`** (/fɪʃ/).
+
+* **Danh từ:** *a fish* (một con cá), *fish* (nhiều con cá).
+* **Động từ:** *to fish* (câu cá).
+* **Ví dụ:** *"My family enjoys eating fresh fish for dinner."* (Gia đình tôi thích ăn cá tươi vào bữa tối).
+* **Thành ngữ thú vị:** *A big fish in a small pond* (Nhân vật có tầm ảnh hưởng trong một nhóm nhỏ)."""
+
+        if "chó" in last_user_msg:
+            return "Từ **\"chó\"** trong tiếng Anh là **`Dog`** (/dɒɡ/).\n* Ví dụ: *\"Dogs are known as man's best friend.\"*"
+
+        if "mèo" in last_user_msg:
+            return "Từ **\"mèo\"** trong tiếng Anh là **`Cat`** (/kæt/).\n* Ví dụ: *\"The cat is sleeping peacefully on the sofa.\"*"
 
     # Chủ đề: Đại từ quan hệ / Mệnh đề quan hệ
-    if any(k in last_user_msg for k in ["đại từ quan hệ", "mệnh đề quan hệ", "relative pronoun", "relative clause", "who", "whom", "which", "whose", "that"]):
-        return """Chào em! Thầy **Socrates AI Mentor** hướng dẫn em trọn bộ kiến thức về **Đại từ quan hệ (Relative Pronouns)** trong tiếng Anh nhé:
+    if any(k in last_user_msg for k in ["đại từ quan hệ", "mệnh đề quan hệ", "relative pronoun", "relative clause"]):
+        return """Trong tiếng Anh, **Đại từ quan hệ (Relative Pronouns)** dùng để liên kết các mệnh đề và thay thế cho danh từ đứng trước nó:
 
-### 1. Đại từ quan hệ là gì?
-* **Đại từ quan hệ** được dùng để nối 2 mệnh đề lại với nhau và thay thế cho một danh từ đứng ngay trước nó nhằm tránh lặp từ.
+1. **`WHO`**: Thay thế cho Người (làm Chủ ngữ hoặc Tân ngữ).
+   * *Ví dụ:* The teacher **who** teaches us English is very dedicated.
+2. **`WHOM`**: Thay thế cho Người (chỉ làm Tân ngữ $S + V$).
+   * *Ví dụ:* The girl **whom** you met yesterday is my sister.
+3. **`WHICH`**: Thay thế cho Vật / Sự việc.
+   * *Ví dụ:* The laptop **which** I bought last week works very fast.
+4. **`WHOSE`**: Chỉ sự sở hữu ($N1 + \text{whose} + N2$).
+   * *Ví dụ:* A student **whose** assignment was excellent got an A.
+5. **`THAT`**: Thay thế cho cả người và vật trong mệnh đề xác định (không dùng sau dấu phẩy `,` hoặc sau giới từ).
 
----
-
-### 2. Bảng phân loại các Đại từ quan hệ cốt lõi
-* 👤 **`WHO`** — Thay thế cho **Danh từ chỉ Người**, đóng vai trò làm **Chủ ngữ (S)** hoặc **Tân ngữ (O)** trong mệnh đề quan hệ.
-  * *Ví dụ:* *The teacher **who** teaches us English is very kind.* (Cô giáo người mà dạy chúng tôi...)
-* 👤 **`WHOM`** — Thay thế cho **Danh từ chỉ Người**, đóng vai trò làm **Tân ngữ (O)** (sau Whom luôn là một mệnh đề $S + V$).
-  * *Ví dụ:* *The boy **whom** you met yesterday is my cousin.* (Cậu bé người mà bạn gặp hôm qua...)
-* 📦 **`WHICH`** — Thay thế cho **Danh từ chỉ Vật/Sự việc**, làm **Chủ ngữ (S)** hoặc **Tân ngữ (O)**.
-  * *Ví dụ:* *The book **which** is on the table belongs to Lan.* (Quyển sách cái mà ở trên bàn...)
-* 👑 **`WHOSE`** — Chỉ **Sở hữu** cho cả người và vật ($N1 + \text{whose} + N2$).
-  * *Ví dụ:* *I have a friend **whose** mother is a famous doctor.* (Tôi có người bạn có mẹ là bác sĩ nổi tiếng).
-* ⭐ **`THAT`** — Có thể thay thế cho cả **`WHO`**, **`WHOM`**, **`WHICH`** trong mệnh đề quan hệ xác định.
-
----
-
-### 3. ⚠️ 2 BẪY KINH ĐIỂN TRONG ĐỀ THI THPT CẦN NHỚ:
-1. **Tuyệt đối KHÔNG dùng `THAT`** khi:
-   * Sau **dấu phẩy** (mệnh đề quan hệ không xác định): *Da Nang, <del>that</del> $\rightarrow$ which I visited last summer, is beautiful.*
-   * Sau **giới từ** (in, on, at, with...): *The house in <del>that</del> $\rightarrow$ which he lives.*
-2. **Bắt buộc dùng `THAT`** khi danh từ phía trước gồm cả **Người + Vật**, hoặc sau các từ so sánh nhất, *all, every, nothing, only*.
-
----
-
-💡 **Câu hỏi thử thách của Thầy để xem em đã nắm chắc chưa nhé:**
-Em hãy chọn đại từ quan hệ thích hợp để điền vào câu sau:
-*"The woman ______ car was stolen last night has reported to the police."*
-👉 *A. who / B. whom / C. whose / D. which*
-
-Em hãy chọn đáp án để thầy chấm tiếp nhé!"""
-
-    # Chủ đề: Phân biệt thì Hiện tại đơn vs Quá khứ đơn
-    if "hiện tại đơn" in last_user_msg or "quá khứ đơn" in last_user_msg or "thì" in last_user_msg:
-        return """Chào em! Thầy Socrates hướng dẫn em phân biệt **Thì Hiện Tại Đơn (Present Simple)** và **Thì Quá Khứ Đơn (Past Simple)** nhé:
-
-### 1. Bản chất & Mục đích sử dụng
-* **Hiện tại đơn (Present Simple):** Diễn tả một sự thật hiển nhiên, thói quen, chân lý khoa học hoặc lịch trình lặp đi lặp lại ở hiện tại.
-  * *Ví dụ:* *I study English every evening.* (Thói quen) / *The sun rises in the East.* (Chân lý).
-* **Quá khứ đơn (Past Simple):** Diễn tả một hành động **đã xảy ra và đã chấm dứt hoàn toàn** tại một thời điểm xác định trong quá khứ.
-  * *Ví dụ:* *I visited Da Nang last summer.* (Đã đi và đã kết thúc hè năm ngoái).
-
----
-
-### 2. Dấu hiệu nhận biết then chốt trong đề thi THPT
-* 📌 **Hiện tại đơn:** *always, usually, often, every day/week, rarely, seldom, nowadays, in general...*
-* 📌 **Quá khứ đơn:** *yesterday, last night/year, ago (3 days ago), in 2020, when I was young, at that time...*
-
----
-
-💡 **Câu hỏi gợi mở cho em:**
-Trong câu sau, em hãy thử tìm từ khóa thời gian và xác định động từ cần chia nhé:
-*"My father usually (drive) ______ to work, but yesterday he (take) ______ the bus."*
-
-Em hãy gõ câu trả lời để thầy nhận xét nhé!"""
+Bạn có câu bài tập nào về phần này cần giải đáp cụ thể không?"""
 
     # Chủ đề: Câu điều kiện (Conditionals)
     if "điều kiện" in last_user_msg or "conditional" in last_user_msg or "câu if" in last_user_msg:
-        return """Chào em! Thầy Socrates tổng hợp **3 Loại Câu Điều Kiện Trọng Tâm (Conditional Sentences)** trong đề thi THPT nhé:
+        return """Dưới đây là 3 loại **Câu Điều Kiện (Conditional Sentences)** trọng tâm:
 
-### 1. Câu điều kiện Loại 1 (Có thật ở hiện tại/tương lai)
-* **Công thức:** $\text{If} + S + V(\text{hiện tại đơn}), S + \text{will/can} + V_{\text{nguyên thể}}$
-* *Ví dụ:* *If it rains tomorrow, we will stay at home.*
+* **Loại 1 (Có thật ở hiện tại/tương lai):** $\text{If} + S + V(\text{hiện tại}), S + \text{will} + V$
+  * *Ví dụ:* *If it rains, we will stay home.*
+* **Loại 2 (Không có thật ở hiện tại):** $\text{If} + S + V2/ed \text{ (were)}, S + \text{would} + V$
+  * *Ví dụ:* *If I had more time, I would learn Spanish.*
+* **Loại 3 (Không có thật trong quá khứ):** $\text{If} + S + \text{had } V3/ed, S + \text{would have } V3/ed$
+  * *Ví dụ:* *If she had studied, she would have passed.*"""
 
-### 2. Câu điều kiện Loại 2 (Không có thật ở hiện tại)
-* **Công thức:** $\text{If} + S + V2/ed \text{ (to be dùng 'were' cho mọi ngôi)}, S + \text{would/could} + V_{\text{nguyên thể}}$
-* *Ví dụ:* *If I had a million dollars, I would travel around the world.*
+    # Phản hồi tổng quát tự nhiên, thông minh
+    return f"""Tôi đã hiểu câu hỏi của bạn về: **"{last_raw}"**.
 
-### 3. Câu điều kiện Loại 3 (Không có thật trong quá khứ)
-* **Công thức:** $\text{If} + S + \text{had} + V3/ed, S + \text{would/could have} + V3/ed$
-* *Ví dụ:* *If she had studied harder, she would have passed the exam.*
-
----
-
-💡 **Thử thách Socratic:**
-Em hãy chia động từ trong câu sau:
-*"If I (know) ______ his phone number yesterday, I (call) ______ him."*
-Em gõ đáp án để thầy chấm nhé!"""
-
-    # Chủ đề: Câu bị động (Passive Voice)
-    if "bị động" in last_user_msg or "passive" in last_user_msg:
-        return """Chào em! Thầy Socrates hướng dẫn nguyên tắc chuyển đổi sang **Câu Bị Động (Passive Voice)**:
-
-### 1. Nguyên tắc vàng: $S + \text{be} + V3/ed + (\text{by } O)$
-* Thì của động từ **"be"** phải chia đúng theo thì của câu chủ động gốc.
-
-### 2. Bảng biến đổi nhanh các thì thường gặp:
-* **Hiện tại đơn:** $S + \text{am/is/are} + V3/ed$
-* **Quá khứ đơn:** $S + \text{was/were} + V3/ed$
-* **Hiện tại hoàn thành:** $S + \text{have/has been} + V3/ed$
-* **Động từ khuyết thiếu (can/must/should):** $S + \text{modal verb} + \text{be} + V3/ed$
-
----
-
-💡 **Thử thách thực hành:**
-Em hãy chuyển câu này sang bị động giúp thầy nhé:
-*"They built this bridge in 2020."* $\rightarrow$ *This bridge ...*"""
-
-    # Đánh giá câu trả lời trắc nghiệm (CHỈ khớp chính xác khi học sinh chọn phương án)
-    if last_user_msg in ["c", "c.", "đáp án c", "c. whose", "whose", "chọn c", "câu c"]:
-        return """Chính xác 100%! Xuất sắc lắm em! 🎉
-
-### Phân tích câu:
-*"The woman **whose** car was stolen last night has reported to the police."*
-* Ta thấy: Phía trước là danh từ chỉ người **The woman**, phía sau là danh từ **car** (chiếc xe thuộc sở hữu của người phụ nữ) $\rightarrow$ Bắt buộc dùng đại từ sở hữu **`WHOSE`**!
-
-Em có muốn thầy hướng dẫn tiếp phần **Rút gọn mệnh đề quan hệ (V-ing / V3-ed / To-V)** không?"""
-
-    # Tra cứu từ vựng / Dịch thuật / Hỏi từ tiếng Anh là gì
-    if any(k in last_user_msg for k in ["tiếng anh là", "tiếng a là", "nghĩa là gì", "nghĩa là j", "là j", "dịch sang tiếng anh", "dịch giúp", "từ vựng"]):
-        # Xử lý các từ vựng phổ biến
-        if "cá" in last_user_msg:
-            return """Chào em! Từ **"cá"** trong tiếng Anh là:
-
-### 🐟 **Fish** /fɪʃ/
-* **Từ loại:** Danh từ (Noun) & Động từ (Verb).
-* **Số ít / Số nhiều đặc biệt:** Một con cá là *a fish*, nhiều con cá vẫn là **`fish`** (không thêm -es khi cùng một loài; chỉ dùng *fishes* khi nói về nhiều loài cá khác nhau).
-* **Động từ:** *to fish* (câu cá / đánh bắt cá).
-
----
-
-### 💡 Ví dụ câu & Thành ngữ hay gặp trong đề thi:
-1. *"My grandfather enjoys going **fishing** at the weekend."* (Ông tôi thích đi câu cá vào cuối tuần).
-2. *"Salmon is a nutritious **fish** rich in omega-3 fatty acids."* (Cá hồi là loài cá giàu dinh dưỡng).
-3. 🌟 **Thành ngữ (Idiom):**
-   * *A big fish in a small pond:* Người có tầm ảnh hưởng lớn trong một tập thể nhỏ.
-   * *Like a fish out of water:* Cảm thấy lạc lõng, bỡ ngỡ trong môi trường mới.
-
-Em có muốn thầy hướng dẫn thêm từ vựng hoặc cấu trúc nào nữa không?"""
-
-        if "chó" in last_user_msg:
-            return """Từ **"chó"** trong tiếng Anh là **`Dog`** /dɒɡ/.
-* *Ví dụ:* *"Dogs are loyal companions to humans."*
-* *Thành ngữ:* *Rain cats and dogs* (Mưa như trút nước)."""
-
-        if "mèo" in last_user_msg:
-            return """Từ **"mèo"** trong tiếng Anh là **`Cat`** /kæt/.
-* *Ví dụ:* *"The cat is sleeping under the table."*
-* *Thành ngữ:* *Let the cat out of the bag* (Vô tình làm lộ bí mật)."""
-
-        if "sách" in last_user_msg:
-            return """Từ **"sách"** trong tiếng Anh là **`Book`** /bʊk/.
-* *Ví dụ:* *"Reading books helps broaden your knowledge."*
-* *Thành ngữ:* *Hit the books* (Cắm đầu vào học thi)."""
-
-    if any(k in last_user_msg for k in ["drived", "tako", "drives", "took", "drive", "take"]):
-        return """Thầy nhận xét câu trả lời của em nhé:
-
-### 1. Phân tích chi tiết từng vế câu
-* 📌 **Vế 1:** *"My father usually (drive) ______ to work"*
-  * Có từ khóa nhận biết: **usually** (thường xuyên $\rightarrow$ Hiện tại đơn).
-  * Chủ ngữ **My father** là ngôi thứ 3 số ít $\rightarrow$ Động từ cần thêm đuôi **-s**: **`drives`** *(em viết 'drived' là bị nhầm sang dạng thêm -ed của quá khứ)*.
-
-* 📌 **Vế 2:** *"but yesterday he (take) ______ the bus"*
-  * Có từ khóa nhận biết: **yesterday** (ngày hôm qua $\rightarrow$ Quá khứ đơn).
-  * Động từ **take** là động từ bất quy tắc trong tiếng Anh, dạng V2 quá khứ của nó là: **`took`** *(take $\rightarrow$ took $\rightarrow$ taken, không tồn tại 'tako' hay 'taked')*.
-
----
-
-✅ **Đáp án chính xác:** **`drives / took`**
-👉 *Câu hoàn chỉnh:* *"My father usually **drives** to work, but yesterday he **took** the bus."*
-
----
-
-💡 **Câu hỏi tiếp theo để em làm chủ dạng này:**
-Em hãy thử chia động từ trong câu tương tự này nhé:
-*"Lan always (buy) ______ books online, but last Sunday she (go) ______ to the bookstore."*
-
-Em hãy gõ đáp án để thầy chấm tiếp nhé!"""
-
-    # Phản hồi trực tiếp, chuẩn xác cho mọi câu hỏi khác
-    return f"""Chào em! Thầy Socrates giải đáp chi tiết câu hỏi của em nhé:
-
-### 💡 Giải đáp: *"{last_user_msg}"*
-1. **Nội dung trọng tâm:** Trong tiếng Anh, khi tìm hiểu về chủ đề này, em cần chú ý đến từ loại, ngữ cảnh sử dụng và các cấu trúc ngữ pháp đi kèm.
-2. **Hướng dẫn ứng dụng:**
-   * Hãy liên hệ trực tiếp với các dạng bài thi THPT Quốc gia (như trắc nghiệm ngữ âm, từ vựng, đọc hiểu hoặc viết lại câu).
-   * Ghi nhớ từ khóa chính và thực hành đặt câu hoàn chỉnh để nhớ lâu hơn.
-
----
-
-Em hãy gửi bài tập hoặc câu văn em đang muốn dịch/chữa lỗi để thầy hướng dẫn em giải chi tiết từng bước nhé!"""
+Để trả lời chi tiết và chuẩn xác nhất:
+* Trong tiếng Anh, nội dung này thường phụ thuộc vào ngữ cảnh và cấu trúc câu cụ thể.
+* Bạn có thể gửi toàn bộ câu hỏi trắc nghiệm, đoạn văn hoặc câu bài tập em đang làm vào đây để tôi phân tích và giải thích cặn kẽ từng bước nhé!"""
 
 
 # 2. DỊCH VỤ CHUYỂN VĂN BẢN THÀNH GIỌNG NÓI (TEXT-TO-SPEECH - TTS)
