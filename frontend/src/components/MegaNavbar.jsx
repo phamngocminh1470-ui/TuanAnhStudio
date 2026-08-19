@@ -85,7 +85,9 @@ export default function MegaNavbar({
   const congDongItems = [
     { id: 'guide', title: 'Hướng dẫn sử dụng', desc: 'Video & tài liệu chi tiết từng tính năng', icon: HelpCircle, action: () => { onNavigate('guide'); setOpenDropdown(null); setIsMobileDrawerOpen(false); } },
     { id: 'project', title: 'Giới thiệu Dự án KHKT', desc: 'Đề tài Nghiên cứu KHKT Quốc Gia', badge: 'KHKT', icon: GraduationCap, action: () => { onNavigate('guide'); setOpenDropdown(null); setIsMobileDrawerOpen(false); } },
-    { id: 'admin', title: 'Bảng Quản trị & Giám sát KHKT', desc: 'Dành riêng cho Giáo viên & Nghiên cứu sinh', badge: 'ADMIN', icon: ShieldCheck, action: () => { onNavigate('admin'); setOpenDropdown(null); setIsMobileDrawerOpen(false); } }
+    ...(currentUser && currentUser.role === 'admin' ? [
+      { id: 'admin', title: 'Bảng Quản trị & Giám sát KHKT', desc: 'Dành riêng cho Giáo viên & Quản trị viên', badge: 'ADMIN', icon: ShieldCheck, action: () => { onNavigate('admin'); setOpenDropdown(null); setIsMobileDrawerOpen(false); } }
+    ] : [])
   ];
 
   return (

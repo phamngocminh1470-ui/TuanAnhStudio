@@ -312,10 +312,10 @@ export default function IRTTestEngine({ selectedGrade, currentUser }) {
             </span>
           </div>
           <div className="text-right">
-            <span className="text-[10px] text-slate-400 uppercase font-bold block">Trình độ ước tính</span>
+            <span className="text-[10px] text-slate-400 uppercase font-bold block">Dự đoán điểm THPT</span>
             <div className="flex items-center gap-1.5 mt-0.5">
-              <span className="text-base font-black text-blue-400 font-mono">
-                {Math.max(10, Math.min(100, Math.round(((theta + 3.0) / 6.0) * 100)))}%
+              <span className="text-base font-black text-cyan-300 font-mono">
+                {Math.max(1.0, Math.min(10.0, Math.round(((theta + 3.0) / 6.0) * 100) / 10)).toFixed(1)} <span className="text-[10px] text-slate-400">/ 10</span>
               </span>
               <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${badge.color}`}>
                 {badge.label}
@@ -660,7 +660,7 @@ export default function IRTTestEngine({ selectedGrade, currentUser }) {
                   <th className="pb-2 px-2">#</th>
                   <th className="pb-2 px-2">Mã câu hỏi</th>
                   <th className="pb-2 px-2">Kết quả</th>
-                  <th className="pb-2 px-2">Độ thành thạo</th>
+                  <th className="pb-2 px-2">Điểm thưởng</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
@@ -670,13 +670,17 @@ export default function IRTTestEngine({ selectedGrade, currentUser }) {
                     <td className="py-2.5 px-2 font-mono text-slate-300 font-semibold">{h.itemId}</td>
                     <td className="py-2.5 px-2">
                       <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                        h.result === 1 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'
+                        h.result === 1 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
                       }`}>
                         {h.result === 1 ? 'ĐÚNG' : 'SAI'}
                       </span>
                     </td>
-                    <td className="py-2.5 px-2 font-mono font-bold text-blue-400">
-                      {Math.max(10, Math.min(100, Math.round(((h.theta + 3.0) / 6.0) * 100)))}%
+                    <td className="py-2.5 px-2 font-mono font-bold text-xs">
+                      {h.result === 1 ? (
+                        <span className="text-emerald-400">+10 Điểm</span>
+                      ) : (
+                        <span className="text-slate-500">+0 Điểm</span>
+                      )}
                     </td>
                   </tr>
                 ))}
