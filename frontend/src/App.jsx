@@ -493,31 +493,6 @@ function App() {
 
       {/* Main Content Space */}
       <main className="flex-1 flex flex-col min-h-screen overflow-x-hidden relative">
-        {/* Mobile Header */}
-        <header className="md:hidden glass border-b border-slate-800 p-4 flex items-center justify-between sticky top-0 z-30">
-          <div className="flex items-center space-x-2">
-            <GraduationCap className="w-6 h-6 text-indigo-400" />
-            <span className="font-bold text-base text-white">AI English Mentor</span>
-          </div>
-          <div className="flex gap-1">
-            <button onClick={() => setActiveTab('dashboard')} className={`p-2 rounded-lg ${activeTab === 'dashboard' ? 'text-indigo-400 bg-indigo-600/20' : 'text-slate-400'}`}>
-              <LayoutDashboard className="w-5 h-5" />
-            </button>
-            <button onClick={() => setActiveTab('irt-test')} className={`p-2 rounded-lg ${activeTab === 'irt-test' ? 'text-indigo-400 bg-indigo-600/20' : 'text-slate-400'}`}>
-              <Zap className="w-5 h-5" />
-            </button>
-            <button onClick={() => setActiveTab('sm2-flashcards')} className={`p-2 rounded-lg ${activeTab === 'sm2-flashcards' ? 'text-amber-400 bg-indigo-600/20' : 'text-slate-400'}`}>
-              <Clock className="w-5 h-5" />
-            </button>
-            <button onClick={() => setActiveTab('chat')} className={`p-2 rounded-lg ${activeTab === 'chat' ? 'text-purple-400 bg-indigo-600/20' : 'text-slate-400'}`}>
-              <MessageSquare className="w-5 h-5" />
-            </button>
-            <button onClick={() => setActiveTab('pronounce')} className={`p-2 rounded-lg ${activeTab === 'pronounce' ? 'text-emerald-400 bg-indigo-600/20' : 'text-slate-400'}`}>
-              <Mic className="w-5 h-5" />
-            </button>
-          </div>
-        </header>
-
         {/* Top Mega Navigation Bar matching study.thptai.kr */}
         <MegaNavbar
           activeTab={activeTab}
@@ -531,8 +506,8 @@ function App() {
           onOpenPhotoSolver={() => setIsPhotoSolverOpen(true)}
         />
 
-        {/* Tab Body - Balanced Spacious Widescreen Container */}
-        <div className="flex-1 px-6 md:px-10 py-8 flex flex-col justify-start w-full max-w-[1600px] mx-auto">
+        {/* Tab Body - Balanced Spacious Responsive Container */}
+        <div className="flex-1 px-3 sm:px-6 md:px-10 py-4 sm:py-6 md:py-8 pb-24 lg:pb-8 flex flex-col justify-start w-full max-w-[1600px] mx-auto">
           {/* TAB LEARNING HUB (Home View) */}
           {(activeTab === 'dashboard' || activeTab === 'hub') && (
             currentUser ? (
