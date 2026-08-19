@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { 
   Send, Bot, Sparkles, RefreshCw, Copy, Check, 
   RotateCcw, Mic, Plus, ChevronDown, Award, BrainCircuit,
-  HelpCircle, Lightbulb, Compass, Zap, BookOpen, Layers
+  HelpCircle, Lightbulb, Compass, Zap, BookOpen, Layers, Clock
 } from 'lucide-react';
 import axios from 'axios';
 
