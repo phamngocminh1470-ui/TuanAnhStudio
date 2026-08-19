@@ -532,8 +532,8 @@ export default function IRTTestEngine({ selectedGrade, currentUser }) {
             {currentQuestion.statements ? (
               <div className="space-y-2.5">
                 <div className="grid grid-cols-12 text-[11px] font-bold text-slate-400 px-3 pb-1">
-                  <div className="col-span-8">Mệnh đề khẳng định</div>
-                  <div className="col-span-4 text-right pr-4">Lựa chọn Đúng / Sai</div>
+                  <div className="col-span-8">English Statements (Mệnh đề đọc hiểu)</div>
+                  <div className="col-span-4 text-right pr-4">Select True / False</div>
                 </div>
                 {currentQuestion.statements.map((stmt) => {
                   const currentVal = tfSelections[stmt.key];
@@ -555,7 +555,7 @@ export default function IRTTestEngine({ selectedGrade, currentUser }) {
                               : 'bg-white/5 border-transparent text-slate-400 hover:text-white'
                           }`}
                         >
-                          Đúng
+                          True (Đúng)
                         </button>
                         <button
                           onClick={() => !questionFeedback && setTfSelections(prev => ({ ...prev, [stmt.key]: false }))}
@@ -565,7 +565,7 @@ export default function IRTTestEngine({ selectedGrade, currentUser }) {
                               : 'bg-white/5 border-transparent text-slate-400 hover:text-white'
                           }`}
                         >
-                          Sai
+                          False (Sai)
                         </button>
                       </div>
                     </div>
@@ -575,13 +575,13 @@ export default function IRTTestEngine({ selectedGrade, currentUser }) {
             ) : currentQuestion.correct_short ? (
               /* ── FORMAT 3: SHORT ANSWER INPUT (PART 3) ── */
               <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-300 block">Nhập câu trả lời của bạn:</label>
+                <label className="text-xs font-bold text-slate-300 block">Write your answer in English (Nhập câu trả lời):</label>
                 <input
                   type="text"
                   value={shortAnswerInput}
                   onChange={(e) => setShortAnswerInput(e.target.value)}
                   disabled={!!questionFeedback}
-                  placeholder="Điền từ hoặc cụm từ thích hợp..."
+                  placeholder="Type your answer in English (e.g. renewable, seamlessly)..."
                   className="w-full bg-[#0a0f1d] border border-white/10 focus:border-blue-500 outline-none rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600"
                 />
               </div>

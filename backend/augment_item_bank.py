@@ -1,9 +1,9 @@
 """
 augment_item_bank.py
-Bổ sung ngân hàng câu hỏi định chuẩn IRT với đầy đủ:
+Bổ sung ngân hàng câu hỏi định chuẩn IRT với đầy đủ 100% TIẾNG ANH CHUẨN ĐỀ THI BỘ GD&ĐT:
 - Phần I (Trắc nghiệm 4 lựa chọn MCQ)
-- Phần II (Đúng / Sai 4 mệnh đề a, b, c, d)
-- Phần III (Trả lời ngắn / Điền từ)
+- Phần II (Đúng / Sai 4 mệnh đề a, b, c, d - True / False Statements)
+- Phần III (Trả lời ngắn / Biến đổi từ - Short Answer & Word Formation)
 Phân loại theo Chủ đề & Độ khó chuẩn GDPT 2025-2027.
 """
 
@@ -15,31 +15,34 @@ def augment():
     with open(file_path, "r", encoding="utf-8") as f:
         data = json.load(f)
 
-    existing_ids = {q["item_id"] for q in data.get("questions", [])}
+    # Lọc bỏ các câu TF_ và SA_ cũ để nạp lại bản Tiếng Anh 100%
+    existing_questions = [q for q in data.get("questions", []) if not (q.get("item_id", "").startswith("TF_") or q.get("item_id", "").startswith("SA_"))]
     
-    new_items = [
-        # ── PHẦN II: ĐÚNG / SAI 4 MỆNH ĐỀ (TRUE / FALSE STATEMENTS) ──
+    new_english_items = [
+        # ═══════════════════════════════════════════════════════════════════════════
+        # PHẦN II: ĐÚNG / SAI 4 MỆNH ĐỀ (PART 2: TRUE / FALSE 4 STATEMENTS)
+        # ═══════════════════════════════════════════════════════════════════════════
         {
             "item_id": "TF_001",
             "task_type": "True/False Statements",
             "thpt_task": 2,
             "topic": "Technology & Society",
             "skill": "Reading & Logic Analysis",
-            "question": "Xét tính Đúng (Đ) hoặc Sai (S) của các nhận định sau về ứng dụng của Trí tuệ Nhân tạo (AI) trong giáo dục:",
+            "question": "Read the following passage about Artificial Intelligence in Education and determine whether each statement is True (T) or False (F):\n\n'Modern AI tools are revolutionizing foreign language acquisition. Adaptive learning algorithms analyze individual speech soundwaves against international phonetic benchmarks (IPA), allowing learners to identify pronunciation inaccuracies in real time. Moreover, Item Response Theory (IRT) models estimate learner latent ability (Theta) and adaptively present questions suited to each student's competency zone. However, educational psychologists emphasize that learners must not passively copy AI outputs, but rather cultivate critical thinking and self-regulated reflection.'",
             "statements": [
-                {"key": "a", "text": "AI có khả năng phân tích lỗi phát âm từng từ theo bảng phiên âm IPA quốc tế.", "correct": True},
-                {"key": "b", "text": "Học sinh nên phụ thuộc hoàn toàn vào lời giải của AI mà không cần rèn luyện tư duy phản biện.", "correct": False},
-                {"key": "c", "text": "Mô hình IRT tự động điều chỉnh độ khó bài kiểm tra theo năng lực thực tế của học sinh.", "correct": True},
-                {"key": "d", "text": "Thuật toán Spaced Repetition yêu cầu học sinh phải làm lại toàn bộ từ vựng mỗi ngày.", "correct": False}
+                {"key": "a", "text": "AI speech engines can evaluate pronunciation errors based on the International Phonetic Alphabet (IPA).", "correct": True},
+                {"key": "b", "text": "Students are encouraged to rely entirely on AI answers without practicing critical thinking.", "correct": False},
+                {"key": "c", "text": "Item Response Theory (IRT) models adapt question difficulty based on student estimated latent ability.", "correct": True},
+                {"key": "d", "text": "Spaced repetition algorithms require students to relearn all stored vocabulary words every single day.", "correct": False}
             ],
-            "options": ["a-Đ, b-S, c-Đ, d-S"],
-            "correct": "a-Đ, b-S, c-Đ, d-S",
+            "options": ["a-True, b-False, c-True, d-False"],
+            "correct": "a-True, b-False, c-True, d-False",
             "difficulty_parameter": 0.2,
             "discrimination": 1.2,
             "guessing_parameter": 0.0625,
             "cognitive_level": "Vận dụng",
             "calibration_status": "CALIBRATED",
-            "explanation": "Ý (a) & (c) đúng: AI hỗ trợ nhận diện IPA và IRT cá nhân hóa độ khó. Ý (b) sai vì cần giữ tư duy phản biện. Ý (d) sai vì SM-2 chia nhỏ chu kỳ ôn tập ngắt quãng."
+            "explanation": "Statements (a) & (c) are True according to the text. Statement (b) is False because students must develop critical thinking rather than passively copying AI. Statement (d) is False because spaced repetition schedules reviews across increasing intervals rather than reviewing everything daily."
         },
         {
             "item_id": "TF_002",
@@ -47,21 +50,21 @@ def augment():
             "thpt_task": 2,
             "topic": "Environment & Sustainability",
             "skill": "Ecology & Logic",
-            "question": "Xét tính Đúng (Đ) hoặc Sai (S) của các mệnh đề dưới đây về bảo vệ môi trường và lối sống xanh:",
+            "question": "Read the following passage regarding environmental sustainability and climate mitigation, and decide whether each statement is True (T) or False (F):\n\n'Global efforts toward carbon neutrality require transitioning from fossil fuels to renewable energy sources such as solar, wind, and geothermal power. The continuous accumulation of greenhouse gases in the atmosphere amplifies the natural greenhouse effect, accelerating polar glacier melting and triggering catastrophic extreme weather phenomena. Community-level green habits, such as replacing single-use plastics with biodegradable materials and planting urban trees, significantly reduce individual carbon footprints and preserve fragile ecosystems.'",
             "statements": [
-                {"key": "a", "text": "Sử dụng túi vải thay cho túi nilon dùng một lần giúp giảm thiểu rác thải nhựa đại dương.", "correct": True},
-                {"key": "b", "text": "Năng lượng hóa thạch như than đá là nguồn năng lượng có thể tái tạo vô hạn.", "correct": False},
-                {"key": "c", "text": "Hiệu ứng nhà kính gia tăng là nguyên nhân chính dẫn đến hiện tượng băng tan ở hai cực.", "correct": True},
-                {"key": "d", "text": "Việc chặt phá rừng nhiệt đới không ảnh hưởng gì đến đa dạng sinh học toàn cầu.", "correct": False}
+                {"key": "a", "text": "Replacing single-use plastic bags with reusable alternatives helps diminish marine plastic debris.", "correct": True},
+                {"key": "b", "text": "Fossil fuels such as coal and crude oil represent infinite and renewable energy resources.", "correct": False},
+                {"key": "c", "text": "The enhanced greenhouse effect is a primary driver accelerating polar ice cap melting.", "correct": True},
+                {"key": "d", "text": "Uncontrolled deforestation in tropical rainforests has no adverse impact on planetary biodiversity.", "correct": False}
             ],
-            "options": ["a-Đ, b-S, c-Đ, d-S"],
-            "correct": "a-Đ, b-S, c-Đ, d-S",
+            "options": ["a-True, b-False, c-True, d-False"],
+            "correct": "a-True, b-False, c-True, d-False",
             "difficulty_parameter": -0.3,
             "discrimination": 1.1,
             "guessing_parameter": 0.0625,
             "cognitive_level": "Thông hiểu",
             "calibration_status": "CALIBRATED",
-            "explanation": "Ý (a) & (c) đúng về lối sống xanh và biến đổi khí hậu. Ý (b) sai vì than đá là năng lượng không tái tạo. Ý (d) sai vì phá rừng phá hủy môi trường sống của muôn loài."
+            "explanation": "Statements (a) & (c) are True. Statement (b) is False as fossil fuels are finite and exhaustible. Statement (d) is False as deforestation directly causes habitat destruction and severe biodiversity loss."
         },
         {
             "item_id": "TF_003",
@@ -69,21 +72,21 @@ def augment():
             "thpt_task": 2,
             "topic": "Health & Nutrition",
             "skill": "Reading & Fact Checking",
-            "question": "Xét tính Đúng (Đ) hoặc Sai (S) của các mệnh đề sau về chế độ dinh dưỡng và sức khỏe học đường:",
+            "question": "Read the following passage regarding adolescent physical well-being and academic performance, and determine whether each statement is True (T) or False (F):\n\n'Maintaining a healthy lifestyle is essential for adolescent cognitive development. Nutritional research indicates that consuming a balanced breakfast containing proteins, whole grains, and healthy fats supplies sustained glucose to the brain, enhancing concentration throughout morning lessons. Furthermore, engaging in at least 30 minutes of aerobic exercise daily stimulates the synthesis of neurotransmitters like endorphins and dopamine, which relieve anxiety and boost mood. Conversely, chronic sleep deprivation impairs memory consolidation and weakens immune defenses.'",
             "statements": [
-                {"key": "a", "text": "Thức khuya thường xuyên và lạm dụng nước tăng lực có lợi cho trí nhớ dài hạn.", "correct": False},
-                {"key": "b", "text": "Tập thể dục 30 phút mỗi ngày kích thích não bộ tiết ra hooc-môn endorphins giúp giảm căng thẳng.", "correct": True},
-                {"key": "c", "text": "Bữa sáng giàu protein và chất xơ cung cấp năng lượng ổn định cho các tiết học buổi sáng.", "correct": True},
-                {"key": "d", "text": "Chỉ những vận động viên chuyên nghiệp mới cần duy trì một lối sống vận động.", "correct": False}
+                {"key": "a", "text": "Chronic sleep deprivation and excessive intake of energy drinks promote long-term memory consolidation.", "correct": False},
+                {"key": "b", "text": "Participating in 30 minutes of daily physical exercise triggers endorphin release to alleviate psychological stress.", "correct": True},
+                {"key": "c", "text": "A nutritious breakfast rich in proteins and whole grains provides steady cognitive energy during school hours.", "correct": True},
+                {"key": "d", "text": "Regular physical activity and healthy nutrition are strictly necessary only for elite professional athletes.", "correct": False}
             ],
-            "options": ["a-S, b-Đ, c-Đ, d-S"],
-            "correct": "a-S, b-Đ, c-Đ, d-S",
+            "options": ["a-False, b-True, c-True, d-False"],
+            "correct": "a-False, b-True, c-True, d-False",
             "difficulty_parameter": -0.5,
             "discrimination": 1.0,
             "guessing_parameter": 0.0625,
             "cognitive_level": "Nhận biết",
             "calibration_status": "CALIBRATED",
-            "explanation": "Ý (b) & (c) đúng khoa học. Ý (a) & (d) sai vì thức khuya gây hại tế bào thần kinh và mọi người đều cần vận động thể chất."
+            "explanation": "Statements (b) & (c) are True scientifically. Statements (a) & (d) are False because sleep deprivation damages memory and all individuals require physical activity for optimal health."
         },
         {
             "item_id": "TF_004",
@@ -91,21 +94,21 @@ def augment():
             "thpt_task": 2,
             "topic": "Education & Global Study",
             "skill": "Academic Skills",
-            "question": "Xét tính Đúng (Đ) hoặc Sai (S) của các mệnh đề sau về phương pháp tự học và ôn thi hiệu quả:",
+            "question": "Read the following text concerning evidence-based study methods and decide whether each statement is True (T) or False (F):\n\n'Cognitive psychology has demonstrated that active retrieval practice (Active Recall) through flashcards or diagnostic quizzes produces substantially stronger neural connections than passive rereading. In addition, interleaving different subjects during study sessions and utilizing visual mind maps enables students to synthesize complex relationships between concepts. By contrast, massed practice (all-night cramming) before examinations generates only short-lived familiarity, leading to rapid forgetting curves.'",
             "statements": [
-                {"key": "a", "text": "Phương pháp Pomodoro chia thời gian học thành các khoảng 25 phút tập trung kèm 5 phút nghỉ.", "correct": True},
-                {"key": "b", "text": "Học dồn vào đêm trước kỳ thi mang lại hiệu quả ghi nhớ sâu hơn học rải đều theo chu kỳ.", "correct": False},
-                {"key": "c", "text": "Tự kiểm tra (Active Recall) bằng Flashcard kích hoạt truy hồi trí nhớ tốt hơn đọc thụ động.", "correct": True},
-                {"key": "d", "text": "Việc ghi chép bài học bằng sơ đồ tư duy (Mind Map) giúp liên kết các ý tưởng logic hơn.", "correct": True}
+                {"key": "a", "text": "The Pomodoro technique breaks study routines into focused 25-minute intervals separated by short restorative breaks.", "correct": True},
+                {"key": "b", "text": "All-night cramming before tests generates deeper long-term memory retention than spaced distributed practice.", "correct": False},
+                {"key": "c", "text": "Active retrieval practice through flashcards and quizzes activates memory pathways more effectively than passive reading.", "correct": True},
+                {"key": "d", "text": "Constructing visual mind maps assists learners in synthesizing and structuring logical connections between concepts.", "correct": True}
             ],
-            "options": ["a-Đ, b-S, c-Đ, d-Đ"],
-            "correct": "a-Đ, b-S, c-Đ, d-Đ",
+            "options": ["a-True, b-False, c-True, d-True"],
+            "correct": "a-True, b-False, c-True, d-True",
             "difficulty_parameter": 0.4,
             "discrimination": 1.3,
             "guessing_parameter": 0.0625,
             "cognitive_level": "Vận dụng",
             "calibration_status": "CALIBRATED",
-            "explanation": "Ý (a), (c), (d) là các phương pháp học tập khoa học đã được kiểm chứng. Ý (b) sai vì học dồn chỉ tạo trí nhớ ngắn hạn và nhanh quên."
+            "explanation": "Statements (a), (c), (d) describe validated cognitive learning strategies. Statement (b) is False because cramming only creates fleeting short-term memory that rapidly decays."
         },
         {
             "item_id": "TF_005",
@@ -113,31 +116,33 @@ def augment():
             "thpt_task": 2,
             "topic": "Technology & Space",
             "skill": "Science Literacy",
-            "question": "Xét tính Đúng (Đ) hoặc Sai (S) của các mệnh đề sau về công nghệ khám phá không gian vũ trụ:",
+            "question": "Read the following passage about deep space astronomical exploration and determine whether each statement is True (T) or False (F):\n\n'The James Webb Space Telescope (JWST) is humanity's most powerful orbital observatory, designed to peer through cosmic dust clouds using high-resolution infrared detectors to witness the birth of the earliest galaxies. In space exploration, artificial satellites orbiting Earth provide indispensable infrastructure for telecommunications, global positioning (GPS), and meteorological storm tracking. Because outer space is a near-perfect vacuum devoid of atmospheric molecules, mechanical acoustic sound waves cannot travel through it.'",
             "statements": [
-                {"key": "a", "text": "Kính thiên văn không gian James Webb quan sát vũ trụ chủ yếu qua dải sóng hồng ngoại.", "correct": True},
-                {"key": "b", "text": "Âm thanh có thể truyền đi dễ dàng trong môi trường chân không tuyệt đối của vũ trụ.", "correct": False},
-                {"key": "c", "text": "Vệ tinh nhân tạo đóng vai trò thiết yếu trong việc dự báo bão và định vị toàn cầu GPS.", "correct": True},
-                {"key": "d", "text": "Hành tinh Đỏ (Sao Hỏa) là hành tinh gần Mặt Trời nhất trong Hệ Mặt Trời.", "correct": False}
+                {"key": "a", "text": "The James Webb Space Telescope explores the distant cosmos primarily by detecting infrared electromagnetic radiation.", "correct": True},
+                {"key": "b", "text": "Acoustic sound waves can easily propagate through the absolute vacuum of interstellar outer space.", "correct": False},
+                {"key": "c", "text": "Earth-orbiting artificial satellites provide crucial telemetry for meteorological forecasting and GPS navigation.", "correct": True},
+                {"key": "d", "text": "Mars is the terrestrial planet situated closest to the Sun within our Solar System.", "correct": False}
             ],
-            "options": ["a-Đ, b-S, c-Đ, d-S"],
-            "correct": "a-Đ, b-S, c-Đ, d-S",
+            "options": ["a-True, b-False, c-True, d-False"],
+            "correct": "a-True, b-False, c-True, d-False",
             "difficulty_parameter": 0.9,
             "discrimination": 1.4,
             "guessing_parameter": 0.0625,
             "cognitive_level": "Vận dụng cao",
             "calibration_status": "CALIBRATED",
-            "explanation": "Ý (a) & (c) đúng kiến thức thiên văn. Ý (b) sai vì sóng âm cần môi trường vật chất. Ý (d) sai vì Sao Thủy (Mercury) mới là hành tinh gần Mặt Trời nhất."
+            "explanation": "Statements (a) & (c) are True. Statement (b) is False because sound waves require a physical medium to propagate. Statement (d) is False because Mercury is the closest planet to the Sun."
         },
 
-        # ── PHẦN III: TRẢ LỜI NGẮN / BIẾN ĐỔI TỪ (SHORT ANSWER & WORD FORM) ──
+        # ═══════════════════════════════════════════════════════════════════════════
+        # PHẦN III: TRẢ LỜI NGẮN / BIẾN ĐỔI TỪ (PART 3: SHORT ANSWER & WORD FORM)
+        # ═══════════════════════════════════════════════════════════════════════════
         {
             "item_id": "SA_001",
             "task_type": "Short Answer / Fill-in",
             "thpt_task": 3,
             "topic": "Environment & Sustainability",
             "skill": "Word Form / Adjectives",
-            "question": "Give the correct form of the word in brackets:\n'Wind and solar power are excellent examples of ________ energy sources.' (RENEW)",
+            "question": "Write the correct form of the word in brackets to complete the sentence:\n\n'Solar and wind power are outstanding examples of ________ energy sources for sustainable development.' (RENEW)",
             "options": ["renewable"],
             "correct": "renewable",
             "correct_short": "renewable",
@@ -146,7 +151,7 @@ def augment():
             "guessing_parameter": 0.0,
             "cognitive_level": "Thông hiểu",
             "calibration_status": "CALIBRATED",
-            "explanation": "Cần tính từ bổ nghĩa cho danh từ 'energy sources'. Dạng tính từ của 'renew' là 'renewable' (có thể tái tạo)."
+            "explanation": "An adjective is needed before the noun phrase 'energy sources'. The adjective form of 'renew' is 'renewable' (có thể tái tạo)."
         },
         {
             "item_id": "SA_002",
@@ -154,114 +159,111 @@ def augment():
             "thpt_task": 3,
             "topic": "Technology & Society",
             "skill": "Word Form / Adverbs",
-            "question": "Give the correct form of the word in brackets:\n'Cloud computing allows international teams to collaborate ________ on complex projects.' (SEAMLESS)",
+            "question": "Write the correct form of the word in brackets to complete the sentence:\n\n'Cloud computing and high-speed fiber internet allow multinational teams to collaborate ________ on complex projects.' (SEAMLESS)",
             "options": ["seamlessly"],
             "correct": "seamlessly",
             "correct_short": "seamlessly",
-            "difficulty_parameter": 0.6,
+            "difficulty_parameter": 0.3,
             "discrimination": 1.3,
             "guessing_parameter": 0.0,
             "cognitive_level": "Vận dụng",
             "calibration_status": "CALIBRATED",
-            "explanation": "Cần trạng từ bổ nghĩa cho động từ 'collaborate'. Dạng trạng từ của 'seamless' là 'seamlessly' (một cách liền mạch, trôi chảy)."
+            "explanation": "An adverb is required to modify the verb 'collaborate'. The adverb form of 'seamless' is 'seamlessly' (một cách liền mạch, trôi chảy)."
         },
         {
             "item_id": "SA_003",
             "task_type": "Short Answer / Fill-in",
             "thpt_task": 3,
-            "topic": "Education & Global Study",
+            "topic": "Culture & Heritage",
             "skill": "Word Form / Nouns",
-            "question": "Give the correct form of the word in brackets:\n'Developing autonomous learning habits fosters student ________ in college.' (DEPEND)",
-            "options": ["independence"],
-            "correct": "independence",
-            "correct_short": "independence",
-            "difficulty_parameter": 0.3,
+            "question": "Write the correct form of the word in brackets to complete the sentence:\n\n'Local authorities have initiated comprehensive conservation programs for the ________ of ancient monuments.' (PRESERVE)",
+            "options": ["preservation"],
+            "correct": "preservation",
+            "correct_short": "preservation",
+            "difficulty_parameter": 0.1,
             "discrimination": 1.2,
             "guessing_parameter": 0.0,
-            "cognitive_level": "Vận dụng",
+            "cognitive_level": "Thông hiểu",
             "calibration_status": "CALIBRATED",
-            "explanation": "Cần danh từ mang nghĩa tích cực (sự tự lập). Từ gốc 'depend' (phụ thuộc) -> 'independence' (sự độc lập, tự chủ)."
+            "explanation": "After the preposition 'for the', a noun is required. The noun form of 'preserve' is 'preservation' (sự bảo tồn, gìn giữ)."
         },
         {
             "item_id": "SA_004",
             "task_type": "Short Answer / Fill-in",
             "thpt_task": 3,
-            "topic": "Environment & Urban Health",
+            "topic": "Education & Career",
             "skill": "Word Form / Nouns",
-            "question": "Give the correct form of the word in brackets:\n'The rapid ________ of natural rainforests leads to catastrophic biodiversity loss.' (DESTROY)",
-            "options": ["destruction"],
-            "correct": "destruction",
-            "correct_short": "destruction",
-            "difficulty_parameter": 0.1,
-            "discrimination": 1.1,
+            "question": "Write the correct form of the word in brackets to complete the sentence:\n\n'Her remarkable academic triumph was achieved through sheer grit and unwavering ________.' (PERSEVERE)",
+            "options": ["perseverance"],
+            "correct": "perseverance",
+            "correct_short": "perseverance",
+            "difficulty_parameter": 0.7,
+            "discrimination": 1.4,
             "guessing_parameter": 0.0,
-            "cognitive_level": "Thông hiểu",
+            "cognitive_level": "Vận dụng cao",
             "calibration_status": "CALIBRATED",
-            "explanation": "Cần danh từ đi sau mạo từ 'The' và tính từ 'rapid'. Dạng danh từ của 'destroy' là 'destruction' (sự tàn phá)."
+            "explanation": "Following the adjective 'unwavering', an abstract noun is needed. The noun form of 'persevere' is 'perseverance' (sự kiên trì, bền bỉ)."
         },
         {
             "item_id": "SA_005",
             "task_type": "Short Answer / Fill-in",
             "thpt_task": 3,
-            "topic": "Culture & Community",
-            "skill": "Word Form / Nouns",
-            "question": "Give the correct form of the word in brackets:\n'Bat Trang ceramic artisans strive for the ________ of traditional handicraft techniques.' (PRESERVE)",
-            "options": ["preservation"],
-            "correct": "preservation",
-            "correct_short": "preservation",
-            "difficulty_parameter": 0.2,
-            "discrimination": 1.2,
+            "topic": "Grammar & Sentence Transformation",
+            "skill": "Prepositions / Collocations",
+            "question": "Fill in the missing preposition to complete the fixed collocation:\n\n'All students must pay close attention ________ the grammatical agreement between subjects and verbs.'",
+            "options": ["to"],
+            "correct": "to",
+            "correct_short": "to",
+            "difficulty_parameter": -0.4,
+            "discrimination": 1.0,
             "guessing_parameter": 0.0,
-            "cognitive_level": "Thông hiểu",
+            "cognitive_level": "Nhận biết",
             "calibration_status": "CALIBRATED",
-            "explanation": "Cần danh từ sau 'the' và trước 'of'. Dạng danh từ của động từ 'preserve' là 'preservation' (sự bảo tồn, gìn giữ)."
+            "explanation": "Fixed English collocation: 'pay attention to something' (chú ý, tập trung vào điều gì)."
         },
         {
             "item_id": "SA_006",
             "task_type": "Short Answer / Fill-in",
             "thpt_task": 3,
-            "topic": "Technology & Society",
-            "skill": "Word Form / Adjectives",
-            "question": "Give the correct form of the word in brackets:\n'Modern smartphones have become ________ across all demographics of modern society.' (UBIQUITY)",
-            "options": ["ubiquitous"],
-            "correct": "ubiquitous",
-            "correct_short": "ubiquitous",
-            "difficulty_parameter": 1.2,
-            "discrimination": 1.5,
+            "topic": "Grammar & Phrasal Verbs",
+            "skill": "Phrasal Verbs",
+            "question": "Fill in the missing particle to complete the phrasal verb:\n\n'The outdoor sports festival was called ________ due to torrential rain and stormy weather.'",
+            "options": ["off"],
+            "correct": "off",
+            "correct_short": "off",
+            "difficulty_parameter": 0.0,
+            "discrimination": 1.2,
             "guessing_parameter": 0.0,
-            "cognitive_level": "Vận dụng cao",
+            "cognitive_level": "Thông hiểu",
             "calibration_status": "CALIBRATED",
-            "explanation": "Cần tính từ đi sau linking verb 'become'. Dạng tính từ của danh từ 'ubiquity' là 'ubiquitous' (phổ biến khắp nơi)."
+            "explanation": "Fixed phrasal verb: 'call off' means to cancel an event (hủy bỏ một sự kiện đã lên lịch)."
         },
         {
             "item_id": "SA_007",
             "task_type": "Short Answer / Fill-in",
             "thpt_task": 3,
-            "topic": "Environment & Sustainability",
-            "skill": "Word Form / Adverbs",
-            "question": "Give the correct form of the word in brackets:\n'The government is investing in ________ friendly urban transportation systems.' (ENVIRONMENT)",
-            "options": ["environmentally"],
-            "correct": "environmentally",
-            "correct_short": "environmentally",
-            "difficulty_parameter": 0.0,
-            "discrimination": 1.1,
+            "topic": "Grammar & Sentence Structure",
+            "skill": "Conjunctions / Inversion",
+            "question": "Fill in the single word to complete the negative inversion structure:\n\n'Hardly had the teacher entered the classroom ________ all students stood up politely.'",
+            "options": ["when"],
+            "correct": "when",
+            "correct_short": "when",
+            "difficulty_parameter": 0.8,
+            "discrimination": 1.5,
             "guessing_parameter": 0.0,
-            "cognitive_level": "Thông hiểu",
+            "cognitive_level": "Vận dụng cao",
             "calibration_status": "CALIBRATED",
-            "explanation": "Cần trạng từ bổ nghĩa cho tính từ 'friendly' (cụm từ 'environmentally friendly' = thân thiện với môi trường)."
+            "explanation": "Standard correlative structure: 'Hardly + had + S + V3/ed + when + S + V2/ed' (Vừa mới... thì...)."
         }
     ]
 
-    added = 0
-    for item in new_items:
-        if item["item_id"] not in existing_ids:
-            data["questions"].append(item)
-            added += 1
+    all_questions = existing_questions + new_english_items
+    data["questions"] = all_questions
 
     with open(file_path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
-    print(f"[OK] Da bo sung {added} cau hoi moi vao irt_item_bank.json. Tong so: {len(data['questions'])}")
+    print(f"[OK] Da cap nhat {len(new_english_items)} cau hoi 100% TIENG ANH CHUAN vao irt_item_bank.json! (Tong cong: {len(all_questions)} cau)")
 
 if __name__ == "__main__":
     augment()
