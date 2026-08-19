@@ -51,7 +51,7 @@ export default function AdaptiveListening({ selectedGrade = '10', theta = 0.0 })
     window.speechSynthesis?.cancel();
 
     try {
-      const savedGemini = localStorage.getItem('api_gemini') || '';
+      const savedGemini = localStorage.getItem('api_gemini') || localStorage.getItem('gemini_api_key') || '';
       const response = await axios.post(
         `${API_BASE}/generate-adaptive-listening`,
         {

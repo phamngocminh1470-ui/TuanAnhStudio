@@ -22,7 +22,7 @@ from ai_services import (
     chat_with_gemini, text_to_speech, speech_to_text, assess_pronunciation, 
     generate_adaptive_question_with_gemini, generate_pronunciation_sentence_with_gemini,
     generate_adaptive_reading, generate_adaptive_listening, calculate_predicted_exam_scores, evaluate_writing_with_gemini,
-    generate_writing_sample_with_gemini, solve_exam_by_image, execute_writing_ai_prompt
+    generate_writing_sample_with_gemini, solve_exam_by_image, execute_writing_ai_prompt, clean_api_key
 )
 from adaptive_learning import (
     IRTEngine, IRTQuestion, SpacedRepetitionEngine, ItemBank, KnowledgeGraph, 
@@ -33,7 +33,8 @@ from item_bank_api import router as item_bank_router
 from auth_api import router as auth_router
 from user_progress_api import router as user_progress_router
 from content_api import router as content_router
-from database import create_db_and_tables, get_session, User
+from sqlmodel import Session, select
+from database import create_db_and_tables, get_session, User, engine, VocabularyWord
 
 app = FastAPI(
     title="AI English Mentor API",
@@ -440,20 +441,22 @@ class GenerateQuestionRequest(BaseModel):
     grade: str = "10"
     theta: float = 0.0
     history: Optional[List[Dict[str, Any]]] = []
+    topic: Optional[str] = None
+    part: Optional[str] = None
+    difficulty: Optional[str] = None
+    exclude_id: Optional[str] = None
 
 @app.post("/api/adaptive/generate-question")
 async def generate_question(request: GenerateQuestionRequest, x_gemini_key: Optional[str] = Header(None)):
     """
     Lựa chọn câu hỏi thích ứng tiếp theo từ Item Bank.
-    BUG-01 FIX: Dùng compute_skill_mastery() dùng chung.
-    BUG-05 FIX: explanation lấy từ item bank thực tế, không tạo chuỗi tùy tiện.
+    Hỗ trợ lọc theo Chủ đề, Dạng bài (Part 1 - 3), Mức độ khó và đổi câu hỏi tức thì.
     """
     try:
         bank = ItemBank()
         graph = KnowledgeGraph()
         selector = AdaptiveQuestionSelector(bank, graph)
 
-        # BUG-01 FIX: Dùng hàm compute_skill_mastery() để tránh fallback sang "Tenses"
         history_items = request.history if request.history else []
         skill_mastery = compute_skill_mastery(history_items, bank)
         formatted_history = [
@@ -461,34 +464,42 @@ async def generate_question(request: GenerateQuestionRequest, x_gemini_key: Opti
             for h in history_items
         ]
 
-        # Chọn câu tiếp theo bằng selector
+        # Chọn câu tiếp theo bằng selector với đầy đủ bộ lọc
         next_q, reason = selector.select_question(
             theta=request.theta,
             irt_history=formatted_history,
-            skill_mastery=skill_mastery
+            skill_mastery=skill_mastery,
+            topic_filter=request.topic,
+            part_filter=request.part,
+            difficulty_filter=request.difficulty,
+            exclude_id=request.exclude_id
         )
 
         if next_q:
-            # BUG-05 FIX: explanation lấy từ item bank, có giải thích ngữ pháp thực chất
             explanation = next_q.explanation if next_q.explanation else f"Đáp án đúng là {next_q.correct}."
             return {
                 "status": "success",
                 "question": {
                     "item_id": next_q.item_id,
+                    "task_type": next_q.task_type,
                     "question": next_q.question_text,
                     "options": next_q.options,
                     "correct": next_q.correct,
+                    "statements": next_q.statements,
+                    "correct_short": next_q.correct_short,
+                    "passage": next_q.passage,
+                    "passage_id": next_q.passage_id,
                     "difficulty": next_q.b,
                     "discrimination": next_q.a,
                     "guessing": next_q.c,
                     "skill": next_q.skill,
+                    "topic": next_q.topic,
                     "explanation": explanation
                 },
                 "recommendation_reason": reason,
                 "skill_mastery": skill_mastery
             }
         else:
-            # YÊU CẦU VI: Không sinh câu hỏi bằng AI trong luồng đánh giá chính thức. Chỉ lấy từ Item Bank.
             return {
                 "status": "completed",
                 "message": "Đã hoàn thành đánh giá toàn bộ câu hỏi định chuẩn trong Ngân hàng câu hỏi (Item Bank).",
@@ -1037,6 +1048,79 @@ async def solve_photo_endpoint(
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Lỗi khi giải đề bằng ảnh: {str(e)}")
+
+
+class DictLookupRequest(BaseModel):
+    word: str
+    grade: Optional[str] = "12"
+
+@app.post("/api/dictionary/lookup")
+async def dictionary_lookup(request: DictLookupRequest, x_gemini_key: Optional[str] = Header(None)):
+    """
+    Tra cứu bất kỳ từ tiếng Anh nào trong toàn bộ từ điển (Full English Dictionary Lookup).
+    Tự động phân tích phiên âm IPA, loại từ, nghĩa tiếng Việt và câu ví dụ song ngữ.
+    """
+    word = request.word.strip()
+    if not word:
+        raise HTTPException(status_code=400, detail="Vui lòng nhập từ cần tra cứu")
+
+    # 1. Tra cứu nhanh trong database SQLite nếu có
+    with Session(engine) as db:
+        db_word = db.exec(select(VocabularyWord).where(VocabularyWord.word.ilike(word))).first()
+        if db_word:
+            return {
+                "status": "success",
+                "source": "database",
+                "data": {
+                    "word": db_word.word,
+                    "ipa": db_word.ipa,
+                    "pos": db_word.pos,
+                    "meaning": db_word.meaning,
+                    "example": db_word.example,
+                    "example_vi": db_word.example_vi
+                }
+            }
+
+    # 2. Tra cứu bằng Gemini AI
+    active_key = clean_api_key(x_gemini_key) or clean_api_key(os.getenv("GEMINI_API_KEY"))
+    if active_key:
+        try:
+            genai.configure(api_key=active_key)
+            model = genai.GenerativeModel(
+                model_name="gemini-1.5-flash",
+                generation_config={"response_mime_type": "application/json"}
+            )
+            prompt = f"""You are an Oxford/Cambridge English-Vietnamese dictionary.
+Provide complete dictionary entry for the English word: "{word}".
+Return strictly valid JSON:
+{{
+  "word": "{word}",
+  "ipa": "/.../",
+  "pos": "Danh từ (n.) / Tính từ (adj.) / Động từ (v.) / etc.",
+  "meaning": "Nghĩa tiếng Việt rõ ràng, súc tích",
+  "example": "A natural English example sentence.",
+  "example_vi": "Bản dịch tiếng Việt của câu ví dụ."
+}}"""
+            res = model.generate_content(prompt)
+            data = json.loads(res.text)
+            return {"status": "success", "source": "ai", "data": data}
+        except Exception as e:
+            print(f"Lỗi AI dictionary lookup: {e}")
+
+    # 3. Fallback dictionary generator
+    return {
+        "status": "success",
+        "source": "offline_dict",
+        "data": {
+            "word": word,
+            "ipa": f"/{word.lower()}/",
+            "pos": "Từ vựng tiếng Anh",
+            "meaning": f"Từ vựng '{word}' trong hệ thống từ điển tiếng Anh",
+            "example": f"Students should learn how to use '{word}' accurately in daily communication.",
+            "example_vi": f"Học sinh nên học cách sử dụng từ '{word}' một cách chính xác trong giao tiếp hàng ngày."
+        }
+    }
+
 
 if __name__ == "__main__":
     import uvicorn

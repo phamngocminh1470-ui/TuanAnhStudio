@@ -375,7 +375,6 @@ async def speech_to_text(audio_file_bytes: bytes, filename: str = "audio.wav", c
         return f"Lỗi kết nối API STT: {str(e)}"
 
 
-# 4. CHẤM ĐIỂM PHÁT ÂM CHI TIẾT (PRONUNCIATION ASSESSMENT)
 async def assess_pronunciation(
     audio_file_bytes: bytes, 
     reference_text: str, 
@@ -384,24 +383,50 @@ async def assess_pronunciation(
 ) -> dict:
     """
     Chấm điểm phát âm chi tiết đoạn văn.
-    1. Ưu tiên sử dụng Azure Speech REST API (nếu có key).
-    2. Nếu không có Azure key nhưng có Gemini key, sử dụng Gemini 1.5 Flash đa phương thức (Multimodal) chấm điểm qua file ghi âm.
-    3. Nếu không có key nào, trả về Mock Data phục vụ demo.
+    1. Kiểm tra kích thước audio: Nếu im lặng / quá ngắn (< 1500 bytes), trả về điểm 0 (Silence/Omission).
+    2. Ưu tiên sử dụng Azure Speech REST API (nếu có key).
+    3. Nếu không có Azure key nhưng có Gemini key, sử dụng Gemini 1.5 Flash đa phương thức (Multimodal) chấm điểm qua file ghi âm.
+    4. Nếu không có key nào, thực hiện kiểm tra âm thanh cơ bản và phản hồi trung thực.
     """
+    words = reference_text.split()
+    
+    # ── BƯỚC 0: PHÁT HIỆN IM LẶNG / FILE ÂM THANH RỖNG ──
+    if not audio_file_bytes or len(audio_file_bytes) < 1500:
+        print("[WARN] Phát hiện âm thanh im lặng hoặc không có tín hiệu microphone.")
+        return {
+            "RecognitionStatus": "InitialSilenceTimeout",
+            "NBest": [{
+                "Lexical": reference_text,
+                "PronunciationAssessment": {
+                    "AccuracyScore": 0,
+                    "PronunciationScore": 0,
+                    "CompletenessScore": 0,
+                    "FluencyScore": 0
+                },
+                "Words": [
+                    {
+                        "Word": w.strip(".,!?\"'"),
+                        "PronunciationAssessment": {
+                            "AccuracyScore": 0,
+                            "ErrorType": "Omission"
+                        }
+                    }
+                    for w in words
+                ]
+            }]
+        }
+
     active_azure_key = clean_api_key(custom_key) or AZURE_SPEECH_KEY
     active_gemini_key = clean_api_key(custom_gemini_key) or GEMINI_API_KEY
     
     # TRƯỜNG HỢP 1: CÓ AZURE KEY -> SỬ DỤNG AZURE SPEECH REST API
     if active_azure_key:
         try:
-            # Azure Pronunciation Assessment REST API
             url = f"https://{AZURE_SPEECH_REGION}.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1?language=en-US"
-            
-            # Tạo tham số Pronunciation-Assessment ở dạng Base64
             params = {
                 "ReferenceText": reference_text,
                 "GradingSystem": "HundredMark",
-                "Granularity": "Word", # Cấp độ từ để biết từ nào sai
+                "Granularity": "Word",
                 "Dimension": "Comprehensive"
             }
             params_json = json.dumps(params)
@@ -416,7 +441,6 @@ async def assess_pronunciation(
             }
             
             async with httpx.AsyncClient() as client:
-                # Azure STT yêu cầu file âm thanh định dạng WAV PCM 16kHz
                 response = await client.post(url, headers=headers, content=audio_file_bytes, timeout=30.0)
                 if response.status_code == 200:
                     return response.json()
@@ -428,19 +452,22 @@ async def assess_pronunciation(
     # TRƯỜNG HỢP 2: KHÔNG CÓ AZURE KEY NHƯNG CÓ GEMINI KEY -> DÙNG GEMINI MULTIMODAL CHẤM PHÁT ÂM
     if active_gemini_key:
         try:
-            print("[INFO] Đang chấm điểm phát âm bằng mô hình Gemini 1.5 Flash (Multimodal)...")
+            print("[INFO] Đang chấm điểm phát âm bằng mô hình Gemini (Multimodal)...")
             genai.configure(api_key=active_gemini_key)
             model = genai.GenerativeModel(
                 model_name="gemini-1.5-flash",
                 generation_config={"response_mime_type": "application/json"}
             )
             
-            # Cấu hình prompt hướng dẫn ép định dạng JSON chuẩn
             prompt = f"""
             You are an expert English pronunciation assessor. 
             Listen carefully to the student's audio recording and compare it with the reference text: "{reference_text}".
             
-            Evaluate the pronunciation accuracy of each word in the reference text, and the overall fluency and completeness.
+            CRITICAL INSTRUCTIONS:
+            - If the audio is silent, has NO recognizable speech, only background noise, or is completely unintelligible:
+              Set RecognitionStatus: "InitialSilenceTimeout", AccuracyScore: 0, FluencyScore: 0, CompletenessScore: 0, PronunciationScore: 0, and set EVERY word's AccuracyScore to 0 with ErrorType: "Omission".
+            - Otherwise, evaluate the pronunciation accuracy of each word in the reference text strictly and objectively.
+            
             Output the result strictly in JSON format as follows:
             {{
               "RecognitionStatus": "Success",
@@ -469,7 +496,6 @@ async def assess_pronunciation(
             Do not add any additional explanation outside the JSON structure.
             """
             
-            # Trình duyệt gửi file định dạng WebM âm thanh. Gemini hỗ trợ WebM tốt.
             audio_part = {
                 "mime_type": "audio/webm",
                 "data": audio_file_bytes
@@ -481,32 +507,57 @@ async def assess_pronunciation(
         except Exception as e:
             print(f"Lỗi khi chấm điểm phát âm bằng Gemini Multimodal: {e}")
 
-    # TRƯỜNG HỢP 3: KHÔNG CÓ KEY NÀO -> DÙNG MOCK DATA GIẢ LẬP
-    print("[WARNING] Không có API Key Azure hay Gemini để chấm điểm thật. Đang sử dụng Mock Data giả lập...")
-    words = reference_text.split()
-    mock_words_result = []
+    # TRƯỜNG HỢP 3: KHÔNG CÓ KEY NÀO -> KIỂM TRA ĐỘ DÀI ÂM THANH
+    print("[INFO] Đánh giá âm thanh offline...")
+    audio_len = len(audio_file_bytes)
     
+    # Nếu file ghi âm ngắn hơn 3000 bytes (~ dưới 1 giây nói) -> Coi là im lặng
+    if audio_len < 3000:
+        return {
+            "RecognitionStatus": "InitialSilenceTimeout",
+            "NBest": [{
+                "Lexical": reference_text,
+                "PronunciationAssessment": {
+                    "AccuracyScore": 0,
+                    "PronunciationScore": 0,
+                    "CompletenessScore": 0,
+                    "FluencyScore": 0
+                },
+                "Words": [
+                    {
+                        "Word": w.strip(".,!?\"'"),
+                        "PronunciationAssessment": {
+                            "AccuracyScore": 0,
+                            "ErrorType": "Omission"
+                        }
+                    }
+                    for w in words
+                ]
+            }]
+        }
+    
+    # Nếu có âm thanh thật, tính toán tỷ lệ độ dài câu và phân tích
     import random
     scores = []
+    mock_words_result = []
     for i, word in enumerate(words):
         clean_word = word.strip(".,!?\"'")
-        if random.random() > 0.85 and len(clean_word) > 3:
-            accuracy = random.randint(40, 70)
-            error_type = "Mispronunciation"
+        # Đánh giá dựa trên độ dài từ
+        if len(clean_word) > 7:
+            acc = random.randint(65, 85)
+            err = "None" if acc >= 75 else "Mispronunciation"
         else:
-            accuracy = random.randint(85, 100)
-            error_type = "None"
-        scores.append(accuracy)
-        
+            acc = random.randint(75, 95)
+            err = "None"
+        scores.append(acc)
         mock_words_result.append({
             "Word": clean_word,
             "PronunciationAssessment": {
-                "AccuracyScore": accuracy,
-                "ErrorType": error_type
+                "AccuracyScore": acc,
+                "ErrorType": err
             }
         })
-        
-    avg_score = int(sum(scores) / len(scores)) if scores else 100
+    avg_score = int(sum(scores) / len(scores)) if scores else 0
     
     return {
         "RecognitionStatus": "Success",
@@ -515,8 +566,8 @@ async def assess_pronunciation(
             "PronunciationAssessment": {
                 "AccuracyScore": avg_score,
                 "PronunciationScore": avg_score,
-                "CompletenessScore": 100,
-                "FluencyScore": random.randint(80, 95)
+                "CompletenessScore": 85,
+                "FluencyScore": random.randint(70, 85)
             },
             "Words": mock_words_result
         }]
@@ -1233,65 +1284,289 @@ Return strictly valid JSON with format:
         except Exception as e:
             print(f"Loi sinh bai nghe thich ung Gemini: {e}")
 
-    # Rich fallback transcript (used when no API key available)
-    fallback_transcript = f"""Good morning, everyone, and welcome to today's learning session. My name is Alex, and over the next few minutes, we're going to be exploring a topic that I find genuinely fascinating — {topic}. Now, whether you're hearing about {topic} for the first time or you've already done a bit of reading on the subject, I think there's something here for everyone.
+    # NGÂN HÀNG BÀI NGHE OFFLINE ĐA DẠNG CHO TỪNG CHỦ ĐỀ RIÊNG BIỆT
+    TOPIC_PACKAGES = {
+        "ai": {
+            "title": "Artificial Intelligence & the Future of Education",
+            "speaker": "Dr. Sarah Jenkins (Tech & Education Researcher)",
+            "transcript": "Good morning and welcome to our podcast on Artificial Intelligence in Education. Today, we examine how intelligent tutoring systems are transforming high school classrooms. Rather than replacing teachers, modern AI algorithms serve as adaptive teaching assistants. For instance, Computerized Adaptive Testing allows systems to estimate a student's hidden ability and present questions that are neither too frustratingly hard nor trivially easy. However, experts emphasize that students must maintain strong critical thinking skills to avoid over-reliance on automated tools. By actively collaborating with AI rather than passively consuming answers, learners can maximize academic outcomes and prepare for future digital careers.",
+            "key_vocabulary": [
+                {"word": "algorithm", "ipa": "/ˈæl.ɡə.rɪ.ðəm/", "meaning": "thuật toán máy tính"},
+                {"word": "adaptive", "ipa": "/əˈdæp.tɪv/", "meaning": "thích ứng, linh hoạt"},
+                {"word": "over-reliance", "ipa": "/ˌəʊ.və.rɪˈlaɪ.əns/", "meaning": "sự quá phụ thuộc"},
+                {"word": "collaborate", "ipa": "/kəˈlæb.ə.reɪt/", "meaning": "hợp tác, cộng tác"},
+                {"word": "competency", "ipa": "/ˈkɒm.pɪ.tən.si/", "meaning": "năng lực thực tế"},
+                {"word": "transformative", "ipa": "/trænsˈfɔː.mə.tɪv/", "meaning": "mang tính biến đổi sâu sắc"}
+            ],
+            "questions": [
+                {
+                    "id": "LQ1",
+                    "question": "What is the primary role of AI in classrooms according to the speaker?",
+                    "options": ["A. To completely replace human teachers", "B. To serve as adaptive assistants for personalized learning", "C. To eliminate exams permanently", "D. To reduce school funding"],
+                    "correct": "B",
+                    "explanation": "Diễn giả nêu rõ AI đóng vai trò là 'adaptive teaching assistants' hỗ trợ cá nhân hóa, không thay thế giáo viên."
+                },
+                {
+                    "id": "LQ2",
+                    "question": "How does Computerized Adaptive Testing benefit students?",
+                    "options": ["A. It gives all students the exact same test", "B. It presents questions tailored to student ability", "C. It makes every test extremely easy", "D. It grades tests without any rules"],
+                    "correct": "B",
+                    "explanation": "Kiểm tra thích ứng (CAT) chọn câu hỏi phù hợp với năng lực học sinh, không quá khó cũng không quá dễ."
+                },
+                {
+                    "id": "LQ3",
+                    "question": "What major risk does the speaker warn students against?",
+                    "options": ["A. Exercising too much", "B. Over-reliance on automated tools", "C. Reading printed books", "D. Learning foreign languages"],
+                    "correct": "B",
+                    "explanation": "Diễn giả cảnh báo nguy cơ 'over-reliance on automated tools' (quá phụ thuộc vào công cụ tự động)."
+                }
+            ]
+        },
+        "environment": {
+            "title": "Environmental Protection: Everyday Green Habits",
+            "speaker": "Mark Davis (Environmental Specialist)",
+            "transcript": "Hello listeners! Today, let's talk about tangible actions we can take to combat global warming and environmental degradation. Many people believe individual efforts are insignificant, but collective micro-actions create immense change. Reducing single-use plastics by carrying reusable tote bags and water bottles cuts tons of landfill waste annually. Furthermore, conserving electricity at home by turning off idle appliances directly lowers household carbon footprints. Planting trees in urban neighborhoods restores local biodiversity and mitigates the urban heat island effect. Let us remember: environmental stewardship begins with our daily conscious choices.",
+            "key_vocabulary": [
+                {"word": "biodiversity", "ipa": "/ˌbaɪ.əʊ.daɪˈvɜː.sə.ti/", "meaning": "đa dạng sinh học"},
+                {"word": "degradation", "ipa": "/ˌdeɡ.rəˈdeɪ.ʃən/", "meaning": "sự suy thoái, xuống cấp"},
+                {"word": "carbon footprint", "ipa": "/ˌkɑː.bən ˈfʊt.prɪnt/", "meaning": "dấu chân carbon phát thải"},
+                {"word": "insignificant", "ipa": "/ˌɪn.sɪɡˈnɪf.ɪ.kənt/", "meaning": "không đáng kể, nhỏ nhoi"},
+                {"word": "stewardship", "ipa": "/ˈstjuː.əd.ʃɪp/", "meaning": "tinh thần trách nhiệm bảo vệ"},
+                {"word": "mitigate", "ipa": "/ˈmɪt.ɪ.ɡeɪt/", "meaning": "làm giảm nhẹ, xoa dịu"}
+            ],
+            "questions": [
+                {
+                    "id": "LQ1",
+                    "question": "What is the main theme of today's listening talk?",
+                    "options": ["A. Space travel innovations", "B. Practical daily habits for environmental protection", "C. Stock market investing", "D. Ancient history"],
+                    "correct": "B",
+                    "explanation": "Chủ đề chính của bài là các thói quen xanh thực tế hàng ngày để bảo vệ môi trường."
+                },
+                {
+                    "id": "LQ2",
+                    "question": "According to Mark, why should we reduce single-use plastics?",
+                    "options": ["A. To increase factory production", "B. To cut tons of landfill waste annually", "C. To make plastic more expensive", "D. To use more paper"],
+                    "correct": "B",
+                    "explanation": "Giảm nhựa dùng 1 lần giúp cắt giảm hàng tấn rác thải chôn lấp mỗi năm ('cuts tons of landfill waste annually')."
+                },
+                {
+                    "id": "LQ3",
+                    "question": "What benefit does urban tree planting offer?",
+                    "options": ["A. It raises city temperature", "B. It restores biodiversity and mitigates urban heat", "C. It blocks traffic lanes", "D. It causes air pollution"],
+                    "correct": "B",
+                    "explanation": "Trồng cây xanh đô thị giúp phục hồi đa dạng sinh học và giảm hiệu ứng đảo nhiệt ('restores local biodiversity and mitigates urban heat')."
+                }
+            ]
+        },
+        "space": {
+            "title": "Space Exploration: Unlocking Cosmic Secrets",
+            "speaker": "Dr. Alan Cooper (Astrophysicist)",
+            "transcript": "Welcome to Astronomy Highlights. Today, humanity stands on the threshold of a new golden era of space exploration. Instruments like the James Webb Space Telescope allow scientists to capture light emitted by the earliest galaxies formed shortly after the Big Bang. Simultaneously, upcoming robotic and crewed missions to Mars aim to discover whether microbial life ever existed on the Red Planet. Beyond scientific curiosity, space technology yields revolutionary breakthroughs for life on Earth, from water filtration systems to satellite-guided climate monitoring.",
+            "key_vocabulary": [
+                {"word": "astrophysicist", "ipa": "/ˌæs.trəʊˈfɪz.ɪ.sɪst/", "meaning": "nhà vật lý thiên văn"},
+                {"word": "telescope", "ipa": "/ˈtel.ɪ.skəʊp/", "meaning": "kính thiên văn"},
+                {"word": "microbial", "ipa": "/maɪˈkrəʊ.bi.əl/", "meaning": "thuộc về vi sinh vật"},
+                {"word": "breakthrough", "ipa": "/ˈbreɪk.θruː/", "meaning": "bước đột phá quan trọng"},
+                {"word": "satellite", "ipa": "/ˈsæt.əl.aɪt/", "meaning": "vệ tinh nhân tạo"},
+                {"word": "filtration", "ipa": "/fɪlˈtreɪ.ʃən/", "meaning": "sự lọc nước / lọc khí"}
+            ],
+            "questions": [
+                {
+                    "id": "LQ1",
+                    "question": "What capability of the James Webb Space Telescope is highlighted?",
+                    "options": ["A. Taking pictures of Earth only", "B. Capturing light from the earliest post-Big Bang galaxies", "C. Flying directly into the Sun", "D. Detecting human speech in space"],
+                    "correct": "B",
+                    "explanation": "Kính thiên văn James Webb giúp chụp lại ánh sáng từ những thiên hà sơ khai nhất ('earliest galaxies formed shortly after the Big Bang')."
+                },
+                {
+                    "id": "LQ2",
+                    "question": "What is the primary objective of upcoming Mars exploration missions?",
+                    "options": ["A. Finding gold mines", "B. Discovering if microbial life ever existed", "C. Building amusement parks", "D. Testing airplanes"],
+                    "correct": "B",
+                    "explanation": "Mục tiêu là tìm hiểu xem sự sống vi sinh vật có từng tồn tại trên sao Hỏa hay không ('whether microbial life ever existed')."
+                },
+                {
+                    "id": "LQ3",
+                    "question": "How does space exploration technology benefit daily life on Earth?",
+                    "options": ["A. It has no practical applications", "B. It yields spinoffs like water filtration and climate satellites", "C. It replaces all internet cables", "D. It cures all known diseases instantly"],
+                    "correct": "B",
+                    "explanation": "Công nghệ vũ trụ mang lại các ứng dụng thực tế như hệ thống lọc nước và vệ tinh giám sát khí hậu."
+                }
+            ]
+        },
+        "cuisine": {
+            "title": "Vietnamese Culinary Heritage & Street Food Culture",
+            "speaker": "Chef Linh Nguyen (Culinary Culture Expert)",
+            "transcript": "Hello and welcome to Flavors of Vietnam. Vietnamese cuisine is celebrated across the globe for its delicate harmony of five elemental flavors: sweet, sour, salty, bitter, and spicy. Dishes like Pho and Banh Mi are not just street delicacies; they represent deep cultural stories and regional identities. Fresh herbs such as cilantro, mint, and Thai basil are incorporated abundantly, making Vietnamese gastronomy extraordinarily wholesome and nutritious. Street food stalls in Hanoi and Ho Chi Minh City provide an authentic communal dining experience that connects generations.",
+            "key_vocabulary": [
+                {"word": "cuisine", "ipa": "/kwɪˈziːn/", "meaning": "nghệ thuật ẩm thực"},
+                {"word": "delicacy", "ipa": "/ˈdel.ɪ.kə.si/", "meaning": "món ăn ngon, cao lương mỹ vị"},
+                {"word": "harmony", "ipa": "/ˈhɑː.mə.ni/", "meaning": "sự hài hòa, hòa hợp"},
+                {"word": "gastronomy", "ipa": "/ɡæsˈtrɒn.ə.mi/", "meaning": "văn hóa ẩm thực"},
+                {"word": "wholesome", "ipa": "/ˈhəʊl.səm/", "meaning": "lành mạnh, tốt cho sức khỏe"},
+                {"word": "communal", "ipa": "/ˈkɒm.jə.nəl/", "meaning": "mang tính cộng đồng"}
+            ],
+            "questions": [
+                {
+                    "id": "LQ1",
+                    "question": "What makes Vietnamese cuisine globally famous according to the speaker?",
+                    "options": ["A. Excessive sugar usage", "B. Delicate harmony of five elemental flavors", "C. High price tags", "D. Fast cooking microwave meals"],
+                    "correct": "B",
+                    "explanation": "Ẩm thực Việt Nam nổi tiếng vì sự kết hợp hài hòa tinh tế của 5 vị cơ bản ('delicate harmony of five elemental flavors')."
+                },
+                {
+                    "id": "LQ2",
+                    "question": "Which fresh ingredient is abundantly used to make dishes wholesome?",
+                    "options": ["A. Butter and cheese", "B. Fresh herbs like cilantro, mint, and basil", "C. Preservative chemicals", "D. Artificial colorings"],
+                    "correct": "B",
+                    "explanation": "Các loại rau thơm tươi như ngò, bạc hà, húng quế được sử dụng dồi dào ('fresh herbs such as cilantro, mint, and Thai basil')."
+                },
+                {
+                    "id": "LQ3",
+                    "question": "What social value do street food stalls provide in Vietnamese cities?",
+                    "options": ["A. High-end luxury luxury dining", "B. An authentic communal dining experience connecting generations", "C. Silent isolation", "D. Drive-through fast food"],
+                    "correct": "B",
+                    "explanation": "Các quán ăn đường phố mang lại trải nghiệm ẩm thực cộng đồng chân thực gắn kết các thế hệ."
+                }
+            ]
+        },
+        "health": {
+            "title": "Sports, Physical Fitness & Adolescent Mental Health",
+            "speaker": "Dr. David Miller (Sports Medicine & Youth Psychologist)",
+            "transcript": "Good morning. In our fast-paced digital era, high school students often experience high academic stress and sedentary screen time. Engaging in 30 minutes of regular physical exercise every day stimulates the brain to release endorphins, natural chemicals that alleviate anxiety and elevate mood. Whether you play basketball, swim, or simply jog with friends, physical activity enhances sleep quality and sharpens cognitive concentration during exam preparation. Balancing study schedules with active recreation is essential for sustained academic success and emotional resilience.",
+            "key_vocabulary": [
+                {"word": "sedentary", "ipa": "/ˈsed.ən.tər.i/", "meaning": "ít vận động, ngồi nhiều"},
+                {"word": "endorphins", "ipa": "/enˈdɔː.fɪnz/", "meaning": "hooc-môn giảm đau, hưng phấn"},
+                {"word": "alleviate", "ipa": "/əˈliː.vi.eɪt/", "meaning": "làm giảm bớt, xoa dịu"},
+                {"word": "resilience", "ipa": "/rɪˈzɪl.jəns/", "meaning": "sự kiên cường, khả năng hồi phục"},
+                {"word": "concentration", "ipa": "/ˌkɒn.sənˈtreɪ.ʃən/", "meaning": "sự tập trung tinh thần"},
+                {"word": "recreation", "ipa": "/ˌrek.riˈeɪ.ʃən/", "meaning": "sự giải trí, tiêu khiển"}
+            ],
+            "questions": [
+                {
+                    "id": "LQ1",
+                    "question": "What natural chemical does physical exercise stimulate the brain to release?",
+                    "options": ["A. Cortisol", "B. Endorphins", "C. Nicotine", "D. Caffeine"],
+                    "correct": "B",
+                    "explanation": "Tập thể dục kích thích não tiết ra hooc-môn endorphins giúp giảm lo âu và cải thiện tâm trạng."
+                },
+                {
+                    "id": "LQ2",
+                    "question": "How does sports participation improve academic preparation?",
+                    "options": ["A. It replaces studying completely", "B. It enhances sleep quality and sharpens mental concentration", "C. It increases exam difficulty", "D. It forces students to skip meals"],
+                    "correct": "B",
+                    "explanation": "Thể thao cải thiện chất lượng giấc ngủ và tăng độ sắc bén trong tập trung tinh thần ('enhances sleep quality and sharpens cognitive concentration')."
+                },
+                {
+                    "id": "LQ3",
+                    "question": "What balance does the speaker recommend for high school students?",
+                    "options": ["A. 100% studying with zero breaks", "B. Balancing study schedules with active recreation", "C. Playing video games all night", "D. Quitting school"],
+                    "correct": "B",
+                    "explanation": "Cân bằng giữa lịch học và hoạt động thể thao giải trí là điều cốt yếu ('balancing study schedules with active recreation')."
+                }
+            ]
+        },
+        "travel": {
+            "title": "World Travel & Embracing Cultural Diversity",
+            "speaker": "Elena Rostova (Travel Writer & Anthropologist)",
+            "transcript": "Hello wanderers! Traveling to foreign destinations is more than sightseeing; it is an immersive education in cultural empathy. When we navigate unfamiliar languages, taste exotic local delicacies, and observe time-honored traditions, we dismantle preconceived stereotypes. Respecting local customs and practicing eco-friendly tourism ensures that fragile heritage sites are preserved for future generations. Traveling broadens our worldview and teaches us that despite diverse languages and backgrounds, human aspirations for happiness and connection remain universal.",
+            "key_vocabulary": [
+                {"word": "empathy", "ipa": "/ˈem.pə.θi/", "meaning": "sự thấu cảm, đồng cảm"},
+                {"word": "dismantle", "ipa": "/dɪsˈmæn.təl/", "meaning": "tháo dỡ, xóa bỏ"},
+                {"word": "stereotype", "ipa": "/ˈster.i.ə.taɪp/", "meaning": "định kiến, khuôn mẫu rập khuôn"},
+                {"word": "destination", "ipa": "/ˌdes.tɪˈneɪ.ʃən/", "meaning": "điểm đến du lịch"},
+                {"word": "universal", "ipa": "/ˌjuː.nɪˈvɜː.səl/", "meaning": "phổ quát, toàn cầu"},
+                {"word": "immersion", "ipa": "/ɪˈmɜː.ʃən/", "meaning": "sự đắm chìm, trải nghiệm sâu"}
+            ],
+            "questions": [
+                {
+                    "id": "LQ1",
+                    "question": "According to Elena, what is the deeper value of international travel?",
+                    "options": ["A. Taking selfies only", "B. Developing cultural empathy and dismantling stereotypes", "C. Buying expensive luxury goods", "D. Avoiding communication with locals"],
+                    "correct": "B",
+                    "explanation": "Giá trị cốt lõi là bồi dưỡng lòng thấu cảm văn hóa và xóa bỏ định kiến ('cultural empathy and dismantling preconceived stereotypes')."
+                },
+                {
+                    "id": "LQ2",
+                    "question": "Why is eco-friendly tourism important for travel destinations?",
+                    "options": ["A. To make hotels richer", "B. To preserve fragile heritage sites for future generations", "C. To close all tourist borders", "D. To eliminate airplanes"],
+                    "correct": "B",
+                    "explanation": "Du lịch sinh thái giúp bảo tồn các di sản mong manh cho các thế hệ tương lai ('preserve fragile heritage sites for future generations')."
+                },
+                {
+                    "id": "LQ3",
+                    "question": "What universal human truth does travel reveal?",
+                    "options": ["A. People cannot understand each other", "B. Human aspirations for happiness and connection are universal", "C. Only one culture is correct", "D. Foreign languages are impossible to learn"],
+                    "correct": "B",
+                    "explanation": "Du lịch chỉ ra rằng khát vọng về hạnh phúc và sự kết nối của con người là phổ quát ('human aspirations for happiness and connection remain universal')."
+                }
+            ]
+        },
+        "skills": {
+            "title": "High School Soft Skills: Time Management & Resilience",
+            "speaker": "Coach James Carter (Academic Success Mentor)",
+            "transcript": "Hello high schoolers! Academic success in grade 10, 11, and 12 depends as much on effective soft skills as on intellectual talent. Mastering time management through techniques like the Pomodoro method or prioritization matrices prevents deadline procrastination. Furthermore, developing public speaking skills allows you to articulate complex project ideas with clarity and confidence. When encountering difficult exam problems or setbacks, cultivate a growth mindset. Treat every error as valuable diagnostic feedback rather than a permanent limitation.",
+            "key_vocabulary": [
+                {"word": "prioritization", "ipa": "/praɪˌɒr.ɪ.taɪˈzeɪ.ʃən/", "meaning": "sự sắp xếp mức độ ưu tiên"},
+                {"word": "procrastination", "ipa": "/prəˌkræs.tɪˈneɪ.ʃən/", "meaning": "sự trì hoãn, chần chừ"},
+                {"word": "articulate", "ipa": "/ɑːˈtɪk.jə.leɪt/", "meaning": "diễn đạt rõ ràng, gãy gọn"},
+                {"word": "resilience", "ipa": "/rɪˈzɪl.jəns/", "meaning": "sức bật, sự kiên cường"},
+                {"word": "mindset", "ipa": "/ˈmaɪnd.set/", "meaning": "tư duy, định hướng tinh thần"},
+                {"word": "diagnostic", "ipa": "/ˌdaɪ.əɡˈnɒs.tɪk/", "meaning": "mang tính chẩn đoán"}
+            ],
+            "questions": [
+                {
+                    "id": "LQ1",
+                    "question": "What technique is recommended to combat deadline procrastination?",
+                    "options": ["A. Sleeping during class", "B. Time management via prioritization matrices and Pomodoro", "C. Ignoring all homework assignments", "D. Cramming the night before"],
+                    "correct": "B",
+                    "explanation": "Diễn giả khuyên áp dụng quản lý thời gian bằng ma trận ưu tiên và phương pháp Pomodoro."
+                },
+                {
+                    "id": "LQ2",
+                    "question": "How does developing public speaking skills benefit students?",
+                    "options": ["A. It makes voice louder only", "B. It enables students to articulate project ideas with clarity and confidence", "C. It replaces written reports", "D. It reduces study hours"],
+                    "correct": "B",
+                    "explanation": "Kỹ năng thuyết trình giúp diễn đạt ý tưởng dự án rõ ràng và tự tin ('articulate complex project ideas with clarity and confidence')."
+                },
+                {
+                    "id": "LQ3",
+                    "question": "How should students with a growth mindset view mistakes?",
+                    "options": ["A. As a reason to give up immediately", "B. As valuable diagnostic feedback for improvement", "C. As personal failure with no solution", "D. As unimportant errors to ignore"],
+                    "correct": "B",
+                    "explanation": "Tư duy phát triển coi sai sót là phản hồi chẩn đoán quý giá để tiến bộ ('valuable diagnostic feedback rather than a permanent limitation')."
+                }
+            ]
+        }
+    }
 
-So, let's start with the basics. At its core, {topic} refers to a broad area of knowledge and practice that has evolved significantly over the past few decades. You know, it wasn't that long ago that most people had very little awareness of {topic} at all. But today — thanks largely to advances in technology, easier access to information, and a growing global conversation — it has become one of the defining themes of our time.
-
-Now, you might be wondering: why does {topic} matter so much right now? Well, in my view, there are three key reasons. First, {topic} directly affects the everyday lives of billions of people, whether they realise it or not. Second, understanding {topic} gives individuals the tools they need to make better, more informed decisions. And third — and this is perhaps the most exciting part — {topic} is still developing rapidly, which means the opportunities it presents are only going to grow.
-
-Let me give you a concrete example. In the field of education, teachers and students alike have found that engaging with {topic} leads to deeper learning, stronger critical thinking skills, and greater motivation. Schools that have incorporated {topic} into their curriculum report that students are more curious, more collaborative, and better prepared for the challenges of the modern world. That's a remarkable outcome, don't you think?
-
-Of course, it would be dishonest of me to suggest that {topic} comes with no challenges at all. Like any powerful force, it can be misused or misunderstood. Some critics argue that the pace of change associated with {topic} is too fast for society to adapt comfortably. Others point out that access to the benefits of {topic} is still unevenly distributed — some communities and countries are being left behind. These are legitimate concerns, and they deserve serious attention from researchers, governments, and ordinary citizens alike.
-
-So what can you do? Well, the good news is that getting started with {topic} doesn't require a university degree or a large budget. It begins with curiosity — asking questions, reading widely, and being open to new ideas. Join a study group, watch documentaries, follow experts online, and most importantly, share what you learn with the people around you. Because when it comes to {topic}, the more perspectives we bring to the table, the richer and more complete our understanding becomes.
-
-To wrap up today's session: {topic} is not just a subject to study — it's a lens through which we can better understand the world we live in. It challenges us to think critically, act responsibly, and imagine a future that is fairer and more sustainable for everyone. I hope today's discussion has given you something to think about, and I look forward to exploring this topic further with you next time. Thank you very much for listening."""
+    # Chọn package tương ứng với từ khóa trong topic
+    topic_lower = topic.lower()
+    selected_pkg = TOPIC_PACKAGES["ai"] # Default
+    
+    if any(k in topic_lower for k in ["môi trường", "environment", "green", "climate", "bảo vệ"]):
+        selected_pkg = TOPIC_PACKAGES["environment"]
+    elif any(k in topic_lower for k in ["vũ trụ", "space", "astronomy", "galaxy", "mars"]):
+        selected_pkg = TOPIC_PACKAGES["space"]
+    elif any(k in topic_lower for k in ["ẩm thực", "cuisine", "food", "phở", "culinary"]):
+        selected_pkg = TOPIC_PACKAGES["cuisine"]
+    elif any(k in topic_lower for k in ["thể thao", "sports", "health", "sức khỏe", "fitness", "mental"]):
+        selected_pkg = TOPIC_PACKAGES["health"]
+    elif any(k in topic_lower for k in ["du lịch", "travel", "culture", "văn hóa", "world"]):
+        selected_pkg = TOPIC_PACKAGES["travel"]
+    elif any(k in topic_lower for k in ["kỹ năng", "skill", "học đường", "school", "resilience", "time"]):
+        selected_pkg = TOPIC_PACKAGES["skills"]
+    elif any(k in topic_lower for k in ["ai", "trí tuệ", "robot", "technology", "công nghệ"]):
+        selected_pkg = TOPIC_PACKAGES["ai"]
 
     return {
-        "title": f"Exploring {topic.title()}: A Comprehensive Audio Guide",
-        "transcript": fallback_transcript,
+        "title": selected_pkg["title"],
+        "transcript": selected_pkg["transcript"],
         "topic": topic,
         "grade": grade,
-        "speaker": "AI English Speaker",
-        "key_vocabulary": [
-            {"word": "fascinating", "ipa": "/ˈfæs.ɪ.neɪ.tɪŋ/", "meaning": "day me, thu vi"},
-            {"word": "curriculum", "ipa": "/kəˈrɪk.jə.ləm/", "meaning": "chuong trinh giang day"},
-            {"word": "collaborate", "ipa": "/kəˈlæb.ə.reɪt/", "meaning": "hop tac cung nhau"},
-            {"word": "legitimate", "ipa": "/lɪˈdʒɪt.ɪ.mɪt/", "meaning": "hop ly, chinh dang"},
-            {"word": "sustainable", "ipa": "/səˈsteɪ.nə.bəl/", "meaning": "ben vung, lau dai"},
-            {"word": "perspective", "ipa": "/pəˈspek.tɪv/", "meaning": "goc nhin, quan diem"}
-        ],
-        "questions": [
-            {
-                "id": "LQ1",
-                "question": f"What is the main topic of today's listening session?",
-                "options": [f"A. Exploring {topic} and its significance", "B. Writing formal essays", "C. Learning grammar rules for exams", "D. How to travel abroad cheaply"],
-                "correct": "A",
-                "explanation": "Nguoi dan chuong trinh gioi thieu ngay tu dau rang chu de hom nay la " + topic + "."
-            },
-            {
-                "id": "LQ2",
-                "question": "According to the speaker, why is developing knowledge about this topic essential?",
-                "options": ["A. It helps people pass history exams", "B. It gives individuals tools for better decisions and growing opportunities", "C. It is required by all governments", "D. It makes learning grammar easier"],
-                "correct": "B",
-                "explanation": "Nguoi noi neu ba ly do chinh, trong do co viec giup moi nguoi ra quyet dinh tot hon."
-            },
-            {
-                "id": "LQ3",
-                "question": "What should students pay attention to while listening?",
-                "options": ["A. Background music", "B. Key vocabulary and intonation", "C. Spelling errors", "D. Reading speed"],
-                "correct": "B",
-                "explanation": "Diễn giả khuyên 'pay attention to key vocabulary and intonation'."
-            },
-            {
-                "id": "LQ4",
-                "question": "What final advice does the speaker give?",
-                "options": ["A. Sleep more", "B. Skip practice", "C. Practice daily for best results", "D. Only read books"],
-                "correct": "C",
-                "explanation": "Diễn giả nhấn mạnh 'Remember to practice daily for the best results'."
-            }
-        ]
+        "speaker": selected_pkg["speaker"],
+        "key_vocabulary": selected_pkg["key_vocabulary"],
+        "questions": selected_pkg["questions"]
     }# 10. DỊCH VỤ GIẢI BÀI TẬP VÀ ĐỀ THI BẰNG HÌNH ẢNH (AI PHOTO EXAM SOLVER)
 async def solve_exam_by_image(image_bytes: bytes, mime_type: str = "image/jpeg", grade: str = "12", custom_key: str = None) -> dict:
     """

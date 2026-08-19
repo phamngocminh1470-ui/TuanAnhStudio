@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import axios from 'axios';
-import { Play, Mic, Square, Volume2, Award, RefreshCw, ChevronRight, HelpCircle, BookOpen, Sparkles, Plus, Wand2 } from 'lucide-react';
+import { Play, Mic, Square, Volume2, Award, RefreshCw, ChevronRight, ChevronLeft, HelpCircle, BookOpen, Sparkles, Plus, Wand2, Shuffle, AlertTriangle } from 'lucide-react';
 
 const API_BASE = '/api';
 
@@ -305,11 +305,23 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
     }
   }, [selectedGrade]);
 
-  // Lọc câu hỏi tương ứng khối lớp / trình độ CEFR
-  const basePool = dynamicSentences.length > 0 
-    ? dynamicSentences 
-    : (SENTENCES_BY_GRADE[selectedGrade] || SENTENCES_BY_GRADE["C1"] || SENTENCES_BY_GRADE["12"]);
-  const sentences = [...aiSentences, ...basePool];
+  // Lọc câu hỏi tương ứng khối lớp / trình độ CEFR - Hợp nhất DB và ngân hàng nội bộ
+  const basePool = useMemo(() => {
+    const localBank = SENTENCES_BY_GRADE[selectedGrade] || SENTENCES_BY_GRADE["12"] || [];
+    const combined = [...dynamicSentences, ...localBank];
+    const seen = new Set();
+    const unique = [];
+    for (const item of combined) {
+      const clean = (item.text || '').trim().toLowerCase();
+      if (clean && !seen.has(clean)) {
+        seen.add(clean);
+        unique.push(item);
+      }
+    }
+    return unique.length > 0 ? unique : localBank;
+  }, [dynamicSentences, selectedGrade]);
+
+  const sentences = useMemo(() => [...aiSentences, ...basePool], [aiSentences, basePool]);
   const currentSentence = sentences[currentSentenceIndex] || sentences[0] || { text: "Welcome to AI English Mentor.", level: "Default" };
 
   // Reset khi đổi khối lớp
@@ -356,9 +368,36 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
     }
   };
 
+  const recognitionRef = useRef(null);
+  const recognizedTranscriptRef = useRef('');
+
   // Bắt đầu ghi âm giọng đọc
   const startRecording = async () => {
     audioChunksRef.current = [];
+    recognizedTranscriptRef.current = '';
+
+    // Khởi động Web Speech API song song nếu trình duyệt hỗ trợ
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      try {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = 'en-US';
+        recognition.onresult = (e) => {
+          let str = '';
+          for (let i = 0; i < e.results.length; i++) {
+            str += e.results[i][0].transcript + ' ';
+          }
+          recognizedTranscriptRef.current = str.trim();
+        };
+        recognition.start();
+        recognitionRef.current = recognition;
+      } catch (err) {
+        console.warn("Web Speech API:", err);
+      }
+    }
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
@@ -371,6 +410,9 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
       };
 
       mediaRecorder.onstop = async () => {
+        if (recognitionRef.current) {
+          try { recognitionRef.current.stop(); } catch(e){}
+        }
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
         sendToAssessment(audioBlob);
         stream.getTracks().forEach(track => track.stop());
@@ -380,7 +422,7 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
       setIsRecording(true);
     } catch (error) {
       console.error("Lỗi micro:", error);
-      alert("Please allow microphone access to practice speaking.");
+      alert("Vui lòng cấp quyền Microphone trong trình duyệt để luyện nói.");
     }
   };
 
@@ -396,7 +438,27 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
   const sendToAssessment = async (audioBlob) => {
     setIsLoading(true);
     setAssessmentResult(null);
-    
+
+    const spokenText = recognizedTranscriptRef.current.trim().toLowerCase();
+    const refWords = currentSentence.text.split(/\s+/).map(w => w.replace(/[.,!?"']/g, ''));
+
+    // Kiểm tra nếu audio quá bé (< 2000 bytes) hoặc không có tiếng
+    if (audioBlob.size < 2000 && !spokenText) {
+      setAssessmentResult({
+        accuracyScore: 0,
+        fluencyScore: 0,
+        completenessScore: 0,
+        pronunciationScore: 0,
+        silenceDetected: true,
+        words: refWords.map(w => ({
+          Word: w,
+          PronunciationAssessment: { AccuracyScore: 0, ErrorType: 'Omission' }
+        }))
+      });
+      setIsLoading(false);
+      return;
+    }
+
     const formData = new FormData();
     formData.append('file', audioBlob, 'read.wav');
     formData.append('reference_text', currentSentence.text);
@@ -407,18 +469,61 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
       });
       
       const nbest = response.data.NBest?.[0];
+      const isSilence = response.data.RecognitionStatus === 'InitialSilenceTimeout' || (!spokenText && audioBlob.size < 3000 && (!nbest || nbest.PronunciationAssessment?.PronunciationScore === 0));
+
+      if (isSilence) {
+        setAssessmentResult({
+          accuracyScore: 0,
+          fluencyScore: 0,
+          completenessScore: 0,
+          pronunciationScore: 0,
+          silenceDetected: true,
+          words: refWords.map(w => ({
+            Word: w,
+            PronunciationAssessment: { AccuracyScore: 0, ErrorType: 'Omission' }
+          }))
+        });
+        setIsLoading(false);
+        return;
+      }
+
       if (nbest) {
-        const overallScore = nbest.PronunciationAssessment?.PronunciationScore || 0;
-        const accuracy = nbest.PronunciationAssessment?.AccuracyScore || 0;
-        const fluency = nbest.PronunciationAssessment?.FluencyScore || 0;
-        const completeness = nbest.PronunciationAssessment?.CompletenessScore || 0;
+        let overallScore = nbest.PronunciationAssessment?.PronunciationScore || 0;
+        let accuracy = nbest.PronunciationAssessment?.AccuracyScore || 0;
+        let fluency = nbest.PronunciationAssessment?.FluencyScore || 0;
+        let completeness = nbest.PronunciationAssessment?.CompletenessScore || 0;
+        let evaluatedWords = nbest.Words || [];
+
+        // Nếu client có kết quả STT từ Web Speech API, kết hợp để đánh giá chính xác từng từ
+        if (spokenText && evaluatedWords.length > 0) {
+          const spokenWordsList = spokenText.split(/\s+/);
+          evaluatedWords = refWords.map(w => {
+            const wLower = w.toLowerCase();
+            const exactMatch = spokenWordsList.some(sw => sw === wLower);
+            const partialMatch = spokenWordsList.some(sw => sw.includes(wLower) || wLower.includes(sw));
+            if (exactMatch) {
+              return { Word: w, PronunciationAssessment: { AccuracyScore: 95, ErrorType: 'None' } };
+            } else if (partialMatch) {
+              return { Word: w, PronunciationAssessment: { AccuracyScore: 65, ErrorType: 'Mispronunciation' } };
+            } else {
+              return { Word: w, PronunciationAssessment: { AccuracyScore: 0, ErrorType: 'Omission' } };
+            }
+          });
+          const matchCount = evaluatedWords.filter(w => w.PronunciationAssessment.ErrorType === 'None').length;
+          const partialCount = evaluatedWords.filter(w => w.PronunciationAssessment.ErrorType === 'Mispronunciation').length;
+          accuracy = Math.round(((matchCount * 100) + (partialCount * 60)) / refWords.length);
+          overallScore = accuracy;
+          fluency = Math.max(50, accuracy);
+          completeness = Math.round(((matchCount + partialCount) / refWords.length) * 100);
+        }
 
         setAssessmentResult({
           accuracyScore: accuracy,
           fluencyScore: fluency,
           completenessScore: completeness,
           pronunciationScore: overallScore,
-          words: nbest.Words || []
+          silenceDetected: overallScore === 0,
+          words: evaluatedWords
         });
 
         // Lưu điểm phát âm vào localStorage
@@ -485,9 +590,32 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
       }
     } catch (error) {
       console.error("Lỗi chấm phát âm:", error);
-      alert("Error connecting to pronunciation assessment server.");
+      alert("Lỗi kết nối máy chủ chấm phát âm.");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Đổi ngẫu nhiên một câu trong ngân hàng
+  const jumpRandomSentence = () => {
+    if (sentences.length <= 1) return;
+    let nextIdx;
+    let tries = 0;
+    do {
+      nextIdx = Math.floor(Math.random() * sentences.length);
+      tries++;
+    } while (nextIdx === currentSentenceIndex && tries < 10);
+    setCurrentSentenceIndex(nextIdx);
+    setAssessmentResult(null);
+    setSpacedRepetitionInfo(null);
+  };
+
+  // Quay lại câu trước
+  const prevSentence = () => {
+    if (currentSentenceIndex > 0) {
+      setCurrentSentenceIndex(prev => prev - 1);
+      setAssessmentResult(null);
+      setSpacedRepetitionInfo(null);
     }
   };
 
@@ -521,27 +649,20 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
           if (nextIndex !== -1) {
             setCurrentSentenceIndex(nextIndex);
             setAssessmentResult(null);
-          } else {
-            setCurrentSentenceIndex((prev) => (prev + 1) % sentences.length);
-            setAssessmentResult(null);
+            setLoadingNext(false);
+            return;
           }
-        } else {
-          // Tuần tự
-          setCurrentSentenceIndex((prev) => (prev + 1) % sentences.length);
-          setAssessmentResult(null);
         }
       } catch (err) {
-        console.error("Lỗi thuật toán thích ứng IRT:", err);
-        setCurrentSentenceIndex((prev) => (prev + 1) % sentences.length);
-        setAssessmentResult(null);
+        console.error("Lỗi chọn câu hỏi thích ứng:", err);
       } finally {
         setLoadingNext(false);
       }
-    } else {
-      // Chế độ học tuần tự
-      setCurrentSentenceIndex((prev) => (prev + 1) % sentences.length);
-      setAssessmentResult(null);
     }
+
+    // Luồng chuyển câu bình thường tuần tự (xoay vòng)
+    setCurrentSentenceIndex(prev => (prev + 1) % sentences.length);
+    setAssessmentResult(null);
   };
 
   // Màu từ phát âm
@@ -573,7 +694,17 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          {/* Nút Tạo 5 câu AI bằng Gemini */}
+          {/* Nút Đổi câu ngẫu nhiên */}
+          <button
+            onClick={jumpRandomSentence}
+            className="px-3.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 text-xs font-bold transition flex items-center gap-1.5 border border-white/10 cursor-pointer"
+            title="Chọn ngẫu nhiên một câu khác trong ngân hàng câu hỏi"
+          >
+            <Shuffle className="w-3.5 h-3.5 text-amber-400" />
+            <span>Đổi câu ngẫu nhiên</span>
+          </button>
+
+          {/* Nút Tạo 3 câu AI bằng Gemini */}
           <button
             onClick={() => generateNewAISentences(3)}
             disabled={isGeneratingAI}
@@ -654,6 +785,13 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
               )}
             </div>
 
+            {assessmentResult?.silenceDetected && (
+              <div className="flex items-center gap-2.5 p-3.5 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-300 text-xs font-bold animate-fade-in mt-3">
+                <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
+                <span>Không phát hiện giọng nói hoặc âm thanh quá nhỏ. Vui lòng nhấn Mic và nói to rõ vào microphone!</span>
+              </div>
+            )}
+
             <div className="flex items-center justify-between mt-6 pt-4 border-t border-white/5">
               <button
                 onClick={playSample}
@@ -673,11 +811,21 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
           </div>
 
           {/* Điều khiển ghi âm */}
-          <div className="flex items-center justify-center gap-8 p-4">
+          <div className="flex items-center justify-center gap-6 p-4">
+            <button
+              onClick={prevSentence}
+              disabled={isRecording || isLoading || currentSentenceIndex === 0}
+              className="w-12 h-12 rounded-2xl bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center text-gray-300 transition border border-white/5 glow-btn-dark cursor-pointer"
+              title="Câu trước đó"
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+
             {isRecording ? (
               <button
                 onClick={stopRecording}
                 className="w-20 h-20 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center text-white transition shadow-lg shadow-red-500/20 pulse-record glow-btn-danger cursor-pointer"
+                title="Dừng ghi âm và chấm điểm"
               >
                 <Square className="w-8 h-8 fill-current" />
               </button>
@@ -686,10 +834,20 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
                 onClick={startRecording}
                 disabled={isPlayingSample || isLoading}
                 className="w-20 h-20 rounded-full bg-brand-500 hover:bg-brand-600 disabled:bg-gray-800 flex items-center justify-center text-white transition shadow-lg shadow-brand-500/20 glow-btn-brand cursor-pointer"
+                title="Bắt đầu ghi âm phát âm"
               >
                 <Mic className="w-9 h-9" />
               </button>
             )}
+
+            <button
+              onClick={jumpRandomSentence}
+              disabled={isRecording || isLoading}
+              className="w-12 h-12 rounded-2xl bg-amber-500/10 hover:bg-amber-500/20 flex items-center justify-center text-amber-400 transition border border-amber-500/20 glow-btn-dark cursor-pointer"
+              title="Đổi ngẫu nhiên câu khác"
+            >
+              <Shuffle className="w-5 h-5" />
+            </button>
 
             <button
               onClick={nextSentence}

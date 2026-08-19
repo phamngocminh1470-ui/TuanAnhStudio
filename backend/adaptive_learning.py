@@ -2,6 +2,7 @@ import math
 import os
 import json
 import time
+import random
 from typing import List, Dict, Tuple, Optional, Any
 
 # =====================================================================
@@ -23,7 +24,12 @@ class IRTQuestion:
         explanation: str = "",
         source: str = "Calibrated Bank",
         calibration_status: str = "CALIBRATED",
-        sample_size: int = 100
+        sample_size: int = 100,
+        task_type: str = "MCQ",
+        statements: Optional[List[Dict[str, Any]]] = None,
+        correct_short: Optional[str] = None,
+        passage: Optional[str] = None,
+        passage_id: Optional[str] = None
     ):
         """
         Khởi tạo câu hỏi trong mô hình IRT 3PL và định dạng ngân hàng câu hỏi chuẩn KHKT.
@@ -41,6 +47,11 @@ class IRTQuestion:
         self.source = source
         self.calibration_status = calibration_status  # CALIBRATED, PROVISIONAL, UNCALIBRATED
         self.sample_size = sample_size
+        self.task_type = task_type
+        self.statements = statements
+        self.correct_short = correct_short
+        self.passage = passage
+        self.passage_id = passage_id
 
     # Để tương thích ngược với code cũ sử dụng difficulty thay vì b
     @property
@@ -70,18 +81,23 @@ class ItemBank:
                 for q in data.get("questions", []):
                     self.questions[q["item_id"]] = IRTQuestion(
                         item_id=q["item_id"],
-                        difficulty=q.get("difficulty_parameter", q.get("difficulty", 0.0)),
-                        discrimination=q.get("discrimination", 1.0),
-                        guessing=q.get("guessing_parameter", q.get("guessing", 0.25)),
+                        difficulty=float(q.get("difficulty_parameter", q.get("difficulty", 0.0))),
+                        discrimination=float(q.get("discrimination", 1.0)),
+                        guessing=float(q.get("guessing_parameter", q.get("guessing", 0.25))),
                         skill=q.get("skill", "Tenses"),
                         topic=q.get("topic", "Grammar"),
-                        question_text=q["question"],
-                        options=q["options"],
-                        correct=q["correct"],
+                        question_text=q.get("question", ""),
+                        options=q.get("options", []),
+                        correct=q.get("correct", q.get("correct_answer", "")),
                         explanation=q.get("explanation", ""),
                         source=q.get("source", "KHKT Bank"),
                         calibration_status=q.get("calibration_status", "CALIBRATED"),
-                        sample_size=q.get("sample_size", 100)
+                        sample_size=q.get("sample_size", 100),
+                        task_type=q.get("task_type", "MCQ"),
+                        statements=q.get("statements"),
+                        correct_short=q.get("correct_short"),
+                        passage=q.get("passage"),
+                        passage_id=q.get("passage_id")
                     )
         except Exception as e:
             print(f"Lỗi khi tải ngân hàng câu hỏi: {e}")
@@ -253,29 +269,18 @@ def compute_skill_mastery(
     Returns:
         Dict[skill_name, mastery_value] với giá trị trong [0.0, 1.0]
     """
-    DEFAULT_SKILLS = {
-        "Tenses": 0.5,
-        "Passive Voice": 0.5,
-        "Relative Clauses": 0.5,
-        "Conditionals": 0.5,
-        "Reported Speech": 0.5,
-        "Vocabulary": 0.5,
-        "Collocations": 0.5,
-        "Pronunciation": 0.5,
-        "Stress": 0.5
-    }
-    
-    mastery = initial_mastery.copy() if initial_mastery else DEFAULT_SKILLS.copy()
+    mastery = dict(initial_mastery) if initial_mastery else {}
     
     for h in history_items:
         item_id = h.get("itemId", "")
         result = int(h.get("result", 0))
         
         # Tìm skill từ item bank; nếu không tìm thấy thì bỏ qua (không fallback sang Tenses)
-        if item_id not in item_bank.questions:
+        q = item_bank.questions.get(item_id)
+        if not q:
             continue
         
-        skill = item_bank.questions[item_id].skill
+        skill = q.skill
         m_old = mastery.get(skill, 0.5)
         
         if result == 1:
@@ -302,69 +307,111 @@ class AdaptiveQuestionSelector:
         self,
         theta: float,
         irt_history: List[Dict[str, Any]],
-        skill_mastery: Dict[str, float]
+        skill_mastery: Dict[str, float],
+        topic_filter: Optional[str] = None,
+        part_filter: Optional[str] = None,
+        difficulty_filter: Optional[str] = None,
+        exclude_id: Optional[str] = None
     ) -> Tuple[Optional[IRTQuestion], str]:
         """
-        Chọn câu hỏi tiếp theo dựa trên:
-        - Khoảng cách độ khó (IRT)
-        - Độ thành thạo kỹ năng (Mastery)
-        - Ràng buộc cây quan hệ tiên quyết (Knowledge Graph)
-        - Tránh lặp lại câu hỏi đã trả lời
+        Chọn câu hỏi thích ứng tiếp theo dựa trên:
+        - Lọc theo Định dạng Phần (Part 1 MCQ, Part 2 True/False, Part 3 Điền từ)
+        - Lọc theo Chủ đề (Grammar, Reading, Vocab, Comm, Writing)
+        - Lọc theo Độ khó (Dễ, Trung bình, Khó)
+        - Tối ưu hóa hàm thông tin IRT và bổ khuyết Mastery
+        - Lấy ngẫu nhiên trong Top-k câu điểm cao nhất (Stochastic Top-k) để câu hỏi luôn đổi mới, hấp dẫn!
         """
         excluded_ids = {h["itemId"] for h in irt_history if "itemId" in h}
-        candidate_pool = self.item_bank.get_all_questions()
+        if exclude_id:
+            excluded_ids.add(exclude_id)
 
-        best_question = None
-        best_score = -9999.0
-        best_reason = "Không tìm thấy câu hỏi phù hợp."
+        all_questions = self.item_bank.get_all_questions()
+        pool = all_questions
 
-        for q in candidate_pool:
-            if q.item_id in excluded_ids:
-                continue
+        # 1. Lọc theo Dạng bài (Part 1 - 3)
+        if part_filter and part_filter != "all":
+            if part_filter == "part2":
+                pool = [q for q in pool if q.statements or "true" in q.task_type.lower() or "đúng" in q.task_type.lower()]
+            elif part_filter == "part3":
+                pool = [q for q in pool if q.correct_short or "short" in q.task_type.lower() or "điền" in q.task_type.lower()]
+            elif part_filter == "part1":
+                pool = [q for q in pool if not q.statements and not q.correct_short]
 
-            # 1. Ràng buộc đồ thị tri thức: Nếu kỹ năng tiên quyết chưa vững -> hạ điểm ưu tiên
+        # 2. Lọc theo Chủ đề (Topics)
+        if topic_filter and topic_filter != "all":
+            tf = topic_filter.lower()
+            if tf == "grammar":
+                matched = [q for q in pool if any(k in (q.topic + " " + q.skill).lower() for k in ["grammar", "tense", "passive", "condition", "report", "verb", "relative", "linking", "modal"])]
+            elif tf == "reading":
+                matched = [q for q in pool if any(k in (q.topic + " " + q.skill).lower() for k in ["reading", "main idea", "inference", "locating", "passage", "comprehension", "logic"])]
+            elif tf == "vocab":
+                matched = [q for q in pool if any(k in (q.topic + " " + q.skill).lower() for k in ["vocab", "collocation", "word form", "adjective", "noun", "adverb"])]
+            elif tf == "comm":
+                matched = [q for q in pool if any(k in (q.topic + " " + q.skill).lower() for k in ["comm", "dialogue", "speech", "letter", "conversation", "interview"])]
+            elif tf == "writing":
+                matched = [q for q in pool if any(k in (q.topic + " " + q.skill).lower() for k in ["writing", "arrangement", "cohesive", "rewrite"])]
+            else:
+                matched = [q for q in pool if tf in (q.topic + " " + q.skill).lower()]
+            if matched:
+                pool = matched
+
+        # 3. Lọc theo Độ khó (Difficulty)
+        if difficulty_filter and difficulty_filter != "all":
+            df = difficulty_filter.lower()
+            if df == "easy":
+                diff_matched = [q for q in pool if q.b <= -0.3]
+            elif df == "medium":
+                diff_matched = [q for q in pool if -0.3 < q.b <= 0.8]
+            elif df == "hard":
+                diff_matched = [q for q in pool if q.b > 0.8]
+            else:
+                diff_matched = pool
+            if diff_matched:
+                pool = diff_matched
+
+        if not pool:
+            pool = all_questions
+
+        # Lọc bỏ các câu đã trả lời
+        unseen_pool = [q for q in pool if q.item_id not in excluded_ids]
+        if not unseen_pool:
+            unseen_pool = [q for q in pool if q.item_id != exclude_id] or pool
+
+        scored_candidates = []
+        for q in unseen_pool:
             prereq_satisfied, weak_prereq = self.knowledge_graph.is_prerequisite_satisfied(
                 q.skill, skill_mastery, threshold=0.45
             )
-            prereq_penalty = 1.0 if prereq_satisfied else 0.1
+            prereq_penalty = 1.0 if prereq_satisfied else 0.4
 
-            # 2. Thành phần IRT: Khoảng cách giữa năng lực theta và độ khó b
             diff_distance = abs(q.b - theta)
             irt_score = 1.0 / (1.0 + diff_distance)
 
-            # 3. Thành phần Mastery: Ưu tiên củng cố kỹ năng có độ thành thạo yếu
             skill_mastery_val = skill_mastery.get(q.skill, 0.5)
             mastery_score = 1.0 - skill_mastery_val
 
-            # Tính toán điểm tổng hợp (Deterministic Scoring Function)
-            w_irt = 0.5
-            w_mastery = 0.5
-            total_score = (w_irt * irt_score + w_mastery * mastery_score) * prereq_penalty
+            total_score = (0.5 * irt_score + 0.5 * mastery_score) * prereq_penalty
 
-            if total_score > best_score:
-                best_score = total_score
-                best_question = q
+            if not prereq_satisfied:
+                reason = f"Đề xuất củng cố kỹ năng tiên quyết '{weak_prereq}' trước khi học '{q.skill}'."
+            elif skill_mastery_val < 0.55:
+                reason = f"Chọn câu '{q.skill}' (Độ khó: b={q.b:.2f}) để bồi dưỡng kỹ năng cần cải thiện."
+            else:
+                reason = f"Chọn câu vừa sức (b={q.b:.2f}, θ={theta:.2f}) để tối ưu hóa đo lường năng lực IRT."
 
-                # Tạo lý do giải thích thuật toán rõ ràng (Explainable Recommendation)
-                if not prereq_satisfied:
-                    best_reason = (
-                        f"Đề xuất củng cố kỹ năng tiên quyết '{weak_prereq}' "
-                        f"(Mastery: {_pct(skill_mastery.get(weak_prereq, 0.5))}%) "
-                        f"trước khi học '{q.skill}'."
-                    )
-                elif skill_mastery_val < 0.55:
-                    best_reason = (
-                        f"Chọn câu '{q.skill}' vì độ thành thạo còn thấp "
-                        f"({_pct(skill_mastery_val)}%). "
-                        f"Độ khó: b={q.b:.2f}, năng lực hiện tại: θ={theta:.2f}."
-                    )
-                else:
-                    best_reason = (
-                        f"Chọn câu vừa sức (b={q.b:.2f}, θ={theta:.2f}) "
-                        f"để đo lường chính xác năng lực kỹ năng '{q.skill}'."
-                    )
+            scored_candidates.append((total_score, q, reason))
 
-        return best_question, best_reason
+        if not scored_candidates:
+            return None, "Không tìm thấy câu hỏi phù hợp."
+
+        # Sắp xếp điểm giảm dần
+        scored_candidates.sort(key=lambda x: x[0], reverse=True)
+
+        # STOCHASTIC TOP-K SAMPLING (Chọn ngẫu nhiên trong top 4 câu phù hợp nhất)
+        top_k = scored_candidates[:min(4, len(scored_candidates))]
+        _, chosen_q, chosen_reason = random.choice(top_k)
+
+        return chosen_q, chosen_reason
 
 
 def _pct(val: float) -> int:

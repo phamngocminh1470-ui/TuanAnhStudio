@@ -159,9 +159,18 @@ def _today() -> str:
 
 
 def create_db_and_tables():
-    """Tạo toàn bộ bảng nếu chưa tồn tại. Gọi một lần khi khởi động app."""
+    """Tạo toàn bộ bảng nếu chưa tồn tại. Tự động nạp dữ liệu từ vựng đồ sộ nếu kho đang rỗng/ít."""
     SQLModel.metadata.create_all(engine)
     print("[DB] SQLite database initialized:", DB_PATH)
+    try:
+        with Session(engine) as session:
+            word_count = len(session.exec(select(VocabularyWord)).all())
+            if word_count < 50:
+                print(f"[DB] Phát hiện số lượng từ vựng hiện tại ít ({word_count} từ), đang tự động nạp kho từ vựng đồ sộ...")
+                from seed_massive_vocab import seed
+                seed()
+    except Exception as e:
+        print("[DB] Auto-seed vocab warning:", e)
 
 
 def get_or_create_user_progress(user_id: int, session: Session) -> UserProgress:

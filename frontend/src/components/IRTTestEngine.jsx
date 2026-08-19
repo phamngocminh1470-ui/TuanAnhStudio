@@ -92,21 +92,27 @@ export default function IRTTestEngine({ selectedGrade, currentUser }) {
   ];
 
   // FETCH NEXT QUESTION
-  const fetchNextQuestion = async () => {
+  const fetchNextQuestion = async (overrideParams = {}) => {
     setLoadingQuestion(true);
     setSelectedOption(null);
     setTfSelections({});
     setShortAnswerInput('');
     setQuestionFeedback(null);
 
+    const topicToUse = overrideParams.topic !== undefined ? overrideParams.topic : selectedTopic;
+    const partToUse = overrideParams.part !== undefined ? overrideParams.part : selectedPart;
+    const diffToUse = overrideParams.difficulty !== undefined ? overrideParams.difficulty : selectedDifficulty;
+    const excludeIdToUse = overrideParams.exclude_id !== undefined ? overrideParams.exclude_id : currentQuestion?.item_id;
+
     try {
       const res = await axios.post(`${API_BASE}/adaptive/generate-question`, {
         grade: selectedGrade,
         theta: theta,
         history: irtHistory,
-        topic: selectedTopic !== 'all' ? selectedTopic : undefined,
-        part: selectedPart !== 'all' ? selectedPart : undefined,
-        difficulty: selectedDifficulty !== 'all' ? selectedDifficulty : undefined
+        topic: topicToUse !== 'all' ? topicToUse : undefined,
+        part: partToUse !== 'all' ? partToUse : undefined,
+        difficulty: diffToUse !== 'all' ? diffToUse : undefined,
+        exclude_id: excludeIdToUse
       }).catch(() => null);
 
       if (res && res.data && res.data.question) {
@@ -119,25 +125,25 @@ export default function IRTTestEngine({ selectedGrade, currentUser }) {
         }
       } else {
         // High-quality fallback question formatted for THPT 2027
-        if (selectedPart === 'part2') {
+        if (partToUse === 'part2') {
           setCurrentQuestion({
-            item_id: 'IRT_TF_001',
-            task_type: 'Phần II: Đúng / Sai',
-            question: 'Xét tính Đúng (Đ) hoặc Sai (S) của các nhận định dưới đây về việc sử dụng Trí tuệ Nhân tạo (AI) trong học tập Tiếng Anh:',
+            item_id: 'TF_001',
+            task_type: 'Phần II: Đúng / Sai 4 mệnh đề',
+            question: 'Xét tính Đúng (Đ) hoặc Sai (S) của các nhận định sau về ứng dụng của Trí tuệ Nhân tạo (AI) trong giáo dục:',
             statements: [
-              { key: 'a', text: 'AI có thể phân tích tức thì độ chính xác của từng âm tiết theo bảng phiên âm quốc tế IPA.', correct: true },
-              { key: 'b', text: 'Thuật toán SuperMemo-2 yêu cầu người học phải ôn tập lại toàn bộ 1000 từ mỗi ngày.', correct: false },
-              { key: 'c', text: 'Mô hình IRT tự động điều chỉnh độ khó câu hỏi dựa vào năng lực thực tế của học sinh.', correct: true },
-              { key: 'd', text: 'Học sinh chỉ cần học vẹt đáp án trắc nghiệm mà không cần rèn luyện đọc hiểu theo ngữ cảnh.', correct: false }
+              { key: 'a', text: 'AI có khả năng phân tích lỗi phát âm từng từ theo bảng phiên âm IPA quốc tế.', correct: true },
+              { key: 'b', text: 'Học sinh nên phụ thuộc hoàn toàn vào lời giải của AI mà không cần rèn luyện tư duy phản biện.', correct: false },
+              { key: 'c', text: 'Mô hình IRT tự động điều chỉnh độ khó bài kiểm tra theo năng lực thực tế của học sinh.', correct: true },
+              { key: 'd', text: 'Thuật toán Spaced Repetition yêu cầu học sinh phải làm lại toàn bộ từ vựng mỗi ngày.', correct: false }
             ],
             difficulty: 0.2,
             discrimination: 1.2,
-            explanation: 'Ý (a) & (c) đúng theo cơ chế AI/IRT. Ý (b) sai vì SM-2 chia nhỏ khoảng thời gian lặp lại. Ý (d) sai vì GDPT 2018 chú trọng năng lực thực.'
+            explanation: 'Ý (a) & (c) đúng theo cơ chế AI/IRT. Ý (b) sai vì cần giữ tư duy phản biện. Ý (d) sai vì SM-2 chia nhỏ khoảng thời gian lặp lại.'
           });
-        } else if (selectedPart === 'part3') {
+        } else if (partToUse === 'part3') {
           setCurrentQuestion({
-            item_id: 'IRT_SA_001',
-            task_type: 'Phần III: Trả lời ngắn',
+            item_id: 'SA_001',
+            task_type: 'Phần III: Trả lời ngắn / Điền từ',
             question: 'Give the correct form of the word in brackets to complete the sentence:\n"Solar and wind power are excellent examples of ________ energy sources." (RENEW)',
             correct_short: 'renewable',
             difficulty: 0.5,
@@ -166,7 +172,7 @@ export default function IRTTestEngine({ selectedGrade, currentUser }) {
 
   useEffect(() => {
     fetchNextQuestion();
-  }, [selectedGrade, selectedTopic, selectedPart, selectedDifficulty]);
+  }, [selectedGrade]);
 
   // SUBMIT ANSWER
   const handleAnswerSubmit = async () => {
@@ -308,17 +314,17 @@ export default function IRTTestEngine({ selectedGrade, currentUser }) {
           <div className="text-right border-r border-white/10 pr-3">
             <span className="text-[10px] text-slate-400 uppercase font-bold block">Tỉ lệ đúng</span>
             <span className="text-base font-black text-emerald-400 font-mono block">
-              {rawAccuracyRate}% <span className="text-[10px] text-slate-500 font-normal">({correctQuestions}/{totalQuestions})</span>
+              {rawAccuracyRate}% <span className="text-[10px] text-slate-500 font-normal">({correctQuestions}/{totalQuestions} câu)</span>
             </span>
           </div>
           <div className="text-right">
-            <span className="text-[10px] text-slate-400 uppercase font-bold block">Dự đoán điểm THPT</span>
-            <div className="flex items-center gap-1.5 mt-0.5">
+            <span className="text-[10px] text-slate-400 uppercase font-bold block">Tiến độ bài làm</span>
+            <div className="flex items-center gap-2 mt-0.5">
               <span className="text-base font-black text-cyan-300 font-mono">
-                {Math.max(1.0, Math.min(10.0, Math.round(((theta + 3.0) / 6.0) * 100) / 10)).toFixed(1)} <span className="text-[10px] text-slate-400">/ 10</span>
+                {totalQuestions} <span className="text-[10px] text-slate-400 font-normal">câu đã làm</span>
               </span>
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${badge.color}`}>
-                {badge.label}
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded border border-blue-500/20 bg-blue-500/10 text-blue-300">
+                {selectedTopic === 'all' ? 'Tất cả chủ đề' : selectedTopic}
               </span>
             </div>
           </div>
@@ -330,7 +336,11 @@ export default function IRTTestEngine({ selectedGrade, currentUser }) {
         {/* Mode Selector: Chủ đề (Topics) vs Dạng bài (Parts) */}
         <div className="grid grid-cols-2 p-1 rounded-xl bg-[#0c1220] border border-white/5 max-w-md">
           <button
-            onClick={() => { setActiveTabMode('topics'); setSelectedPart('all'); }}
+            onClick={() => {
+              setActiveTabMode('topics');
+              setSelectedPart('all');
+              fetchNextQuestion({ part: 'all', topic: selectedTopic });
+            }}
             className={`py-2 px-3 rounded-lg text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5 ${
               activeTabMode === 'topics'
                 ? 'bg-blue-600 text-white shadow-md'
@@ -342,7 +352,11 @@ export default function IRTTestEngine({ selectedGrade, currentUser }) {
           </button>
 
           <button
-            onClick={() => { setActiveTabMode('parts'); setSelectedTopic('all'); }}
+            onClick={() => {
+              setActiveTabMode('parts');
+              setSelectedTopic('all');
+              fetchNextQuestion({ topic: 'all', part: selectedPart });
+            }}
             className={`py-2 px-3 rounded-lg text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5 ${
               activeTabMode === 'parts'
                 ? 'bg-blue-600 text-white shadow-md'
@@ -360,10 +374,13 @@ export default function IRTTestEngine({ selectedGrade, currentUser }) {
             {topicList.map(t => (
               <button
                 key={t.id}
-                onClick={() => setSelectedTopic(t.id)}
+                onClick={() => {
+                  setSelectedTopic(t.id);
+                  fetchNextQuestion({ topic: t.id });
+                }}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition cursor-pointer border ${
                   selectedTopic === t.id
-                    ? 'bg-white/10 text-white border-blue-500/50'
+                    ? 'bg-white/10 text-white border-blue-500/50 shadow'
                     : 'bg-[#0d1424] text-slate-400 border-white/5 hover:text-slate-200'
                 }`}
               >
@@ -376,10 +393,13 @@ export default function IRTTestEngine({ selectedGrade, currentUser }) {
             {partList.map(p => (
               <button
                 key={p.id}
-                onClick={() => setSelectedPart(p.id)}
+                onClick={() => {
+                  setSelectedPart(p.id);
+                  fetchNextQuestion({ part: p.id });
+                }}
                 className={`p-2.5 text-left rounded-xl border transition cursor-pointer ${
                   selectedPart === p.id
-                    ? 'bg-[#141f36] border-blue-500/50 text-white'
+                    ? 'bg-[#141f36] border-blue-500/50 text-white shadow'
                     : 'bg-[#0d1424] border-white/5 text-slate-400 hover:text-slate-200'
                 }`}
               >
@@ -391,11 +411,11 @@ export default function IRTTestEngine({ selectedGrade, currentUser }) {
         )}
 
         {/* Difficulty Filter Bar */}
-        <div className="flex items-center gap-2 pt-1">
-          <span className="text-xs text-slate-400 font-medium flex items-center gap-1">
+        <div className="flex items-center gap-2 pt-1 overflow-x-auto pb-1">
+          <span className="text-xs text-slate-400 font-medium flex items-center gap-1 shrink-0">
             <Filter className="w-3 h-3 text-slate-400" /> Chọn độ khó:
           </span>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 shrink-0">
             {[
               { id: 'all', label: 'Tất cả' },
               { id: 'easy', label: '⚡ Dễ (Nhận biết)' },
@@ -404,11 +424,14 @@ export default function IRTTestEngine({ selectedGrade, currentUser }) {
             ].map(d => (
               <button
                 key={d.id}
-                onClick={() => setSelectedDifficulty(d.id)}
+                onClick={() => {
+                  setSelectedDifficulty(d.id);
+                  fetchNextQuestion({ difficulty: d.id });
+                }}
                 className={`px-3 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer border ${
                   selectedDifficulty === d.id
-                    ? 'bg-white/10 text-white border-white/20'
-                    : 'bg-transparent text-slate-400 border-transparent hover:text-slate-200'
+                    ? 'bg-blue-600/20 text-blue-300 border-blue-500/50 shadow'
+                    : 'bg-[#0d1424] text-slate-400 border-white/5 hover:text-slate-200'
                 }`}
               >
                 {d.label}
@@ -431,9 +454,10 @@ export default function IRTTestEngine({ selectedGrade, currentUser }) {
           </div>
 
           <button
-            onClick={fetchNextQuestion}
+            onClick={() => fetchNextQuestion({ exclude_id: currentQuestion?.item_id })}
             disabled={loadingQuestion}
-            className="px-3 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer border border-white/5"
+            className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer border border-white/5 active:scale-95"
+            title="Nhảy ngẫu nhiên sang một câu hỏi khác trong ngân hàng"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loadingQuestion ? 'animate-spin text-blue-400' : ''}`} />
             <span>Đổi câu hỏi khác</span>
@@ -504,13 +528,69 @@ export default function IRTTestEngine({ selectedGrade, currentUser }) {
               );
             })()}
 
-            {/* ── FORMAT 1: MCQ (Single Choice 4 Options) ── */}
-            {currentQuestion.options && (
+            {/* ── FORMAT 2: TRUE / FALSE STATEMENTS (PART 2) ── */}
+            {currentQuestion.statements ? (
+              <div className="space-y-2.5">
+                <div className="grid grid-cols-12 text-[11px] font-bold text-slate-400 px-3 pb-1">
+                  <div className="col-span-8">Mệnh đề khẳng định</div>
+                  <div className="col-span-4 text-right pr-4">Lựa chọn Đúng / Sai</div>
+                </div>
+                {currentQuestion.statements.map((stmt) => {
+                  const currentVal = tfSelections[stmt.key];
+                  return (
+                    <div 
+                      key={stmt.key}
+                      className="grid grid-cols-12 items-center p-3.5 rounded-xl bg-[#101728] border border-white/5 gap-3"
+                    >
+                      <div className="col-span-8 text-xs text-slate-200">
+                        <span className="font-bold text-blue-400 mr-2">{stmt.key})</span>
+                        {stmt.text}
+                      </div>
+                      <div className="col-span-4 flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => !questionFeedback && setTfSelections(prev => ({ ...prev, [stmt.key]: true }))}
+                          className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer border ${
+                            currentVal === true
+                              ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300 shadow'
+                              : 'bg-white/5 border-transparent text-slate-400 hover:text-white'
+                          }`}
+                        >
+                          Đúng
+                        </button>
+                        <button
+                          onClick={() => !questionFeedback && setTfSelections(prev => ({ ...prev, [stmt.key]: false }))}
+                          className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer border ${
+                            currentVal === false
+                              ? 'bg-rose-500/20 border-rose-500 text-rose-300 shadow'
+                              : 'bg-white/5 border-transparent text-slate-400 hover:text-white'
+                          }`}
+                        >
+                          Sai
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : currentQuestion.correct_short ? (
+              /* ── FORMAT 3: SHORT ANSWER INPUT (PART 3) ── */
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-300 block">Nhập câu trả lời của bạn:</label>
+                <input
+                  type="text"
+                  value={shortAnswerInput}
+                  onChange={(e) => setShortAnswerInput(e.target.value)}
+                  disabled={!!questionFeedback}
+                  placeholder="Điền từ hoặc cụm từ thích hợp..."
+                  className="w-full bg-[#0a0f1d] border border-white/10 focus:border-blue-500 outline-none rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600"
+                />
+              </div>
+            ) : currentQuestion.options ? (
+              /* ── FORMAT 1: MCQ (Single Choice 4 Options - PART 1) ── */
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
                 {currentQuestion.options.map((opt, idx) => {
                   const letter = opt.charAt(0);
                   const isSelected = selectedOption === letter;
-                  const isOrdering = opt.includes(' - ') || opt.includes('-');
                   
                   return (
                     <button
@@ -537,68 +617,7 @@ export default function IRTTestEngine({ selectedGrade, currentUser }) {
                   );
                 })}
               </div>
-            )}
-
-            {/* ── FORMAT 2: TRUE / FALSE STATEMENTS ── */}
-            {currentQuestion.statements && (
-              <div className="space-y-2.5">
-                <div className="grid grid-cols-12 text-[11px] font-bold text-slate-400 px-3 pb-1">
-                  <div className="col-span-8">Mệnh đề khẳng định</div>
-                  <div className="col-span-4 text-right pr-4">Lựa chọn Đúng / Sai</div>
-                </div>
-                {currentQuestion.statements.map((stmt) => {
-                  const currentVal = tfSelections[stmt.key];
-                  return (
-                    <div 
-                      key={stmt.key}
-                      className="grid grid-cols-12 items-center p-3.5 rounded-xl bg-[#101728] border border-white/5 gap-3"
-                    >
-                      <div className="col-span-8 text-xs text-slate-200">
-                        <span className="font-bold text-blue-400 mr-2">{stmt.key})</span>
-                        {stmt.text}
-                      </div>
-                      <div className="col-span-4 flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => !questionFeedback && setTfSelections(prev => ({ ...prev, [stmt.key]: true }))}
-                          className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer border ${
-                            currentVal === true
-                              ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300'
-                              : 'bg-white/5 border-transparent text-slate-400 hover:text-white'
-                          }`}
-                        >
-                          Đúng
-                        </button>
-                        <button
-                          onClick={() => !questionFeedback && setTfSelections(prev => ({ ...prev, [stmt.key]: false }))}
-                          className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer border ${
-                            currentVal === false
-                              ? 'bg-rose-500/20 border-rose-500 text-rose-300'
-                              : 'bg-white/5 border-transparent text-slate-400 hover:text-white'
-                          }`}
-                        >
-                          Sai
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* ── FORMAT 3: SHORT ANSWER INPUT ── */}
-            {currentQuestion.correct_short && (
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-300 block">Nhập câu trả lời của bạn:</label>
-                <input
-                  type="text"
-                  value={shortAnswerInput}
-                  onChange={(e) => setShortAnswerInput(e.target.value)}
-                  disabled={!!questionFeedback}
-                  placeholder="Điền từ hoặc cụm từ thích hợp..."
-                  className="w-full bg-[#0a0f1d] border border-white/10 focus:border-blue-500 outline-none rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600"
-                />
-              </div>
-            )}
+            ) : null}
 
             {/* Feedback & Actions */}
             {questionFeedback ? (
@@ -660,7 +679,7 @@ export default function IRTTestEngine({ selectedGrade, currentUser }) {
                   <th className="pb-2 px-2">#</th>
                   <th className="pb-2 px-2">Mã câu hỏi</th>
                   <th className="pb-2 px-2">Kết quả</th>
-                  <th className="pb-2 px-2">Điểm thưởng</th>
+                  <th className="pb-2 px-2">Trạng thái</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
@@ -675,11 +694,11 @@ export default function IRTTestEngine({ selectedGrade, currentUser }) {
                         {h.result === 1 ? 'ĐÚNG' : 'SAI'}
                       </span>
                     </td>
-                    <td className="py-2.5 px-2 font-mono font-bold text-xs">
+                    <td className="py-2.5 px-2 text-xs">
                       {h.result === 1 ? (
-                        <span className="text-emerald-400">+10 Điểm</span>
+                        <span className="text-emerald-400 font-medium">Chính xác</span>
                       ) : (
-                        <span className="text-slate-500">+0 Điểm</span>
+                        <span className="text-slate-400">Chưa đúng</span>
                       )}
                     </td>
                   </tr>
