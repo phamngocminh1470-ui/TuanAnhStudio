@@ -247,7 +247,9 @@ export default function AdaptiveDashboard({ selectedGrade, onNavigate, onOpenExp
 
           <div className="flex items-baseline justify-between pt-1">
             {hasStudied ? (
-              <span className="text-3xl font-black text-white font-outfit tracking-normal">{Math.max(1, Math.min(100, Math.round(((theta + 3.0) / 6.0) * 100)))}%</span>
+              <span className="text-3xl font-black text-white font-outfit tracking-normal">
+                {Math.max(1.0, Math.min(10.0, Math.round(((theta + 3.0) / 6.0) * 100) / 10)).toFixed(1)} <span className="text-sm text-slate-400 font-normal">/ 10</span>
+              </span>
             ) : (
               <span className="text-3xl font-black text-gray-500 font-outfit tracking-normal">—</span>
             )}
@@ -259,7 +261,7 @@ export default function AdaptiveDashboard({ selectedGrade, onNavigate, onOpenExp
           </div>
 
           <p className="text-[11px] text-indigo-400 font-bold pt-2 border-t border-white/5 flex items-center justify-between group-hover:underline">
-            <span>{hasStudied ? 'Đánh giá năng lực Đọc & Viết' : 'Làm bài test để cập nhật'}</span>
+            <span>{hasStudied ? 'Dự báo điểm thi THPT Quốc Gia' : 'Làm bài test để cập nhật'}</span>
             <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
           </p>
         </div>
@@ -270,25 +272,21 @@ export default function AdaptiveDashboard({ selectedGrade, onNavigate, onOpenExp
           className="glass-card glass-card-hover rounded-3xl p-7 border border-amber-500/25 space-y-4 cursor-pointer group shadow-xl relative overflow-hidden"
         >
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-extrabold text-amber-300 uppercase tracking-widest">Độ bền ghi nhớ từ vựng</span>
+            <span className="text-[11px] font-extrabold text-amber-300 uppercase tracking-widest">Từ Vựng Đã Thuộc</span>
             <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
               <Clock className="w-5 h-5" />
             </div>
           </div>
 
           <div className="flex items-baseline justify-between pt-1">
-            {vocabCount > 0 ? (
-              <span className="text-3xl font-black text-amber-400 font-outfit tracking-normal">{Math.max(1, Math.min(100, Math.round((ef / 3.0) * 100)))}%</span>
-            ) : (
-              <span className="text-3xl font-black text-gray-500 font-outfit tracking-normal">0%</span>
-            )}
+            <span className="text-3xl font-black text-amber-400 font-outfit tracking-normal">{vocabCount} <span className="text-sm text-amber-200/70 font-normal">từ</span></span>
             <span className="text-xs font-bold px-2.5 py-0.5 rounded-full border bg-amber-500/10 border-amber-500/30 text-amber-300">
-              {vocabCount > 0 ? `Ôn lại: ${nextInterval} ngày` : 'Chưa học từ nào'}
+              {vocabCount > 0 ? `Ôn lại: ${nextInterval} ngày` : 'Chưa ôn tập'}
             </span>
           </div>
 
           <p className="text-[11px] text-amber-400 font-bold pt-2 border-t border-white/5 flex items-center justify-between group-hover:underline">
-            <span>Luyện thẻ từ vựng</span>
+            <span>Luyện thẻ từ vựng SM-2</span>
             <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
           </p>
         </div>
@@ -692,12 +690,14 @@ export default function AdaptiveDashboard({ selectedGrade, onNavigate, onOpenExp
                 <span className="font-bold text-white flex items-center gap-2">
                   <Brain className="w-4 h-4 text-indigo-400" /> Ngữ pháp &amp; Đọc hiểu
                 </span>
-                <span className="text-xs font-black text-indigo-400">Thành thạo: {Math.max(10, Math.min(100, Math.round(((theta + 3.0) / 6.0) * 100)))}%</span>
+                <span className="text-xs font-black text-indigo-400">
+                  Dự báo: {Math.max(1.0, Math.min(10.0, Math.round(((theta + 3.0) / 6.0) * 100) / 10)).toFixed(1)} / 10 ({badge.label})
+                </span>
               </div>
               <div className="w-full bg-white/5 rounded-full h-3 overflow-hidden p-0.5 border border-white/10">
                 <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 h-full rounded-full transition-all duration-500 shadow-md" style={{ width: `${Math.max(10, Math.min(100, Math.round(((theta + 3.0) / 6.0) * 100)))}%` }}></div>
               </div>
-              <p className="text-[11px] text-gray-400 font-medium">Khuyến nghị AI: Tự động điều chỉnh bài tập phù hợp</p>
+              <p className="text-[11px] text-gray-400 font-medium">Khuyến nghị AI: Tự động điều chỉnh độ khó bám sát ma trận đề thi</p>
             </div>
 
             {/* Skill 2: Azure Pronunciation */}
@@ -851,11 +851,13 @@ export default function AdaptiveDashboard({ selectedGrade, onNavigate, onOpenExp
                   </div>
                   <h4 className="font-black text-lg text-white font-outfit">1. Đọc hiểu &amp; Ngữ pháp</h4>
                   <p className="text-xs text-gray-400 leading-relaxed font-semibold">
-                    Đạt độ thành thạo ước lượng từ <strong className="text-indigo-300">70% trở lên</strong> qua bài kiểm tra thích ứng.
+                    Đạt năng lực tiếng Anh từ <strong className="text-indigo-300">7.0 / 10 điểm trở lên</strong> qua bài kiểm tra thích ứng.
                   </p>
                 </div>
                 <div className="pt-4 border-t border-white/5 flex items-center justify-between">
-                  <span className="text-[11px] text-gray-400 font-bold">Hiện tại: {Math.max(10, Math.min(100, Math.round(((theta + 3.0) / 6.0) * 100)))}%</span>
+                  <span className="text-[11px] text-gray-400 font-bold">
+                    Hiện tại: {Math.max(1.0, Math.min(10.0, Math.round(((theta + 3.0) / 6.0) * 100) / 10)).toFixed(1)} / 10 ({badge.label})
+                  </span>
                   {!isCompleted && (
                     <button 
                       onClick={() => onNavigate('irt-test')}
