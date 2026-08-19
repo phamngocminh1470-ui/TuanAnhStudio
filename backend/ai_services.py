@@ -82,7 +82,7 @@ async def chat_with_gemini(messages: list, system_instruction: str = None, custo
                 role = "assistant" if msg["role"] == "model" else "user"
                 groq_messages.append({"role": role, "content": msg["content"]})
             
-            models_to_try = ["qwen/qwen3.6-27b", "openai/gpt-oss-120b", "openai/gpt-oss-20b", "llama-3.3-70b-versatile"]
+            models_to_try = ["openai/gpt-oss-120b", "llama-3.3-70b-versatile", "openai/gpt-oss-20b", "qwen/qwen3.6-27b"]
             import re
             async with httpx.AsyncClient(timeout=30.0) as client:
                 for mod in models_to_try:
@@ -104,6 +104,8 @@ async def chat_with_gemini(messages: list, system_instruction: str = None, custo
                             data = res.json()
                             raw_reply = data["choices"][0]["message"]["content"]
                             clean_reply = re.sub(r'<think>.*?</think>', '', raw_reply, flags=re.DOTALL).strip()
+                            # Loại bỏ hoàn toàn ký tự tiếng Trung / Hán tự phát sinh ngoài ý muốn
+                            clean_reply = re.sub(r'[\u4e00-\u9fff\u3400-\u4dbf]+', '', clean_reply).strip()
                             if clean_reply:
                                 return clean_reply
                     except Exception as err:
@@ -1029,7 +1031,7 @@ async def execute_writing_ai_prompt(prompt: str, custom_gemini_key: str = None, 
     active_groq = clean_api_key(custom_groq_key) or GROQ_API_KEY
     if active_groq:
         try:
-            models_to_try = ["qwen/qwen3.6-27b", "openai/gpt-oss-120b", "openai/gpt-oss-20b", "llama-3.3-70b-versatile"]
+            models_to_try = ["openai/gpt-oss-120b", "llama-3.3-70b-versatile", "openai/gpt-oss-20b", "qwen/qwen3.6-27b"]
             import re
             async with httpx.AsyncClient(timeout=30.0) as client:
                 for mod in models_to_try:
@@ -1043,7 +1045,10 @@ async def execute_writing_ai_prompt(prompt: str, custom_gemini_key: str = None, 
                             },
                             json={
                                 "model": mod,
-                                "messages": [{"role": "user", "content": prompt}],
+                                "messages": [
+                                    {"role": "system", "content": "You are a professional English writing teacher. STRICT RULE: ONLY output in English and Vietnamese. Return pure valid JSON when requested. NEVER output any Chinese (Hán tự) or non-Latin characters under any circumstances."},
+                                    {"role": "user", "content": prompt}
+                                ],
                                 "temperature": 0.3
                             }
                         )
@@ -1051,6 +1056,7 @@ async def execute_writing_ai_prompt(prompt: str, custom_gemini_key: str = None, 
                             data = res.json()
                             raw_reply = data["choices"][0]["message"]["content"]
                             clean_reply = re.sub(r'<think>.*?</think>', '', raw_reply, flags=re.DOTALL).strip()
+                            clean_reply = re.sub(r'[\u4e00-\u9fff\u3400-\u4dbf]+', '', clean_reply).strip()
                             if clean_reply:
                                 return clean_reply
                     except Exception:

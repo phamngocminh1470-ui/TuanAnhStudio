@@ -114,6 +114,24 @@ export default function WritingPractice({ selectedGrade, keys }) {
     return h;
   };
 
+  // Helper bóc tách JSON an toàn tuyệt đối từ phản hồi của LLM
+  const parseSafeJSON = (raw) => {
+    if (!raw) return null;
+    if (typeof raw === 'object') return raw;
+    try { return JSON.parse(raw); } catch (e) {}
+    
+    const cleaned = String(raw).replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+    try { return JSON.parse(cleaned); } catch (e) {}
+    
+    const firstBrace = cleaned.indexOf('{');
+    const lastBrace = cleaned.lastIndexOf('}');
+    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+      const jsonSub = cleaned.substring(firstBrace, lastBrace + 1);
+      try { return JSON.parse(jsonSub); } catch (e) {}
+    }
+    return null;
+  };
+
   // Tính số từ trong bài viết
   const wordCount = essayContent.trim() ? essayContent.trim().split(/\s+/).length : 0;
   const currentPromptText = customPrompt.trim() ? customPrompt : selectedPrompt.prompt;
@@ -175,11 +193,13 @@ Return ONLY pure JSON.`;
     try {
       const headers = getHeaders();
       const res = await axios.post(`${API_BASE}/writing/practice-ai`, { prompt }, { headers });
-      const raw = res.data?.reply || '';
-      const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-      const parsed = JSON.parse(cleaned);
-      setEssayOutline(parsed.outline);
-      setEssayVocab(parsed.advanced_vocabulary);
+      const parsed = parseSafeJSON(res.data?.reply);
+      if (parsed && parsed.outline) {
+        setEssayOutline(parsed.outline);
+        setEssayVocab(parsed.advanced_vocabulary || []);
+      } else {
+        throw new Error('Dữ liệu dàn ý không hợp lệ');
+      }
     } catch (err) {
       console.error(err);
       setEssayError('Không thể tạo dàn ý. Vui lòng kiểm tra lại kết nối hoặc API Key.');
@@ -214,10 +234,12 @@ Return ONLY a pure JSON object with this exact structure:
     try {
       const headers = getHeaders();
       const res = await axios.post(`${API_BASE}/writing/practice-ai`, { prompt }, { headers });
-      const raw = res.data?.reply || '';
-      const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-      const parsed = JSON.parse(cleaned);
-      setModelEssay(parsed);
+      const parsed = parseSafeJSON(res.data?.reply);
+      if (parsed && parsed.model_text) {
+        setModelEssay(parsed);
+      } else {
+        throw new Error('Dữ liệu bài mẫu không hợp lệ');
+      }
     } catch (err) {
       console.error(err);
       setEssayError('Không thể tạo bài mẫu. Vui lòng thử lại.');
@@ -268,11 +290,13 @@ Return ONLY pure JSON (no markdown):
     try {
       const headers = getHeaders();
       const res = await axios.post(`${API_BASE}/writing/practice-ai`, { prompt }, { headers });
-      const raw = res.data?.reply || '';
-      const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-      const parsed = JSON.parse(cleaned);
-      setEssayEvaluation(parsed);
-      setSessionCount(c => c + 1);
+      const parsed = parseSafeJSON(res.data?.reply);
+      if (parsed && (parsed.overall_score || parsed.criteria)) {
+        setEssayEvaluation(parsed);
+        setSessionCount(c => c + 1);
+      } else {
+        throw new Error('Dữ liệu chấm điểm không hợp lệ');
+      }
     } catch (err) {
       console.error(err);
       setEssayError('Không thể chấm bài. Vui lòng kiểm tra lại kết nối hoặc API Key.');
@@ -309,13 +333,15 @@ Return JSON: {"original_wrong_sentence": "wrong sentence", "correct_rewrite": "c
     try {
       const headers = getHeaders();
       const res = await axios.post(`${API_BASE}/writing/practice-ai`, { prompt }, { headers });
-      const raw = res.data?.reply || '';
-      const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-      const parsed = JSON.parse(cleaned);
-      setSentenceResult(parsed);
-      setSessionCount(c => c + 1);
+      const parsed = parseSafeJSON(res.data?.reply);
+      if (parsed) {
+        setSentenceResult(parsed);
+        setSessionCount(c => c + 1);
+      } else {
+        throw new Error('Dữ liệu kết quả câu không hợp lệ');
+      }
     } catch (err) {
-      setSentenceError('Lỗi kết nối AI. Vui lòng kiểm tra API Key.');
+      setSentenceError('Lỗi kết nối AI. Vui lòng thử lại.');
     } finally {
       setSentenceLoading(false);
     }
