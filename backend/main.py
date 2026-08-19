@@ -1054,19 +1054,87 @@ class DictLookupRequest(BaseModel):
     word: str
     grade: Optional[str] = "12"
 
+# Bảng tra cứu trực tiếp các từ tiếng Việt thông dụng sang tiếng Anh chuẩn
+COMMON_VI_EN_MAP = {
+    "con ca": ("fish", "/fɪʃ/", "Danh từ (n.)", "con cá, loài cá sống dưới nước", "Many colorful fish swim in the coral reef.", "Nhiều loài cá sặc sỡ bơi lội trong rạn san hô."),
+    "ca": ("fish", "/fɪʃ/", "Danh từ (n.)", "con cá, loài cá sống dưới nước", "Fresh fish is a healthy source of protein.", "Cá tươi là nguồn cung cấp chất đạm lành mạnh."),
+    "con meo": ("cat", "/kæt/", "Danh từ (n.)", "con mèo", "The cat is sleeping peacefully under the warm sunshine.", "Con mèo đang ngủ yên bình dưới ánh nắng ấm áp."),
+    "meo": ("cat", "/kæt/", "Danh từ (n.)", "con mèo", "Cats are very independent and agile pets.", "Mèo là loài thú cưng rất độc lập và nhanh nhẹn."),
+    "con cho": ("dog", "/dɒɡ/", "Danh từ (n.)", "con chó", "Dogs are faithful companions to humans.", "Chó là những người bạn đồng hành trung thành của con người."),
+    "cho": ("dog", "/dɒɡ/", "Danh từ (n.)", "con chó", "Dogs are faithful companions to humans.", "Chó là những người bạn đồng hành trung thành của con người."),
+    "bac si": ("doctor", "/ˈdɒk.tər/", "Danh từ (n.)", "bác sĩ y khoa", "The doctor examines patients carefully in the hospital.", "Bác sĩ khám bệnh cẩn thận cho bệnh nhân trong bệnh viện."),
+    "giao vien": ("teacher", "/ˈtiː.tʃər/", "Danh từ (n.)", "giáo viên, thầy cô giáo", "Our English teacher is enthusiastic and dedicated.", "Giáo viên tiếng Anh của chúng tôi rất nhiệt tình và tận tâm."),
+    "thay co": ("teacher", "/ˈtiː.tʃər/", "Danh từ (n.)", "thầy cô giáo", "Students show profound gratitude to their teachers.", "Học sinh bày tỏ lòng biết ơn sâu sắc tới các thầy cô giáo."),
+    "hoc sinh": ("student", "/ˈstjuː.dənt/", "Danh từ (n.)", "học sinh, sinh viên", "Diligent students review grammar lessons daily.", "Những học sinh chăm chỉ ôn luyện các bài học ngữ pháp mỗi ngày."),
+    "ngoi nha": ("house", "/haʊs/", "Danh từ (n.)", "ngôi nhà", "They built a lovely house with a peaceful garden.", "Họ đã xây một ngôi nhà đáng yêu có khu vườn yên bình."),
+    "nha": ("house", "/haʊs/", "Danh từ (n.)", "ngôi nhà", "Welcome to our cozy house.", "Chào mừng bạn đến với ngôi nhà ấm cúng của chúng tôi."),
+    "truong hoc": ("school", "/skuːl/", "Danh từ (n.)", "trường học", "Children walk to school together every morning.", "Trẻ em cùng nhau đi bộ đến trường mỗi buổi sáng."),
+    "xe dap": ("bicycle", "/ˈbaɪ.sɪ.kəl/", "Danh từ (n.)", "xe đạp", "Riding a bicycle improves cardiovascular health.", "Đi xe đạp giúp cải thiện sức khỏe tim mạch."),
+    "xe may": ("motorbike", "/ˈməʊ.tə.baɪk/", "Danh từ (n.)", "xe máy", "Motorbikes are a common means of transport in Vietnam.", "Xe máy là phương tiện giao thông phổ biến tại Việt Nam."),
+    "o to": ("car", "/kɑːr/", "Danh từ (n.)", "xe ô tô, xe hơi", "Electric cars reduce urban air pollution.", "Xe ô tô điện giúp làm giảm ô nhiễm không khí đô thị."),
+    "xe hoi": ("car", "/kɑːr/", "Danh từ (n.)", "xe ô tô, xe hơi", "Electric cars reduce urban air pollution.", "Xe ô tô điện giúp làm giảm ô nhiễm không khí đô thị."),
+    "may tinh": ("computer", "/kəmˈpjuː.tər/", "Danh từ (n.)", "máy tính", "Computers are indispensable tools for digital learning.", "Máy tính là công cụ không thể thiếu cho việc học tập kỹ thuật số."),
+    "dien thoai": ("phone", "/fəʊn/", "Danh từ (n.)", "điện thoại di động", "Smartphones connect people around the world.", "Điện thoại thông minh kết nối mọi người trên khắp thế giới."),
+    "moi truong": ("environment", "/ɪnˈvaɪ.rən.mənt/", "Danh từ (n.)", "môi trường sinh thái", "Protecting the environment is the responsibility of everyone.", "Bảo vệ môi trường là trách nhiệm của tất cả mọi người."),
+    "suc khoe": ("health", "/helθ/", "Danh từ (n.)", "sức khỏe", "Good health is the most valuable asset in life.", "Sức khỏe tốt là tài sản quý giá nhất trong cuộc đời."),
+    "gia dinh": ("family", "/ˈfæm.əl.i/", "Danh từ (n.)", "gia đình", "Family is where love begins and never ends.", "Gia đình là nơi tình yêu bắt đầu và không bao giờ kết thúc."),
+    "ban be": ("friend", "/frend/", "Danh từ (n.)", "bạn bè, người bạn", "A true friend is always there to support you.", "Một người bạn thực sự luôn ở đó để hỗ trợ bạn."),
+    "thanh cong": ("success", "/səkˈses/", "Danh từ (n.)", "sự thành công", "Hard work and perseverance lead to lasting success.", "Chăm chỉ và kiên trì sẽ dẫn tới thành công lâu dài."),
+    "hanh phuc": ("happiness", "/ˈhæp.i.nəs/", "Danh từ (n.)", "sự hạnh phúc", "True happiness comes from helping others.", "Hạnh phúc đích thực đến từ việc giúp đỡ người khác."),
+    "sang tao": ("creative", "/kriˈeɪ.tɪv/", "Tính từ (adj.)", "sáng tạo, có óc tưởng tượng", "She came up with a creative solution to the problem.", "Cô ấy đã đưa ra một giải pháp sáng tạo cho vấn đề."),
+    "thong minh": ("intelligent", "/ɪnˈtel.ɪ.dʒənt/", "Tính từ (adj.)", "thông minh, sáng dạ", "Dolphins are highly intelligent marine creatures.", "Cá heo là loài sinh vật biển vô cùng thông minh."),
+    "kien tri": ("perseverance", "/ˌpɜː.sɪˈvɪə.rəns/", "Danh từ (n.)", "sự kiên trì, nhẫn nại", "Through sheer perseverance, he mastered English fluency.", "Nhờ vào sự kiên trì tuyệt đối, anh ấy đã làm chủ được sự trôi chảy trong tiếng Anh."),
+    "thoi tiet": ("weather", "/ˈweð.ər/", "Danh từ (n.)", "thời tiết khí hậu", "The weather is pleasant and sunny today.", "Thời tiết hôm nay rất dễ chịu và có nắng ấm."),
+    "sach": ("book", "/bʊk/", "Danh từ (n.)", "cuốn sách", "Reading books broadens your knowledge and imagination.", "Đọc sách giúp mở rộng kiến thức và trí tưởng tượng của bạn."),
+    "tien": ("money", "/ˈmʌn.i/", "Danh từ (n.)", "tiền bạc", "Money cannot buy genuine happiness.", "Tiền bạc không thể mua được hạnh phúc chân thật."),
+    "thoi gian": ("time", "/taɪm/", "Danh từ (n.)", "thời gian", "Time is the most precious resource we possess.", "Thời gian là nguồn tài nguyên quý giá nhất mà chúng ta sở hữu.")
+}
+
+def _remove_vietnamese_accents(text: str) -> str:
+    import re
+    s = text.lower().strip()
+    s = re.sub(r'[àáạảãâầấậẩẫăằắặẳẵ]', 'a', s)
+    s = re.sub(r'[èéẹẻẽêềếệểễ]', 'e', s)
+    s = re.sub(r'[ìíịỉĩ]', 'i', s)
+    s = re.sub(r'[òóọỏõôồốộổỗơờớợởỡ]', 'o', s)
+    s = re.sub(r'[ùúụủũưừứựửữ]', 'u', s)
+    s = re.sub(r'[ỳýỵỷỹ]', 'y', s)
+    s = re.sub(r'[đ]', 'd', s)
+    return s
+
 @app.post("/api/dictionary/lookup")
 async def dictionary_lookup(request: DictLookupRequest, x_gemini_key: Optional[str] = Header(None)):
     """
-    Tra cứu bất kỳ từ tiếng Anh nào trong toàn bộ từ điển (Full English Dictionary Lookup).
-    Tự động phân tích phiên âm IPA, loại từ, nghĩa tiếng Việt và câu ví dụ song ngữ.
+    Tra cứu song ngữ thông minh Anh - Việt & Việt - Anh (Smart Bilingual Dictionary Lookup).
+    Nhận diện tự động tiếng Việt (VD: "con cá", "bác sĩ", "môi trường") để dịch chuẩn sang tiếng Anh
+    kèm đầy đủ phiên âm IPA, loại từ, nghĩa tiếng Việt và câu ví dụ ngữ cảnh có audio.
     """
-    word = request.word.strip()
-    if not word:
+    raw_query = request.word.strip()
+    if not raw_query:
         raise HTTPException(status_code=400, detail="Vui lòng nhập từ cần tra cứu")
 
-    # 1. Tra cứu nhanh trong database SQLite nếu có
+    norm_query = _remove_vietnamese_accents(raw_query)
+
+    # 1. Kiểm tra bảng từ điển Tiếng Việt -> Tiếng Anh thông dụng
+    if norm_query in COMMON_VI_EN_MAP:
+        eng_word, ipa, pos, meaning, ex, ex_vi = COMMON_VI_EN_MAP[norm_query]
+        return {
+            "status": "success",
+            "source": "bilingual_lexicon",
+            "data": {
+                "word": eng_word,
+                "ipa": ipa,
+                "pos": pos,
+                "meaning": f"{raw_query} → {meaning}",
+                "example": ex,
+                "example_vi": ex_vi
+            }
+        }
+
+    # 2. Tra cứu trong SQLite Database (khớp cả từ tiếng Anh lẫn nghĩa tiếng Việt)
     with Session(engine) as db:
-        db_word = db.exec(select(VocabularyWord).where(VocabularyWord.word.ilike(word))).first()
+        # Khớp tiếng Anh chính xác
+        db_word = db.exec(select(VocabularyWord).where(VocabularyWord.word.ilike(raw_query))).first()
         if db_word:
             return {
                 "status": "success",
@@ -1081,7 +1149,24 @@ async def dictionary_lookup(request: DictLookupRequest, x_gemini_key: Optional[s
                 }
             }
 
-    # 2. Tra cứu bằng Gemini AI
+        # Khớp nghĩa tiếng Việt trong database
+        all_words = db.exec(select(VocabularyWord)).all()
+        for w in all_words:
+            if norm_query in _remove_vietnamese_accents(w.meaning):
+                return {
+                    "status": "success",
+                    "source": "database_meaning_match",
+                    "data": {
+                        "word": w.word,
+                        "ipa": w.ipa,
+                        "pos": w.pos,
+                        "meaning": w.meaning,
+                        "example": w.example,
+                        "example_vi": w.example_vi
+                    }
+                }
+
+    # 3. Tra cứu bằng Gemini AI (Song ngữ 2 chiều)
     active_key = clean_api_key(x_gemini_key) or clean_api_key(os.getenv("GEMINI_API_KEY"))
     if active_key:
         try:
@@ -1090,16 +1175,32 @@ async def dictionary_lookup(request: DictLookupRequest, x_gemini_key: Optional[s
                 model_name="gemini-1.5-flash",
                 generation_config={"response_mime_type": "application/json"}
             )
-            prompt = f"""You are an Oxford/Cambridge English-Vietnamese dictionary.
-Provide complete dictionary entry for the English word: "{word}".
-Return strictly valid JSON:
+            prompt = f"""You are an Oxford/Cambridge English-Vietnamese Bilingual Dictionary.
+Query from user: "{raw_query}"
+
+Instructions:
+1. If the query is in VIETNAMESE (e.g. "con cá", "bác sĩ", "kinh doanh", "môi trường"):
+   - Identify the most accurate target ENGLISH word (e.g. "fish", "doctor", "business", "environment").
+   - Provide its standard International Phonetic Alphabet (IPA) transcription (e.g. "/fɪʃ/").
+   - Provide its part of speech in Vietnamese (e.g. "Danh từ (n.)", "Động từ (v.)", "Tính từ (adj.)").
+   - Provide the concise Vietnamese definition of the word.
+   - Provide a clear, natural English example sentence.
+   - Provide the Vietnamese translation of the example sentence.
+
+2. If the query is in ENGLISH (e.g. "sustainable", "serendipity", "achieve"):
+   - Provide standard IPA transcription.
+   - Provide part of speech in Vietnamese.
+   - Provide the Vietnamese meaning.
+   - Provide an English example sentence and its Vietnamese translation.
+
+Return strictly a valid JSON object with keys:
 {{
-  "word": "{word}",
+  "word": "<English word>",
   "ipa": "/.../",
-  "pos": "Danh từ (n.) / Tính từ (adj.) / Động từ (v.) / etc.",
-  "meaning": "Nghĩa tiếng Việt rõ ràng, súc tích",
-  "example": "A natural English example sentence.",
-  "example_vi": "Bản dịch tiếng Việt của câu ví dụ."
+  "pos": "<Part of speech in Vietnamese>",
+  "meaning": "<Vietnamese meaning>",
+  "example": "<English example sentence>",
+  "example_vi": "<Vietnamese translation of example>"
 }}"""
             res = model.generate_content(prompt)
             data = json.loads(res.text)
@@ -1107,17 +1208,45 @@ Return strictly valid JSON:
         except Exception as e:
             print(f"Lỗi AI dictionary lookup: {e}")
 
-    # 3. Fallback dictionary generator
+    # 4. Tra cứu dự phòng trực tuyến qua MyMemory API (Miễn phí 100% không cần key)
+    try:
+        import urllib.request
+        import urllib.parse
+        encoded = urllib.parse.quote(raw_query)
+        url = f"https://api.mymemory.translated.net/get?q={encoded}&langpair=vi|en"
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=4) as response:
+            trans_json = json.loads(response.read().decode("utf-8"))
+            translated_text = trans_json.get("responseData", {}).get("translatedText", "").strip()
+            # Bỏ dấu chấm cuối nếu dịch ra 1 từ
+            clean_eng = translated_text.rstrip('.').strip().lower()
+            if clean_eng and clean_eng != raw_query.lower():
+                return {
+                    "status": "success",
+                    "source": "online_bilingual_translator",
+                    "data": {
+                        "word": clean_eng,
+                        "ipa": f"/{clean_eng}/",
+                        "pos": "Từ vựng tiếng Anh",
+                        "meaning": f"{raw_query} (Nghĩa tiếng Anh: {clean_eng})",
+                        "example": f"Students should learn how to use '{clean_eng}' in daily communication.",
+                        "example_vi": f"Học sinh nên rèn luyện cách sử dụng từ '{clean_eng}' ({raw_query}) trong giao tiếp hàng ngày."
+                    }
+                }
+    except Exception as e:
+        print("Lỗi MyMemory fallback:", e)
+
+    # 5. Fallback cuối cùng
     return {
         "status": "success",
         "source": "offline_dict",
         "data": {
-            "word": word,
-            "ipa": f"/{word.lower()}/",
-            "pos": "Từ vựng tiếng Anh",
-            "meaning": f"Từ vựng '{word}' trong hệ thống từ điển tiếng Anh",
-            "example": f"Students should learn how to use '{word}' accurately in daily communication.",
-            "example_vi": f"Học sinh nên học cách sử dụng từ '{word}' một cách chính xác trong giao tiếp hàng ngày."
+            "word": raw_query,
+            "ipa": f"/{raw_query.lower()}/",
+            "pos": "Từ vựng tra cứu",
+            "meaning": f"Nghĩa tra cứu của từ '{raw_query}'",
+            "example": f"Practice using '{raw_query}' regularly to expand your vocabulary.",
+            "example_vi": f"Hãy luyện tập sử dụng từ '{raw_query}' thường xuyên để mở rộng vốn từ vựng."
         }
     }
 

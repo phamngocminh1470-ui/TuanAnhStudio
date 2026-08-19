@@ -56,7 +56,11 @@ const COMPREHENSIVE_VOCAB_DATA = [
       { id: 'w6_07', word: 'textbook', ipa: '/ˈtekst.bʊk/', pos: 'Danh từ (n.)', meaning: 'sách giáo khoa học tập', example: 'Please open your English textbook to page twenty.', example_vi: 'Xin mời các em mở sách giáo khoa tiếng Anh trang 20.' },
       { id: 'w6_08', word: 'neighborhood', ipa: '/ˈneɪ.bə.hʊd/', pos: 'Danh từ (n.)', meaning: 'khu phố, hàng xóm lân cận', example: 'There is a quiet library in our neighborhood.', example_vi: 'Có một thư viện yên tĩnh trong khu phố của chúng tôi.' },
       { id: 'w6_09', word: 'teacher', ipa: '/ˈtiː.tʃər/', pos: 'Danh từ (n.)', meaning: 'giáo viên, thầy cô giáo', example: 'Our English teacher is dedicated and enthusiastic.', example_vi: 'Giáo viên tiếng Anh của chúng tôi rất tận tâm và nhiệt huyết.' },
-      { id: 'w6_10', word: 'classroom', ipa: '/ˈklɑːs.ruːm/', pos: 'Danh từ (n.)', meaning: 'phòng học, lớp học', example: 'Students clean the classroom after lessons.', example_vi: 'Học sinh dọn dẹp phòng học sau các tiết học.' }
+      { id: 'w6_10', word: 'classroom', ipa: '/ˈklɑːs.ruːm/', pos: 'Danh từ (n.)', meaning: 'phòng học, lớp học', example: 'Students clean the classroom after lessons.', example_vi: 'Học sinh dọn dẹp phòng học sau các tiết học.' },
+      { id: 'w6_10a', word: 'fish', ipa: '/fɪʃ/', pos: 'Danh từ (n.)', meaning: 'con cá, loài cá sống dưới nước', example: 'Many colorful fish swim in the coral reef.', example_vi: 'Nhiều loài cá sặc sỡ bơi lội trong rạn san hô.' },
+      { id: 'w6_10b', word: 'cat', ipa: '/kæt/', pos: 'Danh từ (n.)', meaning: 'con mèo thú cưng', example: 'The cute cat is sleeping under the warm sun.', example_vi: 'Chú mèo dễ thương đang ngủ dưới ánh nắng ấm áp.' },
+      { id: 'w6_10c', word: 'dog', ipa: '/dɒɡ/', pos: 'Danh từ (n.)', meaning: 'con chó trung thành', example: 'Dogs are loyal companions to human families.', example_vi: 'Chó là người bạn đồng hành trung thành của các gia đình.' },
+      { id: 'w6_10d', word: 'doctor', ipa: '/ˈdɒk.tər/', pos: 'Danh từ (n.)', meaning: 'bác sĩ y khoa', example: 'The doctor cares for sick children in the clinic.', example_vi: 'Bác sĩ chăm sóc cho trẻ em ốm trong phòng khám.' }
     ]
   },
   {
