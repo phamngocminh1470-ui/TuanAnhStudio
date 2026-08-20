@@ -868,27 +868,66 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
             {isLoading ? (
               <div className="flex-1 flex flex-col items-center justify-center space-y-3">
                 <RefreshCw className="w-10 h-10 text-brand-500 animate-spin" />
-                <span className="text-xs text-gray-400">AI is evaluating your pronunciation...</span>
+                <span className="text-xs text-gray-400">AI đang phân tích từng âm và ngữ điệu...</span>
               </div>
             ) : assessmentResult ? (
               <div className="flex-1 flex flex-col justify-between space-y-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="text-4xl font-extrabold text-brand-400 font-outfit">
-                      {assessmentResult.pronunciationScore}<span className="text-base font-normal text-gray-500">/100</span>
+                    <div className="text-xl md:text-2xl font-black text-white font-outfit">
+                      {assessmentResult.pronunciationScore >= 80 ? (
+                        <span className="text-emerald-400 flex items-center gap-1.5">
+                          <CheckCircle2 className="w-6 h-6 text-emerald-400" />
+                          Phát âm Chuẩn &amp; Rõ Ràng
+                        </span>
+                      ) : assessmentResult.pronunciationScore >= 60 ? (
+                        <span className="text-amber-400 flex items-center gap-1.5">
+                          <Sparkles className="w-6 h-6 text-amber-400" />
+                          Khá Tốt • Cần Chỉnh Vài Âm
+                        </span>
+                      ) : (
+                        <span className="text-rose-400 flex items-center gap-1.5">
+                          <AlertCircle className="w-6 h-6 text-rose-400" />
+                          Cần Luyện Rõ Âm Đuôi
+                        </span>
+                      )}
                     </div>
-                    <div className="text-xs text-gray-400 font-semibold mt-1">Pronunciation Score</div>
+                    <div className="text-xs text-gray-400 font-semibold mt-1">
+                      {assessmentResult.words?.filter(w => (w.accuracyScore || 0) >= 70).length || 0} / {assessmentResult.words?.length || 0} từ đọc chuẩn xác
+                    </div>
                   </div>
-                  <div className="h-14 w-14 rounded-2xl bg-brand-500/10 flex items-center justify-center">
-                    <Award className="w-8 h-8 text-brand-400" />
+                  <div className="h-12 w-12 rounded-2xl bg-brand-500/10 flex items-center justify-center">
+                    <Award className="w-6 h-6 text-brand-400" />
                   </div>
                 </div>
 
-                <div className="space-y-4 pt-2">
+                {/* Phân tích từ đúng vs từ cần sửa */}
+                <div className="space-y-3 p-4 rounded-2xl bg-white/[0.02] border border-white/5">
+                  <div className="text-xs font-bold text-gray-300">Phân tích chi tiết từng từ:</div>
+                  <div className="flex flex-wrap gap-2">
+                    {assessmentResult.words?.map((w, idx) => {
+                      const isGood = (w.accuracyScore || 0) >= 70;
+                      return (
+                        <span
+                          key={idx}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-bold font-mono border ${
+                            isGood
+                              ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300'
+                              : 'bg-rose-500/15 border-rose-500/30 text-rose-300 animate-pulse'
+                          }`}
+                        >
+                          {w.word} {isGood ? '✓' : '⚠️'}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="space-y-3 pt-1">
                   <div>
                     <div className="flex justify-between text-xs font-bold mb-1">
-                      <span className="text-gray-400">Độ chuẩn âm (Accuracy)</span>
-                      <span className="text-emerald-400">{assessmentResult.accuracyScore}%</span>
+                      <span className="text-gray-400">Độ chuẩn xác nguyên âm &amp; phụ âm</span>
+                      <span className="text-emerald-400 font-mono">{assessmentResult.accuracyScore}%</span>
                     </div>
                     <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden">
                       <div className="bg-emerald-500 h-full rounded-full" style={{ width: `${assessmentResult.accuracyScore}%` }}></div>
@@ -897,8 +936,8 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
 
                   <div>
                     <div className="flex justify-between text-xs font-bold mb-1">
-                      <span className="text-gray-400">Độ lưu loát (Fluency)</span>
-                      <span className="text-brand-400">{assessmentResult.fluencyScore}%</span>
+                      <span className="text-gray-400">Độ lưu loát &amp; ngắt nghỉ tự nhiên</span>
+                      <span className="text-brand-400 font-mono">{assessmentResult.fluencyScore}%</span>
                     </div>
                     <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden">
                       <div className="bg-brand-500 h-full rounded-full" style={{ width: `${assessmentResult.fluencyScore}%` }}></div>
@@ -907,8 +946,8 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
 
                   <div>
                     <div className="flex justify-between text-xs font-bold mb-1">
-                      <span className="text-gray-400">Độ hoàn thành (Completeness)</span>
-                      <span className="text-indigo-400">{assessmentResult.completenessScore}%</span>
+                      <span className="text-gray-400">Độ hoàn thành trọn vẹn câu</span>
+                      <span className="text-indigo-400 font-mono">{assessmentResult.completenessScore}%</span>
                     </div>
                     <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden">
                       <div className="bg-indigo-500 h-full rounded-full" style={{ width: `${assessmentResult.completenessScore}%` }}></div>
@@ -917,61 +956,28 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
                 </div>
 
                 {spacedRepetitionInfo && (
-                  <div className="mt-4 p-4 rounded-2xl bg-gradient-to-r from-brand-500/10 to-indigo-500/10 border border-brand-500/10 space-y-2">
+                  <div className="p-3.5 rounded-2xl bg-gradient-to-r from-brand-500/10 to-indigo-500/10 border border-brand-500/10 space-y-1.5">
                     <div className="text-[11px] text-brand-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
                       <Sparkles className="w-3.5 h-3.5 animate-pulse" />
-                      <span>Thuật toán ôn tập ngắt quãng (SM-2)</span>
+                      <span>Chu kỳ ôn tập ngắt quãng (SM-2)</span>
                     </div>
-                    <div className="text-xs text-gray-300">
-                      Chất lượng đọc: <span className="font-bold text-emerald-400">{spacedRepetitionInfo.qualityScore}/5</span> • 
-                      Độ dễ (EF): <span className="font-bold text-brand-400">{spacedRepetitionInfo.ef.toFixed(2)}</span>
-                    </div>
-                    <div className="text-xs text-white font-semibold">
-                      Lịch ôn tập tiếp theo: <span className="text-emerald-400 font-bold underline">Sau {spacedRepetitionInfo.interval} ngày</span>
+                    <div className="text-xs text-white font-medium">
+                      Lịch nhắc nhở luyện lại câu này: <span className="text-emerald-400 font-bold underline">Sau {spacedRepetitionInfo.interval} ngày</span>
                     </div>
                   </div>
                 )}
-
-                <div className="text-[11px] text-gray-500 bg-white/5 rounded-2xl p-4 space-y-2">
-                  <div className="font-bold mb-1 flex items-center gap-1.5">
-                    <HelpCircle className="w-4 h-4 text-gray-400" />
-                    <span>Chú thích màu sắc:</span>
-                  </div>
-                  <div className="flex flex-wrap gap-x-3 gap-y-1">
-                    <span className="text-emerald-400 font-bold">● Tốt (&gt;=85)</span>
-                    <span className="text-amber-400 font-bold">● Khá (60-84)</span>
-                    <span className="text-red-400 font-bold">● Sửa lỗi (&lt;60)</span>
-                  </div>
-                </div>
               </div>
             ) : (
-              <div className="flex-1 flex flex-col items-center justify-center text-center space-y-6">
-                <div className="p-5 rounded-2xl border border-white/5 bg-[#0a0f1d] w-full space-y-3">
-                  <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider flex items-center justify-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-brand-400" />
-                    <span>Lý thuyết ứng đáp câu hỏi (IRT)</span>
-                  </div>
-                  <div className="text-3xl font-extrabold text-brand-400 font-outfit">
-                    θ = {theta.toFixed(3)}
-                  </div>
-                  <div className="text-xs text-gray-300 font-medium">
-                    Năng lực ước lượng: <span className="text-emerald-400 font-bold">
-                      {theta < -1.0 ? "Yếu (A1)" : theta < 0.5 ? "Đạt (A2)" : theta < 1.8 ? "Khá (B1)" : "Xuất sắc (B2/C1)"}
-                    </span>
-                  </div>
-                  <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden relative">
-                    <div 
-                      className="absolute bg-brand-500 h-full rounded-full transition-all duration-500" 
-                      style={{ 
-                        left: '0%', 
-                        width: `${((theta + 3.0) / 6.0) * 100}%` 
-                      }}
-                    ></div>
-                  </div>
+              <div className="flex-1 flex flex-col items-center justify-center text-center space-y-5">
+                <div className="w-16 h-16 rounded-2xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center text-brand-400 shadow-lg">
+                  <Mic className="w-8 h-8 animate-pulse" />
                 </div>
-
-                <Mic className="w-10 h-10 text-gray-600 animate-pulse" />
-                <p className="text-xs text-gray-500 max-w-[200px]">Hãy nhấn nút Mic và bắt đầu đọc câu mẫu để xem báo cáo điểm số chi tiết ở đây.</p>
+                <div className="space-y-1.5 max-w-xs">
+                  <h4 className="text-sm font-bold text-white">Sẵn sàng phân tích phát âm</h4>
+                  <p className="text-xs text-gray-400 leading-relaxed">
+                    Nhấn giữ nút <strong className="text-emerald-400">Micro</strong> và đọc to câu mẫu tiếng Anh. AI sẽ nhận diện từng âm đúng (màu xanh) và âm cần sửa (màu đỏ).
+                  </p>
+                </div>
               </div>
             )}
           </div>

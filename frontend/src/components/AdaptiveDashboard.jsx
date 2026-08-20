@@ -754,34 +754,34 @@ export default function AdaptiveDashboard({ selectedGrade, onNavigate, onOpenExp
                 <Target className="w-5 h-5 animate-pulse" />
               </div>
               <div>
-                <h4 className="font-black text-lg text-white font-outfit">Đánh giá Năng lực Học tập</h4>
-                <p className="text-[10px] text-gray-400">Dự báo kết quả học tập định kỳ theo chương trình GDPT mới</p>
+                <h4 className="font-black text-lg text-white font-outfit">Tiến Độ &amp; Kỹ Năng Thực Tế</h4>
+                <p className="text-[10px] text-gray-400">Đánh giá thực chất mức độ thành thạo và năng lực hoàn thành bài tập</p>
               </div>
             </div>
 
             <div className="space-y-3">
-              {/* Semester Exam Prediction */}
+              {/* Tỉ lệ đúng thực tế */}
               <div className="p-3.5 rounded-2xl bg-white/[0.02] border border-white/5 flex items-center justify-between">
                 <div>
-                  <span className="text-[10px] text-gray-400 font-bold block uppercase tracking-wider">Điểm kiểm tra Học kỳ</span>
-                  <span className="text-xs text-gray-300 block mt-0.5">Dự đoán điểm trung bình học kỳ</span>
+                  <span className="text-[10px] text-gray-400 font-bold block uppercase tracking-wider">Tỉ lệ bài làm chính xác</span>
+                  <span className="text-xs text-gray-300 block mt-0.5">Dựa trên các câu đã hoàn thành</span>
                 </div>
                 <div className="text-right">
-                  <span className="text-xl font-black text-amber-400 font-outfit">
-                    {hasStudied ? predictions.semesterScore : '—'} / 10
+                  <span className="text-xl font-black text-emerald-400 font-outfit">
+                    {hasStudied ? `${Math.round(((theta + 3.0) / 6.0) * 100)}%` : '—'}
                   </span>
                 </div>
               </div>
 
-              {/* THPT Graduation prediction */}
+              {/* Mức độ thành thạo kỹ năng */}
               <div className="p-3.5 rounded-2xl bg-white/[0.02] border border-white/5 flex items-center justify-between">
                 <div>
-                  <span className="text-[10px] text-gray-400 font-bold block uppercase tracking-wider">Dự báo Điểm thi tốt nghiệp THPT</span>
-                  <span className="text-xs text-gray-300 block mt-0.5">Kỳ thi Quốc gia THPT</span>
+                  <span className="text-[10px] text-gray-400 font-bold block uppercase tracking-wider">Mức độ làm chủ kiến thức</span>
+                  <span className="text-xs text-gray-300 block mt-0.5">Đọc hiểu, Từ vựng &amp; Ngữ pháp</span>
                 </div>
                 <div className="text-right">
-                  <span className="text-xl font-black text-indigo-300 font-outfit">
-                    {hasStudied ? predictions.thptScore : '—'} / 10
+                  <span className="text-sm font-black text-indigo-300 font-outfit">
+                    {hasStudied ? (theta >= 1.0 ? 'Thành thạo' : theta >= 0.0 ? 'Đang tiến bộ' : 'Cần củng cố') : 'Chưa đánh giá'}
                   </span>
                 </div>
               </div>
@@ -800,8 +800,8 @@ export default function AdaptiveDashboard({ selectedGrade, onNavigate, onOpenExp
           </div>
 
           <div className="pt-3 border-t border-white/5 flex items-center justify-between text-[10px] text-gray-500 font-semibold">
-            <span>Độ tin cậy mô hình: 94.8%</span>
-            <span className="text-amber-400/80 font-bold">AI Pathway Analytics</span>
+            <span>Đánh giá thực chất • Không ảo hóa</span>
+            <span className="text-amber-400/80 font-bold">AI Skill Mastery</span>
           </div>
         </div>
 

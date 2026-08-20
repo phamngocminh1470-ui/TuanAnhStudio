@@ -643,16 +643,16 @@ Return JSON: {"original_wrong_sentence": "wrong sentence", "correct_rewrite": "c
                 {/* Score Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-5">
                   <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-purple-600 to-pink-600 flex items-center justify-center text-white shadow-xl shadow-purple-600/30 font-black text-2xl font-outfit">
-                      {essayEvaluation.overall_score?.toFixed(1) || '8.0'}
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-600 to-pink-600 flex items-center justify-center text-white shadow-xl shadow-purple-600/30">
+                      <Sparkles className="w-7 h-7" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-black text-white font-outfit">Kết Quả Đánh Giá Bài Viết</h3>
-                      <p className="text-xs text-gray-400">Thang điểm 10 chuẩn cấu trúc thi Tốt nghiệp THPT Quốc gia</p>
+                      <h3 className="text-lg font-black text-white font-outfit">Kết Quả Phân Tích &amp; Sửa Lỗi Chi Tiết</h3>
+                      <p className="text-xs text-gray-400">Đánh giá thực chất 4 tiêu chí chuẩn quốc tế &amp; Hướng dẫn sửa từng câu</p>
                     </div>
                   </div>
                   <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 text-xs font-bold">
-                    <CheckCircle2 className="w-4 h-4" /> Đã hoàn thành chấm thi
+                    <CheckCircle2 className="w-4 h-4" /> Đã hoàn thành đánh giá
                   </div>
                 </div>
 
@@ -663,11 +663,11 @@ Return JSON: {"original_wrong_sentence": "wrong sentence", "correct_rewrite": "c
                   <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/10 space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold text-purple-300">1. Hoàn Thành Yêu Cầu (Task Response)</span>
-                      <span className="text-xs font-black text-white px-2 py-0.5 rounded-md bg-purple-500/20">
-                        {essayEvaluation.criteria?.task_achievement?.score || '—'}/10
+                      <span className="text-[11px] font-bold text-emerald-400 px-2.5 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/20">
+                        {essayEvaluation.criteria?.task_achievement?.score >= 8 ? 'Xuất sắc' : essayEvaluation.criteria?.task_achievement?.score >= 6.5 ? 'Đạt yêu cầu' : 'Cần bổ sung ý'}
                       </span>
                     </div>
-                    <p className="text-xs text-gray-400 leading-relaxed">
+                    <p className="text-xs text-gray-300 leading-relaxed">
                       {essayEvaluation.criteria?.task_achievement?.comment}
                     </p>
                   </div>
@@ -676,11 +676,11 @@ Return JSON: {"original_wrong_sentence": "wrong sentence", "correct_rewrite": "c
                   <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/10 space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold text-indigo-300">2. Tính Mạch Lạc (Coherence &amp; Cohesion)</span>
-                      <span className="text-xs font-black text-white px-2 py-0.5 rounded-md bg-indigo-500/20">
-                        {essayEvaluation.criteria?.coherence_cohesion?.score || '—'}/10
+                      <span className="text-[11px] font-bold text-indigo-300 px-2.5 py-0.5 rounded-md bg-indigo-500/15 border border-indigo-500/20">
+                        {essayEvaluation.criteria?.coherence_cohesion?.score >= 8 ? 'Rất mạch lạc' : essayEvaluation.criteria?.coherence_cohesion?.score >= 6.5 ? 'Liên kết tốt' : 'Cần thêm từ nối'}
                       </span>
                     </div>
-                    <p className="text-xs text-gray-400 leading-relaxed">
+                    <p className="text-xs text-gray-300 leading-relaxed">
                       {essayEvaluation.criteria?.coherence_cohesion?.comment}
                     </p>
                   </div>
@@ -689,11 +689,11 @@ Return JSON: {"original_wrong_sentence": "wrong sentence", "correct_rewrite": "c
                   <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/10 space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold text-pink-300">3. Vốn Từ Vựng (Lexical Resource)</span>
-                      <span className="text-xs font-black text-white px-2 py-0.5 rounded-md bg-pink-500/20">
-                        {essayEvaluation.criteria?.lexical_resource?.score || '—'}/10
+                      <span className="text-[11px] font-bold text-pink-300 px-2.5 py-0.5 rounded-md bg-pink-500/15 border border-pink-500/20">
+                        {essayEvaluation.criteria?.lexical_resource?.score >= 8 ? 'Từ vựng đa dạng' : essayEvaluation.criteria?.lexical_resource?.score >= 6.5 ? 'Đúng ngữ cảnh' : 'Cần tránh lặp từ'}
                       </span>
                     </div>
-                    <p className="text-xs text-gray-400 leading-relaxed">
+                    <p className="text-xs text-gray-300 leading-relaxed">
                       {essayEvaluation.criteria?.lexical_resource?.comment}
                     </p>
                   </div>
@@ -702,11 +702,11 @@ Return JSON: {"original_wrong_sentence": "wrong sentence", "correct_rewrite": "c
                   <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/10 space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold text-emerald-300">4. Độ Chính Xác Ngữ Pháp (Grammar)</span>
-                      <span className="text-xs font-black text-white px-2 py-0.5 rounded-md bg-emerald-500/20">
-                        {essayEvaluation.criteria?.grammatical_accuracy?.score || '—'}/10
+                      <span className="text-[11px] font-bold text-emerald-300 px-2.5 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/20">
+                        {essayEvaluation.criteria?.grammatical_accuracy?.score >= 8 ? 'Chuẩn ngữ pháp' : essayEvaluation.criteria?.grammatical_accuracy?.score >= 6.5 ? 'Ít lỗi cơ bản' : 'Cần sửa cấu trúc'}
                       </span>
                     </div>
-                    <p className="text-xs text-gray-400 leading-relaxed">
+                    <p className="text-xs text-gray-300 leading-relaxed">
                       {essayEvaluation.criteria?.grammatical_accuracy?.comment}
                     </p>
                   </div>
