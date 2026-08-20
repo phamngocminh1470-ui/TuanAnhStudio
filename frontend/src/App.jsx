@@ -657,13 +657,10 @@ function App() {
         </div>
       </main>
 
-      {/* CUSTOM LASER CURSOR EFFECT */}
-      <CustomCursor />
-
       {/* INTERACTIVE FLOATING SKILL DOCK */}
       <InteractiveSkillDock 
         activeTab={activeTab} 
-        onNavigate={handleTabChange} 
+        onNavigate={(tab) => setActiveTab(tab)} 
         onOpenPhotoSolver={() => setIsPhotoSolverOpen(true)}
       />
 
