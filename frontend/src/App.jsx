@@ -13,6 +13,7 @@ import UserGuide from './components/UserGuide';
 import AuthModal from './components/AuthModal';
 import AdminPanel from './components/AdminPanel';
 import CustomCursor from './components/CustomCursor';
+import InteractiveSkillDock from './components/InteractiveSkillDock';
 import ExportProgressReportModal from './components/ExportProgressReportModal';
 import ItemBankManager from './components/ItemBankManager';
 import UserProfileModal from './components/UserProfileModal';
@@ -655,6 +656,17 @@ function App() {
 
         </div>
       </main>
+
+      {/* CUSTOM LASER CURSOR EFFECT */}
+      <CustomCursor />
+
+      {/* INTERACTIVE FLOATING SKILL DOCK */}
+      <InteractiveSkillDock 
+        activeTab={activeTab} 
+        onNavigate={handleTabChange} 
+        onOpenPhotoSolver={() => setIsPhotoSolverOpen(true)}
+      />
+
       {/* PRINTABLE PROGRESS REPORT MODAL */}
       <ExportProgressReportModal 
         isOpen={isExportModalOpen} 
