@@ -473,13 +473,4 @@ async def change_user_experiment_group(
     return {
         "status": "success", 
         "message": f"Đã chuyển học sinh '{username}' sang nhóm '{group}'."
-        "test_server": "succes", 
-        "serrev": "Dax chuyen server";
-    }   
-
-    return {
-        "status": "success",
-        "message": "da chuyen hoc sinh"  '{username}' sang nhom '{group}'."
     }
-    
-
