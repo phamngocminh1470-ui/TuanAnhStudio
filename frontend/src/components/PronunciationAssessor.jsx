@@ -413,7 +413,8 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
         if (recognitionRef.current) {
           try { recognitionRef.current.stop(); } catch(e){}
         }
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
+        const mimeType = mediaRecorder.mimeType || 'audio/webm';
+        const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
         sendToAssessment(audioBlob);
         stream.getTracks().forEach(track => track.stop());
       };
@@ -422,7 +423,11 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
       setIsRecording(true);
     } catch (error) {
       console.error("Lỗi micro:", error);
-      alert("Vui lòng cấp quyền Microphone trong trình duyệt để luyện nói.");
+      setAssessmentResult({
+        silenceDetected: true,
+        errorNotice: "Không thể truy cập Microphone. Vui lòng cấp quyền Microphone trong trình duyệt để luyện nói.",
+        words: []
+      });
     }
   };
 
@@ -439,11 +444,11 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
     setIsLoading(true);
     setAssessmentResult(null);
 
-    const spokenText = recognizedTranscriptRef.current.trim().toLowerCase();
-    const refWords = currentSentence.text.split(/\s+/).map(w => w.replace(/[.,!?"']/g, ''));
+    const spokenText = (recognizedTranscriptRef.current || '').trim().toLowerCase();
+    const refWords = currentSentence.text.split(/\s+/).map(w => w.replace(/[.,!?"']/g, '').trim()).filter(Boolean);
 
-    // Kiểm tra nếu audio quá bé (< 2000 bytes) hoặc không có tiếng
-    if (audioBlob.size < 2000 && !spokenText) {
+    // Kiểm tra nếu audio quá bé (< 1500 bytes) và không bắt được giọng nói
+    if (audioBlob.size < 1500 && !spokenText) {
       setAssessmentResult({
         accuracyScore: 0,
         fluencyScore: 0,
@@ -452,7 +457,9 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
         silenceDetected: true,
         words: refWords.map(w => ({
           Word: w,
-          PronunciationAssessment: { AccuracyScore: 0, ErrorType: 'Omission' }
+          word: w,
+          accuracyScore: 0,
+          errorType: 'Omission'
         }))
       });
       setIsLoading(false);
@@ -460,7 +467,7 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
     }
 
     const formData = new FormData();
-    formData.append('file', audioBlob, 'read.wav');
+    formData.append('file', audioBlob, 'speech.webm');
     formData.append('reference_text', currentSentence.text);
 
     try {
@@ -469,7 +476,7 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
       });
       
       const nbest = response.data.NBest?.[0];
-      const isSilence = response.data.RecognitionStatus === 'InitialSilenceTimeout' || (!spokenText && audioBlob.size < 3000 && (!nbest || nbest.PronunciationAssessment?.PronunciationScore === 0));
+      const isSilence = response.data.RecognitionStatus === 'InitialSilenceTimeout' || (!spokenText && audioBlob.size < 2500 && (!nbest || nbest.PronunciationAssessment?.PronunciationScore === 0));
 
       if (isSilence) {
         setAssessmentResult({
@@ -480,7 +487,9 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
           silenceDetected: true,
           words: refWords.map(w => ({
             Word: w,
-            PronunciationAssessment: { AccuracyScore: 0, ErrorType: 'Omission' }
+            word: w,
+            accuracyScore: 0,
+            errorType: 'Omission'
           }))
         });
         setIsLoading(false);
@@ -492,42 +501,52 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
         let accuracy = nbest.PronunciationAssessment?.AccuracyScore || 0;
         let fluency = nbest.PronunciationAssessment?.FluencyScore || 0;
         let completeness = nbest.PronunciationAssessment?.CompletenessScore || 0;
-        let evaluatedWords = nbest.Words || [];
+        
+        let evaluatedWords = (nbest.Words || []).map(w => {
+          const wText = w.Word || w.word || '';
+          const acc = w.PronunciationAssessment?.AccuracyScore ?? w.accuracyScore ?? 0;
+          const err = w.PronunciationAssessment?.ErrorType ?? (acc >= 70 ? 'None' : 'Mispronunciation');
+          return {
+            Word: wText,
+            word: wText,
+            accuracyScore: acc,
+            errorType: err
+          };
+        });
 
-        // Nếu client có kết quả STT từ Web Speech API, kết hợp để đánh giá chính xác từng từ
-        if (spokenText && evaluatedWords.length > 0) {
-          const spokenWordsList = spokenText.split(/\s+/);
+        // Nếu client có kết quả STT từ Web Speech API, kết hợp để đối chiếu chính xác
+        if (spokenText && refWords.length > 0) {
+          const spokenWordsList = spokenText.split(/\s+/).map(s => s.toLowerCase().trim());
           evaluatedWords = refWords.map(w => {
             const wLower = w.toLowerCase();
             const exactMatch = spokenWordsList.some(sw => sw === wLower);
             const partialMatch = spokenWordsList.some(sw => sw.includes(wLower) || wLower.includes(sw));
-            if (exactMatch) {
-              return { Word: w, PronunciationAssessment: { AccuracyScore: 95, ErrorType: 'None' } };
-            } else if (partialMatch) {
-              return { Word: w, PronunciationAssessment: { AccuracyScore: 65, ErrorType: 'Mispronunciation' } };
-            } else {
-              return { Word: w, PronunciationAssessment: { AccuracyScore: 0, ErrorType: 'Omission' } };
-            }
+            const acc = exactMatch ? 95 : partialMatch ? 70 : 0;
+            const err = exactMatch ? 'None' : partialMatch ? 'Mispronunciation' : 'Omission';
+            return {
+              Word: w,
+              word: w,
+              accuracyScore: acc,
+              errorType: err
+            };
           });
-          const matchCount = evaluatedWords.filter(w => w.PronunciationAssessment.ErrorType === 'None').length;
-          const partialCount = evaluatedWords.filter(w => w.PronunciationAssessment.ErrorType === 'Mispronunciation').length;
-          accuracy = Math.round(((matchCount * 100) + (partialCount * 60)) / refWords.length);
+          const matchCount = evaluatedWords.filter(w => w.accuracyScore >= 70).length;
+          accuracy = Math.round((matchCount / refWords.length) * 100);
           overallScore = accuracy;
-          fluency = Math.max(50, accuracy);
-          completeness = Math.round(((matchCount + partialCount) / refWords.length) * 100);
+          fluency = Math.max(60, accuracy);
+          completeness = Math.round((evaluatedWords.filter(w => w.accuracyScore > 0).length / refWords.length) * 100);
         }
+
+        const isReallySilent = evaluatedWords.length === 0 || evaluatedWords.every(w => w.accuracyScore === 0);
 
         setAssessmentResult({
           accuracyScore: accuracy,
           fluencyScore: fluency,
           completenessScore: completeness,
           pronunciationScore: overallScore,
-          silenceDetected: overallScore === 0,
+          silenceDetected: isReallySilent,
           words: evaluatedWords
         });
-
-        // Lưu điểm phát âm vào localStorage
-        localStorage.setItem('user_pronounce_score', overallScore.toString());
 
         // Cập nhật IRT Năng lực
         const responseVal = overallScore >= 70 ? 1 : 0;
@@ -550,18 +569,10 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
           if (thetaRes.data.status === 'success') {
             setTheta(thetaRes.data.new_theta);
           }
-        } catch (err) {
-          console.error("Lỗi cập nhật năng lực IRT:", err);
-        }
+        } catch (err) {}
 
         // Cập nhật SM-2 Spaced Repetition
-        let quality = 0;
-        if (overallScore >= 85) quality = 5;
-        else if (overallScore >= 70) quality = 4;
-        else if (overallScore >= 55) quality = 3;
-        else if (overallScore >= 40) quality = 2;
-        else if (overallScore >= 20) quality = 1;
-
+        let quality = overallScore >= 85 ? 5 : overallScore >= 70 ? 4 : overallScore >= 55 ? 3 : 2;
         const currentRep = spacedRepetitionInfo?.repetition || 0;
         const currentEF = spacedRepetitionInfo?.ef || 2.5;
         const currentInterval = spacedRepetitionInfo?.interval || 1;
@@ -581,16 +592,38 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
               qualityScore: quality
             });
           }
-        } catch (err) {
-          console.error("Lỗi tính lặp ngắt quãng SM-2:", err);
-        }
+        } catch (err) {}
 
       } else {
-        alert("Chấm điểm thất bại. Vui lòng nói to và rõ hơn.");
+        setAssessmentResult({
+          accuracyScore: 0,
+          fluencyScore: 0,
+          completenessScore: 0,
+          pronunciationScore: 0,
+          silenceDetected: true,
+          words: refWords.map(w => ({
+            Word: w,
+            word: w,
+            accuracyScore: 0,
+            errorType: 'Omission'
+          }))
+        });
       }
     } catch (error) {
       console.error("Lỗi chấm phát âm:", error);
-      alert("Lỗi kết nối máy chủ chấm phát âm.");
+      setAssessmentResult({
+        accuracyScore: 0,
+        fluencyScore: 0,
+        completenessScore: 0,
+        pronunciationScore: 0,
+        silenceDetected: true,
+        words: refWords.map(w => ({
+          Word: w,
+          word: w,
+          accuracyScore: 0,
+          errorType: 'Omission'
+        }))
+      });
     } finally {
       setIsLoading(false);
     }
@@ -668,13 +701,12 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
   // Màu từ phát âm
   const getWordColor = (wordAssessment) => {
     if (!wordAssessment) return 'text-gray-300';
-    const errorType = wordAssessment.PronunciationAssessment?.ErrorType;
-    const score = wordAssessment.PronunciationAssessment?.AccuracyScore || 0;
+    const errorType = wordAssessment.errorType || wordAssessment.PronunciationAssessment?.ErrorType;
+    const score = wordAssessment.accuracyScore ?? wordAssessment.PronunciationAssessment?.AccuracyScore ?? 0;
     
-    if (errorType === 'Omission') return 'text-gray-600 line-through';
-    if (errorType === 'Mispronunciation' || score < 60) return 'text-red-400 font-semibold underline decoration-wavy decoration-red-500';
-    if (score >= 60 && score < 85) return 'text-amber-400 font-semibold';
-    return 'text-emerald-400 font-semibold';
+    if (errorType === 'Omission' || score === 0) return 'text-gray-600 line-through';
+    if (errorType === 'Mispronunciation' || score < 70) return 'text-red-400 font-bold underline decoration-wavy decoration-red-500';
+    return 'text-emerald-400 font-extrabold';
   };
 
   return (
@@ -772,11 +804,11 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
             <div className="absolute top-0 right-0 w-32 h-32 bg-brand-500/5 rounded-full blur-3xl"></div>
             
             <div className="text-2xl md:text-3xl font-medium leading-relaxed font-outfit text-gray-100 py-2">
-              {assessmentResult ? (
+              {assessmentResult && !assessmentResult.silenceDetected ? (
                 <div className="flex flex-wrap gap-x-3 gap-y-2">
                   {assessmentResult.words.map((wordObj, i) => (
                     <span key={i} className={getWordColor(wordObj)}>
-                      {wordObj.Word}
+                      {wordObj.Word || wordObj.word}
                     </span>
                   ))}
                 </div>
@@ -786,9 +818,9 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
             </div>
 
             {assessmentResult?.silenceDetected && (
-              <div className="flex items-center gap-2.5 p-3.5 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-300 text-xs font-bold animate-fade-in mt-3">
-                <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
-                <span>Không phát hiện giọng nói hoặc âm thanh quá nhỏ. Vui lòng nhấn Mic và nói to rõ vào microphone!</span>
+              <div className="flex items-center gap-2.5 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-bold animate-fade-in mt-3">
+                <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0" />
+                <span>Chưa phát hiện giọng nói: Micro chưa thu được tiếng của bạn hoặc âm lượng quá nhỏ. Bạn hãy bấm Micro lại và đọc to, rõ ràng câu mẫu nhé!</span>
               </div>
             )}
 
@@ -801,7 +833,7 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
                 }`}
               >
                 <Volume2 className="w-4 h-4" />
-                <span>{isPlayingSample ? 'Listening...' : 'Hear Native'}</span>
+                <span>{isPlayingSample ? 'Đang đọc...' : 'Nghe phát âm chuẩn'}</span>
               </button>
 
               <div className="text-[11px] text-gray-500 italic">
@@ -825,7 +857,7 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
               <button
                 onClick={stopRecording}
                 className="w-20 h-20 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center text-white transition shadow-lg shadow-red-500/20 pulse-record glow-btn-danger cursor-pointer"
-                title="Dừng ghi âm và chấm điểm"
+                title="Dừng ghi âm và nhận diện"
               >
                 <Square className="w-8 h-8 fill-current" />
               </button>
@@ -834,7 +866,7 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
                 onClick={startRecording}
                 disabled={isPlayingSample || isLoading}
                 className="w-20 h-20 rounded-full bg-brand-500 hover:bg-brand-600 disabled:bg-gray-800 flex items-center justify-center text-white transition shadow-lg shadow-brand-500/20 glow-btn-brand cursor-pointer"
-                title="Bắt đầu ghi âm phát âm"
+                title="Bắt đầu nói"
               >
                 <Mic className="w-9 h-9" />
               </button>
@@ -863,24 +895,24 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
         {/* Cột phải: Kết quả phân tích từ AI */}
         <div className="space-y-6">
           <div className="glass-card rounded-3xl p-8 shadow-md min-h-[350px] flex flex-col justify-between border border-white/5">
-            <h3 className="font-bold text-gray-200 text-sm mb-4 border-b border-white/5 pb-3">Báo cáo đánh giá AI</h3>
+            <h3 className="font-bold text-gray-200 text-sm mb-4 border-b border-white/5 pb-3">Phân tích phát âm</h3>
             
             {isLoading ? (
               <div className="flex-1 flex flex-col items-center justify-center space-y-3">
                 <RefreshCw className="w-10 h-10 text-brand-500 animate-spin" />
-                <span className="text-xs text-gray-400">AI đang phân tích từng âm và ngữ điệu...</span>
+                <span className="text-xs text-gray-400">AI đang lắng nghe và phân tích từng âm...</span>
               </div>
-            ) : assessmentResult ? (
+            ) : assessmentResult && !assessmentResult.silenceDetected ? (
               <div className="flex-1 flex flex-col justify-between space-y-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-xl md:text-2xl font-black text-white font-outfit">
-                      {assessmentResult.pronunciationScore >= 80 ? (
+                      {assessmentResult.words?.filter(w => (w.accuracyScore || 0) >= 70).length >= Math.ceil(assessmentResult.words?.length * 0.8) ? (
                         <span className="text-emerald-400 flex items-center gap-1.5">
                           <CheckCircle2 className="w-6 h-6 text-emerald-400" />
                           Phát âm Chuẩn &amp; Rõ Ràng
                         </span>
-                      ) : assessmentResult.pronunciationScore >= 60 ? (
+                      ) : assessmentResult.words?.filter(w => (w.accuracyScore || 0) >= 70).length >= Math.ceil(assessmentResult.words?.length * 0.5) ? (
                         <span className="text-amber-400 flex items-center gap-1.5">
                           <Sparkles className="w-6 h-6 text-amber-400" />
                           Khá Tốt • Cần Chỉnh Vài Âm
@@ -916,7 +948,7 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
                               : 'bg-rose-500/15 border-rose-500/30 text-rose-300 animate-pulse'
                           }`}
                         >
-                          {w.word} {isGood ? '✓' : '⚠️'}
+                          {w.Word || w.word} {isGood ? '✓' : '⚠️'}
                         </span>
                       );
                     })}
@@ -927,30 +959,36 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
                   <div>
                     <div className="flex justify-between text-xs font-bold mb-1">
                       <span className="text-gray-400">Độ chuẩn xác nguyên âm &amp; phụ âm</span>
-                      <span className="text-emerald-400 font-mono">{assessmentResult.accuracyScore}%</span>
+                      <span className="text-emerald-400 font-bold">
+                        {assessmentResult.accuracyScore >= 80 ? 'Rất chuẩn xác' : assessmentResult.accuracyScore >= 60 ? 'Tương đối tốt' : 'Cần chú ý âm đuôi'}
+                      </span>
                     </div>
                     <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden">
-                      <div className="bg-emerald-500 h-full rounded-full" style={{ width: `${assessmentResult.accuracyScore}%` }}></div>
+                      <div className="bg-emerald-500 h-full rounded-full" style={{ width: `${Math.max(15, assessmentResult.accuracyScore)}%` }}></div>
                     </div>
                   </div>
 
                   <div>
                     <div className="flex justify-between text-xs font-bold mb-1">
                       <span className="text-gray-400">Độ lưu loát &amp; ngắt nghỉ tự nhiên</span>
-                      <span className="text-brand-400 font-mono">{assessmentResult.fluencyScore}%</span>
+                      <span className="text-brand-400 font-bold">
+                        {assessmentResult.fluencyScore >= 75 ? 'Tự nhiên & Trôi chảy' : 'Khá lưu loát'}
+                      </span>
                     </div>
                     <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden">
-                      <div className="bg-brand-500 h-full rounded-full" style={{ width: `${assessmentResult.fluencyScore}%` }}></div>
+                      <div className="bg-brand-500 h-full rounded-full" style={{ width: `${Math.max(20, assessmentResult.fluencyScore)}%` }}></div>
                     </div>
                   </div>
 
                   <div>
                     <div className="flex justify-between text-xs font-bold mb-1">
-                      <span className="text-gray-400">Độ hoàn thành trọn vẹn câu</span>
-                      <span className="text-indigo-400 font-mono">{assessmentResult.completenessScore}%</span>
+                      <span className="text-gray-400">Mức độ hoàn thành câu</span>
+                      <span className="text-indigo-400 font-bold">
+                        {assessmentResult.completenessScore >= 80 ? 'Hoàn thành trọn vẹn' : 'Đã đọc hầu hết các từ'}
+                      </span>
                     </div>
                     <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden">
-                      <div className="bg-indigo-500 h-full rounded-full" style={{ width: `${assessmentResult.completenessScore}%` }}></div>
+                      <div className="bg-indigo-500 h-full rounded-full" style={{ width: `${Math.max(25, assessmentResult.completenessScore)}%` }}></div>
                     </div>
                   </div>
                 </div>
@@ -973,9 +1011,9 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
                   <Mic className="w-8 h-8 animate-pulse" />
                 </div>
                 <div className="space-y-1.5 max-w-xs">
-                  <h4 className="text-sm font-bold text-white">Sẵn sàng phân tích phát âm</h4>
+                  <h4 className="text-sm font-bold text-white">Sẵn sàng nhận diện phát âm</h4>
                   <p className="text-xs text-gray-400 leading-relaxed">
-                    Nhấn giữ nút <strong className="text-emerald-400">Micro</strong> và đọc to câu mẫu tiếng Anh. AI sẽ nhận diện từng âm đúng (màu xanh) và âm cần sửa (màu đỏ).
+                    Nhấn nút <strong className="text-emerald-400">Micro</strong> và đọc to câu mẫu tiếng Anh. AI sẽ chỉ ra từ nào bạn đọc chuẩn (màu xanh ✓) và từ nào cần sửa lại (màu đỏ ⚠️).
                   </p>
                 </div>
               </div>

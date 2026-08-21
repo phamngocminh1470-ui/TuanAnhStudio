@@ -502,10 +502,15 @@ async def assess_pronunciation(
             }
             
             response = model.generate_content([prompt, audio_part])
-            result_json = json.loads(response.text)
-            return result_json
+            clean_text = (response.text or "").strip()
+            if clean_text.startswith("```"):
+                clean_text = re.sub(r"^```[a-zA-Z]*\n", "", clean_text)
+                clean_text = re.sub(r"\n```$", "", clean_text).strip()
+            result_json = json.loads(clean_text)
+            if "NBest" in result_json or "RecognitionStatus" in result_json:
+                return result_json
         except Exception as e:
-            print(f"Lỗi khi chấm điểm phát âm bằng Gemini Multimodal: {e}")
+            print(f"[WARN] Lỗi khi chấm điểm phát âm bằng Gemini Multimodal: {e}")
 
     # TRƯỜNG HỢP 3: KHÔNG CÓ KEY NÀO -> KIỂM TRA ĐỘ DÀI ÂM THANH
     print("[INFO] Đánh giá âm thanh offline...")
