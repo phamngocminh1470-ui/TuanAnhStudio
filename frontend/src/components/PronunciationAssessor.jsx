@@ -240,6 +240,20 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
   const [aiSentences, setAiSentences] = useState([]);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [isAutoAI, setIsAutoAI] = useState(true); // Bật chế độ tự động sinh câu AI liên tục bằng Gemini
+  const [selectedWordInfo, setSelectedWordInfo] = useState(null); // Từ được click để nghe lại & xem hướng dẫn sửa âm
+
+  const playWordSample = (wordText) => {
+    if (!wordText) return;
+    try {
+      window.speechSynthesis?.cancel();
+      const utterance = new SpeechSynthesisUtterance(wordText);
+      utterance.lang = 'en-US';
+      utterance.rate = 0.8;
+      window.speechSynthesis?.speak(utterance);
+    } catch (e) {
+      console.warn("Speech error:", e);
+    }
+  };
 
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
@@ -935,24 +949,55 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
 
                 {/* Phân tích từ đúng vs từ cần sửa */}
                 <div className="space-y-3 p-4 rounded-2xl bg-white/[0.02] border border-white/5">
-                  <div className="text-xs font-bold text-gray-300">Phân tích chi tiết từng từ:</div>
+                  <div className="flex items-center justify-between text-xs font-bold text-gray-300">
+                    <span>Phân tích chi tiết từng từ:</span>
+                    <span className="text-[10px] text-gray-500 font-normal">Bấm vào từ để nghe riêng</span>
+                  </div>
                   <div className="flex flex-wrap gap-2">
                     {assessmentResult.words?.map((w, idx) => {
+                      const wordText = w.Word || w.word;
                       const isGood = (w.accuracyScore || 0) >= 70;
                       return (
-                        <span
+                        <button
                           key={idx}
-                          className={`px-2.5 py-1 rounded-lg text-xs font-bold font-mono border ${
+                          onClick={() => {
+                            playWordSample(wordText);
+                            setSelectedWordInfo({
+                              word: wordText,
+                              isGood: isGood
+                            });
+                          }}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold font-mono border transition-all cursor-pointer flex items-center gap-1.5 ${
                             isGood
-                              ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300'
-                              : 'bg-rose-500/15 border-rose-500/30 text-rose-300 animate-pulse'
+                              ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/25'
+                              : 'bg-rose-500/15 border-rose-500/30 text-rose-300 hover:bg-rose-500/25 animate-pulse'
                           }`}
+                          title="Bấm để nghe AI phát âm chậm riêng từ này"
                         >
-                          {w.Word || w.word} {isGood ? '✓' : '⚠️'}
-                        </span>
+                          <span>{wordText}</span>
+                          <span>{isGood ? '✓' : '⚠️'}</span>
+                        </button>
                       );
                     })}
                   </div>
+
+                  {selectedWordInfo && (
+                    <div className="mt-2 p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-between text-xs animate-fade-in">
+                      <div className="flex items-center gap-2">
+                        <Volume2 className="w-4 h-4 text-indigo-400 shrink-0" />
+                        <span className="text-white font-bold">"{selectedWordInfo.word}":</span>
+                        <span className="text-gray-300">
+                          {selectedWordInfo.isGood ? 'Đã phát âm chuẩn xác!' : 'Cần bật rõ âm đuôi và nhấn đúng trọng âm.'}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => playWordSample(selectedWordInfo.word)}
+                        className="px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-bold text-[10px] hover:bg-indigo-500 cursor-pointer transition"
+                      >
+                        🔊 Nghe lại
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-3 pt-1">
