@@ -203,8 +203,8 @@ export default function GuestLandingPage({ onOpenAuth, onStartTrial, selectedGra
 
       {/* DẢI CHẠY NGANG VÔ TẬN CÁC TÍNH NĂNG VÀ SKILL AI */}
       <InteractiveMarqueeBanner 
-        onNavigate={onNavigate} 
-        onOpenPhotoSolver={onOpenPhotoSolver} 
+        onNavigate={(tab) => onStartTrial ? onStartTrial(tab) : (onOpenAuth && onOpenAuth())} 
+        onOpenPhotoSolver={() => onOpenAuth ? onOpenAuth() : null} 
       />
 
       {/* ═══════════════════════════════════════════
