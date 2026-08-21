@@ -6,6 +6,7 @@ import {
   Star, Users, TrendingUp, Target, Headphones, PenLine, Compass, Check, HelpCircle, Search
 } from 'lucide-react';
 import { OFFICIAL_EXAM_LIST } from './OfficialExamRepository';
+import InteractiveMarqueeBanner from './InteractiveMarqueeBanner';
 
 function useCountUp(end, duration = 1500, start = 0) {
   const [count, setCount] = useState(start);
@@ -199,6 +200,12 @@ export default function GuestLandingPage({ onOpenAuth, onStartTrial, selectedGra
         </div>
 
       </section>
+
+      {/* DẢI CHẠY NGANG VÔ TẬN CÁC TÍNH NĂNG VÀ SKILL AI */}
+      <InteractiveMarqueeBanner 
+        onNavigate={onNavigate} 
+        onOpenPhotoSolver={onOpenPhotoSolver} 
+      />
 
       {/* ═══════════════════════════════════════════
           SECTION 02: KHO ĐỀ TIÊU CHUẨN (EXACT MATCH SCREENSHOT)

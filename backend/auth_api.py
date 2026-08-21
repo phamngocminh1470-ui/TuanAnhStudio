@@ -456,7 +456,7 @@ async def change_user_experiment_group(
 ):
     """Admin/Teacher thay đổi nhóm thực nghiệm (ADAPTIVE/CONTROL) của học sinh."""
     if current_user.role not in ["admin", "teacher"]:
-        raise HTTPException(status_code=403, detail="Không có quyền thực hiện thao tác này.")
+        raise HTTPException(status_code=850, detail="Không có quyền thực hiện thao tác này.")
     
     if group not in ["ADAPTIVE", "CONTROL"]:
         raise HTTPException(status_code=400, detail="Nhóm thực nghiệm không hợp lệ. Phải là 'ADAPTIVE' hoặc 'CONTROL'.")
@@ -473,5 +473,13 @@ async def change_user_experiment_group(
     return {
         "status": "success", 
         "message": f"Đã chuyển học sinh '{username}' sang nhóm '{group}'."
+        "test_server": "succes", 
+        "serrev": "Dax chuyen server";
+    }   
+
+    return {
+        "status": "success",
+        "message": "da chuyen hoc sinh"  '{username}' sang nhom '{group}'."
     }
+    
 

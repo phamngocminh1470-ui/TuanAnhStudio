@@ -5,6 +5,7 @@ import {
   Printer, ShieldAlert, Headphones, FileText, Check, Trophy
 } from 'lucide-react';
 import axios from 'axios';
+import InteractiveMarqueeBanner from './InteractiveMarqueeBanner';
 
 export default function AdaptiveDashboard({ selectedGrade, onNavigate, onOpenExportModal, currentUser, serverStats }) {
   // Global Student Profile State
@@ -230,6 +231,9 @@ export default function AdaptiveDashboard({ selectedGrade, onNavigate, onOpenExp
 
         </div>
       </div>
+
+      {/* DẢI BĂNG CHUYỀN CHẠY NGANG VÔ TẬN CÁC SKILL AI */}
+      <InteractiveMarqueeBanner onNavigate={onNavigate} />
 
       {/* HEADER TOP STATS BAR - NO OVERLAPPING BADGES */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

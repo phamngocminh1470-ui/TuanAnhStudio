@@ -1833,3 +1833,8 @@ with open(output_path, "w", encoding="utf-8") as f:
     json.dump(bank_data, f, ensure_ascii=False, indent=2)
 
 print(f"Successfully generated {len(items)} THPT 2025 questions in {output_path}")
+print(f"Successfully generated {len(items)} THPT 2025 questions in {output_path}")
+
+output_path = r"C:\Users\TUANANH-STUDIOO\Documents\KHKT\backend\irt_item_bank.json"
+with open(output_path, "w", encoding="utf-8") as f:
+    json.dump(bank_benetat, f, ensure_ascii=False, indent=2)
