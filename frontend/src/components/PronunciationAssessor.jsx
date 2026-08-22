@@ -382,64 +382,56 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
     }
   };
 
-  const recognitionRef = useRef(null);
-  const recognizedTranscriptRef = useRef('');
-
-  // Bắt đầu ghi âm giọng đọc
+  // Bắt đầu ghi âm giọng đọc (Tối ưu cho cả Mobile Safari/Chrome và Desktop)
   const startRecording = async () => {
     audioChunksRef.current = [];
-    recognizedTranscriptRef.current = '';
-
-    // Khởi động Web Speech API song song nếu trình duyệt hỗ trợ
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (SpeechRecognition) {
-      try {
-        const recognition = new SpeechRecognition();
-        recognition.continuous = true;
-        recognition.interimResults = true;
-        recognition.lang = 'en-US';
-        recognition.onresult = (e) => {
-          let str = '';
-          for (let i = 0; i < e.results.length; i++) {
-            str += e.results[i][0].transcript + ' ';
-          }
-          recognizedTranscriptRef.current = str.trim();
-        };
-        recognition.start();
-        recognitionRef.current = recognition;
-      } catch (err) {
-        console.warn("Web Speech API:", err);
-      }
-    }
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        }
+      });
+
+      let options = {};
+      if (typeof MediaRecorder !== 'undefined') {
+        if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+          options = { mimeType: 'audio/webm;codecs=opus' };
+        } else if (MediaRecorder.isTypeSupported('audio/webm')) {
+          options = { mimeType: 'audio/webm' };
+        } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
+          options = { mimeType: 'audio/mp4' };
+        } else if (MediaRecorder.isTypeSupported('audio/aac')) {
+          options = { mimeType: 'audio/aac' };
+        }
+      }
+
+      const mediaRecorder = new MediaRecorder(stream, options);
       mediaRecorderRef.current = mediaRecorder;
 
       mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
+        if (event.data && event.data.size > 0) {
           audioChunksRef.current.push(event.data);
         }
       };
 
       mediaRecorder.onstop = async () => {
-        if (recognitionRef.current) {
-          try { recognitionRef.current.stop(); } catch(e){}
-        }
-        const mimeType = mediaRecorder.mimeType || 'audio/webm';
-        const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
+        const actualMime = mediaRecorder.mimeType || 'audio/webm';
+        const audioBlob = new Blob(audioChunksRef.current, { type: actualMime });
         sendToAssessment(audioBlob);
         stream.getTracks().forEach(track => track.stop());
       };
 
-      mediaRecorder.start();
+      // Gọi start với chu kỳ 250ms để liên tục thu thập chunk trên di động
+      mediaRecorder.start(250);
       setIsRecording(true);
     } catch (error) {
       console.error("Lỗi micro:", error);
       setAssessmentResult({
         silenceDetected: true,
-        errorNotice: "Không thể truy cập Microphone. Vui lòng cấp quyền Microphone trong trình duyệt để luyện nói.",
+        errorNotice: "Không thể truy cập Microphone. Vui lòng cấp quyền Microphone cho trình duyệt trong Cài đặt của điện thoại.",
         words: []
       });
     }
@@ -458,11 +450,10 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
     setIsLoading(true);
     setAssessmentResult(null);
 
-    const spokenText = (recognizedTranscriptRef.current || '').trim().toLowerCase();
     const refWords = currentSentence.text.split(/\s+/).map(w => w.replace(/[.,!?"']/g, '').trim()).filter(Boolean);
 
-    // Kiểm tra nếu audio quá bé (< 1500 bytes) và không bắt được giọng nói
-    if (audioBlob.size < 1500 && !spokenText) {
+    // Kiểm tra nếu audio quá bé (< 1000 bytes)
+    if (!audioBlob || audioBlob.size < 1000) {
       setAssessmentResult({
         accuracyScore: 0,
         fluencyScore: 0,
@@ -480,8 +471,14 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
       return;
     }
 
+    let ext = 'webm';
+    if (audioBlob.type.includes('mp4')) ext = 'mp4';
+    else if (audioBlob.type.includes('aac') || audioBlob.type.includes('m4a')) ext = 'm4a';
+    else if (audioBlob.type.includes('wav')) ext = 'wav';
+    else if (audioBlob.type.includes('ogg')) ext = 'ogg';
+
     const formData = new FormData();
-    formData.append('file', audioBlob, 'speech.webm');
+    formData.append('file', audioBlob, `speech.${ext}`);
     formData.append('reference_text', currentSentence.text);
 
     try {
@@ -490,7 +487,7 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
       });
       
       const nbest = response.data.NBest?.[0];
-      const isSilence = response.data.RecognitionStatus === 'InitialSilenceTimeout' || (!spokenText && audioBlob.size < 2500 && (!nbest || nbest.PronunciationAssessment?.PronunciationScore === 0));
+      const isSilence = response.data.RecognitionStatus === 'InitialSilenceTimeout' || (!nbest || nbest.PronunciationAssessment?.PronunciationScore === 0);
 
       if (isSilence) {
         setAssessmentResult({
@@ -527,29 +524,6 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
             errorType: err
           };
         });
-
-        // Nếu client có kết quả STT từ Web Speech API, kết hợp để đối chiếu chính xác
-        if (spokenText && refWords.length > 0) {
-          const spokenWordsList = spokenText.split(/\s+/).map(s => s.toLowerCase().trim());
-          evaluatedWords = refWords.map(w => {
-            const wLower = w.toLowerCase();
-            const exactMatch = spokenWordsList.some(sw => sw === wLower);
-            const partialMatch = spokenWordsList.some(sw => sw.includes(wLower) || wLower.includes(sw));
-            const acc = exactMatch ? 95 : partialMatch ? 70 : 0;
-            const err = exactMatch ? 'None' : partialMatch ? 'Mispronunciation' : 'Omission';
-            return {
-              Word: w,
-              word: w,
-              accuracyScore: acc,
-              errorType: err
-            };
-          });
-          const matchCount = evaluatedWords.filter(w => w.accuracyScore >= 70).length;
-          accuracy = Math.round((matchCount / refWords.length) * 100);
-          overallScore = accuracy;
-          fluency = Math.max(60, accuracy);
-          completeness = Math.round((evaluatedWords.filter(w => w.accuracyScore > 0).length / refWords.length) * 100);
-        }
 
         const isReallySilent = evaluatedWords.length === 0 || evaluatedWords.every(w => w.accuracyScore === 0);
 
