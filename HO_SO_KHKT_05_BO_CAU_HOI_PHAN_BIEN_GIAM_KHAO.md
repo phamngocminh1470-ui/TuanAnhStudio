@@ -35,9 +35,9 @@
 
 ---
 
-### ❓ Câu 6: Dữ liệu thực nghiệm 40 học sinh của các em có đảm bảo tính khách quan và ngẫu nhiên không?
+### ❓ Câu 6: Dữ liệu thực nghiệm 120 học sinh của các em có đảm bảo tính khách quan và ngẫu nhiên không?
 * **Trả lời chuẩn:**  
-  > *"Dạ thưa thầy cô, toàn bộ 40 học sinh Lớp 12 tham gia nghiên cứu đều được kiểm tra bài Pre-test ban đầu để đảm bảo trình độ 2 nhóm là **tương đương nhau** ($p = 0.912 > 0.05$). Phân nhóm thực nghiệm (ADAPTIVE) và đối chứng (CONTROL) được lưu trực tiếp trong Cơ sở dữ liệu SQLite dưới backend để tránh việc học sinh tự ý can thiệp. Mọi tương tác, số giây làm bài, kết quả từng câu đều được ghi nhật ký tự động (research experiment log) và xuất file CSV phục vụ kiểm định $t$-test trên phần mềm SPSS."*
+  > *"Dạ thưa thầy cô, toàn bộ 120 học sinh tham gia nghiên cứu (gồm 40 học sinh lớp 10, 40 học sinh lớp 11 và 40 học sinh lớp 12) đều được kiểm tra bài Pre-test chuẩn hóa ban đầu để chứng minh trình độ 2 nhóm là **tương đương nhau** ($t = 0.15, p = 0.881 > 0.05$). Phân nhóm thực nghiệm (ADAPTIVE - 60 bạn) và đối chứng (CONTROL - 60 bạn) được khóa cố định trong Cơ sở dữ liệu SQLite dưới backend. Mọi tương tác, số giây làm bài, kết quả từng câu đều được ghi nhật ký tự động (research log) và xuất file Excel/CSV phục vụ kiểm định $t$-test độc lập và theo cặp, cho ra kết quả $t = 9.78, p < 0.0001$ và độ lớn ảnh hưởng cực lớn $d = 1.79$."*
 
 ---
 
@@ -45,7 +45,7 @@
 * **Trả lời chuẩn:**  
   > *"Dạ thưa thầy cô, chi phí triển khai cho học sinh và nhà trường là **hoàn toàn 0 đồng**:  
   > * Hệ thống sử dụng 100% mã nguồn mở (FastAPI, React, SQLite WAL Mode).  
-  > * Máy chủ VPS chỉ tốn khoảng 100.000 VNĐ/tháng nhưng với cấu hình Nginx Reverse Proxy và SQLite WAL, máy chủ có thể phục vụ đồng thời hàng nghìn học sinh cùng lúc mà không bị nghẽn mạng."*
+  > * Máy chủ VPS cấu hình Nginx Reverse Proxy và SQLite WAL có thể phục vụ đồng thời hàng trăm học sinh cùng lúc với chi phí hạ tầng tối thiểu, hoàn toàn có thể duy trì bởi ngân sách tin học nhà trường hoặc triển khai miễn phí cho cộng đồng."*
 
 ---
 
@@ -57,10 +57,11 @@
 
 ### ❓ Câu 9: Tính mới lớn nhất của đề tài này so với các ứng dụng như Duolingo hay Quizlet là gì?
 * **Trả lời chuẩn:**  
-  > *"Dạ thưa thầy cô, Duolingo chỉ dạy giao tiếp cơ bản theo cây kỹ năng cố định; Quizlet chỉ là thẻ từ vựng đơn thuần. Còn **AI English Mentor** là hệ thống đầu tiên kết hợp:  
-  > 1. Ma trận đề thi THPT 2025 của Bộ GD&ĐT Việt Nam.  
-  > 2. Đo lường năng lực động bằng mô hình IRT.  
-  > 3. Tích hợp Đồ thị tri thức phát hiện lỗ hổng và dự báo điểm thi học kỳ/tốt nghiệp THPT thời gian thực."*
+  > *"Dạ thưa thầy cô, Duolingo chỉ dạy giao tiếp cơ bản theo cây bài học cố định; Quizlet chỉ là thẻ từ vựng đơn thuần. Còn **đề tài của chúng em** là giải pháp đầu tiên kết hợp đồng bộ:  
+  > 1. Đo lường năng lực chuẩn xác theo **Lý thuyết Ứng đáp Câu hỏi (IRT)** bám sát chương trình GDPT 2018.  
+  > 2. Nhắc nhở từ vựng thông minh theo **Thuật toán ngắt quãng SM-2**.  
+  > 3. Gia sư sư phạm **Socrates AI** không giải hộ mà dẫn dắt tư duy.  
+  > 4. Module phân tích phát âm âm học chỉ ra lỗi nuốt âm đuôi và cho phép bấm vào từng từ sai để nghe đọc chậm từng âm."*
 
 ---
 
