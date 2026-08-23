@@ -6,7 +6,7 @@ import {
   Star, Users, TrendingUp, Target, Headphones, PenLine, Compass, Check, HelpCircle, 
   Search, Flame, ChevronDown, CheckCheck, BarChart3, MessageSquare, Play, Sparkle
 } from 'lucide-react';
-import { OFFICIAL_EXAM_LIST } from './OfficialExamRepository';
+import { OFFICIAL_EXAM_LIST } from '../data/officialExamsData';
 import InteractiveMarqueeBanner from './InteractiveMarqueeBanner';
 
 function useCountUp(end, duration = 1500, start = 0) {
@@ -227,7 +227,7 @@ export default function GuestLandingPage({ onOpenAuth, onStartTrial, selectedGra
           <span className="text-[11px] font-mono font-bold text-indigo-400 tracking-widest uppercase">
             HỆ SINH THÁI TÍNH NĂNG AI CHUYỂN ĐỘNG
           </span>
-          <h3 className="text-lg md:text-xl font-bold text-white">Chạm vào tính năng bất kỳ để khám phá ngay</h3>
+          <h2 className="text-lg md:text-xl font-bold text-white">Chạm vào tính năng bất kỳ để khám phá ngay</h2>
         </div>
         <InteractiveMarqueeBanner 
           onNavigate={(tab) => onStartTrial ? onStartTrial(tab) : (onOpenAuth && onOpenAuth())} 

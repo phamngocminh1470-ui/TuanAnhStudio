@@ -1,26 +1,29 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { useUserProgress } from './hooks/useUserProgress';
 import MegaNavbar from './components/MegaNavbar';
-import LearningHub from './components/LearningHub';
-import ChatMentor from './components/ChatMentor';
-import PronunciationAssessor from './components/PronunciationAssessor';
-import AdaptiveDashboard from './components/AdaptiveDashboard';
-import IRTTestEngine from './components/IRTTestEngine';
-import SM2Flashcards from './components/SM2Flashcards';
-import AdaptiveReading from './components/AdaptiveReading';
-import AdaptiveListening from './components/AdaptiveListening';
-import UserGuide from './components/UserGuide';
-import AuthModal from './components/AuthModal';
-import AdminPanel from './components/AdminPanel';
-import CustomCursor from './components/CustomCursor';
-import ExportProgressReportModal from './components/ExportProgressReportModal';
-import ItemBankManager from './components/ItemBankManager';
-import UserProfileModal from './components/UserProfileModal';
-import VocabLibrary from './components/VocabLibrary';
-import WritingPractice from './components/WritingPractice';
-import PhotoExamSolverModal from './components/PhotoExamSolverModal';
 import GuestLandingPage from './components/GuestLandingPage';
-import OfficialExamRepository from './components/OfficialExamRepository';
+import AuthModal from './components/AuthModal';
+import CustomCursor from './components/CustomCursor';
+
+// Lazy loaded heavy components for optimal PageSpeed score
+const LearningHub = lazy(() => import('./components/LearningHub'));
+const ChatMentor = lazy(() => import('./components/ChatMentor'));
+const PronunciationAssessor = lazy(() => import('./components/PronunciationAssessor'));
+const AdaptiveDashboard = lazy(() => import('./components/AdaptiveDashboard'));
+const IRTTestEngine = lazy(() => import('./components/IRTTestEngine'));
+const SM2Flashcards = lazy(() => import('./components/SM2Flashcards'));
+const AdaptiveReading = lazy(() => import('./components/AdaptiveReading'));
+const AdaptiveListening = lazy(() => import('./components/AdaptiveListening'));
+const UserGuide = lazy(() => import('./components/UserGuide'));
+const AdminPanel = lazy(() => import('./components/AdminPanel'));
+const ExportProgressReportModal = lazy(() => import('./components/ExportProgressReportModal'));
+const ItemBankManager = lazy(() => import('./components/ItemBankManager'));
+const UserProfileModal = lazy(() => import('./components/UserProfileModal'));
+const VocabLibrary = lazy(() => import('./components/VocabLibrary'));
+const WritingPractice = lazy(() => import('./components/WritingPractice'));
+const PhotoExamSolverModal = lazy(() => import('./components/PhotoExamSolverModal'));
+const OfficialExamRepository = lazy(() => import('./components/OfficialExamRepository'));
+
 
 import { 
   Sparkles, MessageSquare, Mic, BookOpen, GraduationCap, LayoutDashboard, ChevronRight, 
@@ -508,89 +511,96 @@ function App() {
 
         {/* Tab Body - Balanced Spacious Responsive Container */}
         <div className="flex-1 px-3 sm:px-6 md:px-10 py-4 sm:py-6 md:py-8 pb-24 lg:pb-8 flex flex-col justify-start w-full max-w-[1600px] mx-auto">
-          {/* TAB LEARNING HUB (Home View) */}
-          {(activeTab === 'dashboard' || activeTab === 'hub') && (
-            currentUser ? (
-              <LearningHub
+          <Suspense fallback={
+            <div className="flex flex-col items-center justify-center py-24 space-y-4 animate-fade-in">
+              <div className="w-10 h-10 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin"></div>
+              <p className="text-xs font-bold text-gray-400 font-mono tracking-wider">ĐANG TẢI TÍNH NĂNG...</p>
+            </div>
+          }>
+            {/* TAB LEARNING HUB (Home View) */}
+            {(activeTab === 'dashboard' || activeTab === 'hub') && (
+              currentUser ? (
+                <LearningHub
+                  selectedGrade={selectedLevel}
+                  onGradeChange={handleLevelChange}
+                  onNavigate={(tab) => setActiveTab(tab)}
+                  currentUser={currentUser}
+                  serverStats={serverStats}
+                  onOpenPhotoSolver={() => setIsPhotoSolverOpen(true)}
+                />
+              ) : (
+                <GuestLandingPage
+                  onOpenAuth={() => setIsAuthOpen(true)}
+                  onStartTrial={(tab) => setActiveTab(tab)}
+                  selectedGrade={selectedLevel}
+                  onGradeChange={handleLevelChange}
+                />
+              )
+            )}
+
+            {/* TAB DETAILED ANALYTICS DASHBOARD */}
+            {activeTab === 'analytics' && (
+              <AdaptiveDashboard
                 selectedGrade={selectedLevel}
-                onGradeChange={handleLevelChange}
                 onNavigate={(tab) => setActiveTab(tab)}
+                onOpenExportModal={() => setIsExportModalOpen(true)}
                 currentUser={currentUser}
                 serverStats={serverStats}
-                onOpenPhotoSolver={() => setIsPhotoSolverOpen(true)}
               />
-            ) : (
-              <GuestLandingPage
-                onOpenAuth={() => setIsAuthOpen(true)}
-                onStartTrial={(tab) => setActiveTab(tab)}
+            )}
+
+            {/* TAB IRT ADAPTIVE TEST ENGINE */}
+            {activeTab === 'irt-test' && (
+              <IRTTestEngine
                 selectedGrade={selectedLevel}
-                onGradeChange={handleLevelChange}
+                currentUser={currentUser}
               />
-            )
-          )}
+            )}
 
-          {/* TAB DETAILED ANALYTICS DASHBOARD */}
-          {activeTab === 'analytics' && (
-            <AdaptiveDashboard
-              selectedGrade={selectedLevel}
-              onNavigate={(tab) => setActiveTab(tab)}
-              onOpenExportModal={() => setIsExportModalOpen(true)}
-              currentUser={currentUser}
-              serverStats={serverStats}
-            />
-          )}
+            {/* TAB SUPERMEMO-2 SPACED REPETITION FLASHCARDS */}
+            {activeTab === 'sm2-flashcards' && (
+              <SM2Flashcards
+                selectedGrade={selectedLevel}
+                currentUser={currentUser}
+              />
+            )}
 
-          {/* TAB IRT ADAPTIVE TEST ENGINE */}
-          {activeTab === 'irt-test' && (
-            <IRTTestEngine
-              selectedGrade={selectedLevel}
-              currentUser={currentUser}
-            />
-          )}
+            {/* TAB CHAT AI MENTOR */}
+            {activeTab === 'chat' && <ChatMentor selectedGrade={selectedLevel} keys={keys} />}
 
-          {/* TAB SUPERMEMO-2 SPACED REPETITION FLASHCARDS */}
-          {activeTab === 'sm2-flashcards' && (
-            <SM2Flashcards
-              selectedGrade={selectedLevel}
-              currentUser={currentUser}
-            />
-          )}
+            {/* TAB PRONUNCIATION ASSESSOR */}
+            {activeTab === 'pronounce' && <PronunciationAssessor selectedGrade={selectedLevel} keys={keys} />}
 
-          {/* TAB CHAT AI MENTOR */}
-          {activeTab === 'chat' && <ChatMentor selectedGrade={selectedLevel} keys={keys} />}
+            {/* TAB ADAPTIVE INTEREST READING */}
+            {activeTab === 'reading' && <AdaptiveReading selectedGrade={selectedLevel} />}
 
-          {/* TAB PRONUNCIATION ASSESSOR */}
-          {activeTab === 'pronounce' && <PronunciationAssessor selectedGrade={selectedLevel} keys={keys} />}
+            {/* TAB ADAPTIVE LISTENING */}
+            {activeTab === 'listening' && <AdaptiveListening selectedGrade={selectedLevel} />}
 
-          {/* TAB ADAPTIVE INTEREST READING */}
-          {activeTab === 'reading' && <AdaptiveReading selectedGrade={selectedLevel} />}
+            {/* TAB OFFICIAL EXAMS REPOSITORY */}
+            {activeTab === 'official-exams' && (
+              <OfficialExamRepository onStartExam={(tab) => setActiveTab(tab)} />
+            )}
 
-          {/* TAB ADAPTIVE LISTENING */}
-          {activeTab === 'listening' && <AdaptiveListening selectedGrade={selectedLevel} />}
+            {/* TAB USER GUIDE */}
+            {activeTab === 'guide' && <UserGuide onStartLearning={(tab) => setActiveTab(tab)} />}
 
-          {/* TAB OFFICIAL EXAMS REPOSITORY */}
-          {activeTab === 'official-exams' && (
-            <OfficialExamRepository onStartExam={(tab) => setActiveTab(tab)} />
-          )}
+            {/* TAB VOCAB LIBRARY (student-facing) */}
+            {activeTab === 'vocab-library' && (
+              <VocabLibrary selectedGrade={selectedLevel} />
+            )}
 
-          {/* TAB USER GUIDE */}
-          {activeTab === 'guide' && <UserGuide onStartLearning={(tab) => setActiveTab(tab)} />}
+            {/* TAB ITEM BANK MANAGER */}
+            {activeTab === 'item-bank' && <ItemBankManager />}
 
-          {/* TAB VOCAB LIBRARY (student-facing) */}
-          {activeTab === 'vocab-library' && (
-            <VocabLibrary selectedGrade={selectedLevel} />
-          )}
+            {/* TAB WRITING PRACTICE (AI-powered grammar & translation) */}
+            {activeTab === 'writing-practice' && (
+              <WritingPractice selectedGrade={selectedLevel} keys={keys} />
+            )}
 
-          {/* TAB ITEM BANK MANAGER */}
-          {activeTab === 'item-bank' && <ItemBankManager />}
-
-          {/* TAB WRITING PRACTICE (AI-powered grammar & translation) */}
-          {activeTab === 'writing-practice' && (
-            <WritingPractice selectedGrade={selectedLevel} keys={keys} />
-          )}
-
-          {/* TAB ADMIN PANEL */}
-          {activeTab === 'admin-panel' && <AdminPanel keys={keys} onSaveKeys={handleSaveKeys} />}
+            {/* TAB ADMIN PANEL */}
+            {activeTab === 'admin-panel' && <AdminPanel keys={keys} onSaveKeys={handleSaveKeys} />}
+          </Suspense>
 
           {/* TAB SETTINGS */}
           {activeTab === 'settings' && (
