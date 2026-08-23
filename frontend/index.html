@@ -24,11 +24,19 @@
     <meta property="twitter:title" content="AI English Mentor - Gia sư Tiếng Anh Thích ứng Cá nhân hóa" />
     <meta property="twitter:description" content="Tự học tiếng Anh thông minh với mô hình đo lường thích ứng 3PL IRT, thuật toán ghi nhớ dài hạn SM-2 và kiểm tra phát âm chuẩn IPA." />
 
-    <!-- Google Fonts: Non-blocking async loading with font-display=swap -->
+    <!-- Preconnect for fast fonts fetching -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" media="print" onload="this.media='all'" />
+
+    <!-- Asynchronous Non-blocking Google Fonts Loader -->
+    <script>
+      (function() {
+        var link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap';
+        document.head.appendChild(link);
+      })();
+    </script>
     <noscript>
       <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" />
     </noscript>

@@ -619,7 +619,7 @@ export default function GuestLandingPage({ onOpenAuth, onStartTrial, selectedGra
               className="p-6 rounded-2xl bg-[#090e21]/80 border border-white/10 hover:border-white/20 transition-all cursor-pointer select-none space-y-3"
             >
               <div className="flex items-center justify-between">
-                <h4 className="text-sm sm:text-base font-bold text-white">{faq.q}</h4>
+                <h3 className="text-sm sm:text-base font-bold text-white">{faq.q}</h3>
                 <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${openFaq === idx ? 'rotate-180 text-emerald-400' : ''}`} />
               </div>
               {openFaq === idx && (
