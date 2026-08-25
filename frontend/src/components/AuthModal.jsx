@@ -37,7 +37,7 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
     try {
       const endpoint = mode === 'register' ? `${API}/auth/register` : `${API}/auth/login`;
       const payload = mode === 'register'
-        ? { username: form.username.trim().toLowerCase(), fullname: form.fullname.trim(), email: form.email.trim(), password: form.password, role: form.role, grade: form.grade, target_score: parseFloat(form.target_score) }
+        ? { username: form.username.trim().toLowerCase(), fullname: form.fullname.trim(), email: (form.email || '').trim(), password: form.password, role: 'student', grade: form.grade || '12', target_score: 7.0 }
         : { username: form.username.trim().toLowerCase(), password: form.password };
 
       const res = await axios.post(endpoint, payload);
@@ -160,30 +160,25 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
             </div>
           </div>
 
-          {/* Grade + Role + Target — only on register */}
+          {/* Grade selection — only on register */}
           {mode === 'register' && (
-            <div className="grid grid-cols-3 gap-2">
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-300 uppercase tracking-wider">Lớp</label>
-                <select value={form.grade} onChange={e => setField('grade', e.target.value)}
-                  className="w-full bg-[#070a16] border border-white/10 focus:border-indigo-500 outline-none rounded-xl px-3 py-2.5 text-sm text-gray-200 cursor-pointer">
-                  {['10','11','12'].map(g => <option key={g} value={g}>Lớp {g}</option>)}
-                </select>
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-300 uppercase tracking-wider">Vai trò</label>
-                <select value={form.role} onChange={e => setField('role', e.target.value)}
-                  className="w-full bg-[#070a16] border border-white/10 focus:border-indigo-500 outline-none rounded-xl px-3 py-2.5 text-sm text-gray-200 cursor-pointer">
-                  <option value="student">Học sinh</option>
-                  <option value="teacher">Giáo viên</option>
-                </select>
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-300 uppercase tracking-wider flex items-center gap-1"><Target className="w-3 h-3"/>Mục tiêu</label>
-                <select value={form.target_score} onChange={e => setField('target_score', e.target.value)}
-                  className="w-full bg-[#070a16] border border-white/10 focus:border-indigo-500 outline-none rounded-xl px-3 py-2.5 text-sm text-gray-200 cursor-pointer">
-                  {[6,6.5,7,7.5,8,8.5,9,9.5,10].map(s => <option key={s} value={s}>{s} điểm</option>)}
-                </select>
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-gray-300 uppercase tracking-wider">Khối Lớp *</label>
+              <div className="grid grid-cols-3 gap-2">
+                {['10', '11', '12'].map(g => (
+                  <button
+                    key={g}
+                    type="button"
+                    onClick={() => setField('grade', g)}
+                    className={`py-2.5 rounded-xl text-xs font-bold transition cursor-pointer border ${
+                      form.grade === g
+                        ? 'bg-indigo-600 border-indigo-500 text-white shadow-md shadow-indigo-500/20'
+                        : 'bg-[#070a16] border-white/10 text-gray-400 hover:text-white hover:border-white/20'
+                    }`}
+                  >
+                    Lớp {g}
+                  </button>
+                ))}
               </div>
             </div>
           )}
