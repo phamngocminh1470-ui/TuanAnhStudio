@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import axios from 'axios';
-import { Play, Mic, Square, Volume2, Award, RefreshCw, ChevronRight, ChevronLeft, HelpCircle, BookOpen, Sparkles, Plus, Wand2, Shuffle, AlertTriangle } from 'lucide-react';
+import { Play, Mic, Square, Volume2, Award, RefreshCw, ChevronRight, ChevronLeft, HelpCircle, BookOpen, Sparkles, Plus, Wand2, Shuffle, AlertTriangle, CheckCircle2, AlertCircle } from 'lucide-react';
 
 const API_BASE = '/api';
 
@@ -385,6 +385,7 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
   // Bắt đầu ghi âm giọng đọc (Tối ưu cho cả Mobile Safari/Chrome và Desktop)
   const startRecording = async () => {
     audioChunksRef.current = [];
+    setAssessmentResult(null);
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -418,13 +419,14 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
       };
 
       mediaRecorder.onstop = async () => {
-        const actualMime = mediaRecorder.mimeType || 'audio/webm';
+        const actualMime = mediaRecorder.mimeType || options.mimeType || 'audio/webm';
         const audioBlob = new Blob(audioChunksRef.current, { type: actualMime });
+        try {
+          stream.getTracks().forEach(track => track.stop());
+        } catch (e) {}
         sendToAssessment(audioBlob);
-        stream.getTracks().forEach(track => track.stop());
       };
 
-      // Gọi start với chu kỳ 250ms để liên tục thu thập chunk trên di động
       mediaRecorder.start(250);
       setIsRecording(true);
     } catch (error) {
@@ -440,6 +442,11 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
   // Dừng ghi âm và gửi đi chấm điểm
   const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
+      if (mediaRecorderRef.current.state === 'recording') {
+        try {
+          mediaRecorderRef.current.requestData();
+        } catch (e) {}
+      }
       mediaRecorderRef.current.stop();
       setIsRecording(false);
     }
@@ -452,8 +459,8 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
 
     const refWords = currentSentence.text.split(/\s+/).map(w => w.replace(/[.,!?"']/g, '').trim()).filter(Boolean);
 
-    // Kiểm tra nếu audio quá bé (< 1000 bytes)
-    if (!audioBlob || audioBlob.size < 1000) {
+    // Kiểm tra nếu audio quá bé (< 400 bytes)
+    if (!audioBlob || audioBlob.size < 400) {
       setAssessmentResult({
         accuracyScore: 0,
         fluencyScore: 0,
