@@ -531,75 +531,113 @@ function App() {
               ) : (
                 <GuestLandingPage
                   onOpenAuth={() => setIsAuthOpen(true)}
-                  onStartTrial={(tab) => setActiveTab(tab)}
+                  onStartTrial={() => setIsAuthOpen(true)}
                   selectedGrade={selectedLevel}
                   onGradeChange={handleLevelChange}
                 />
               )
             )}
 
-            {/* TAB DETAILED ANALYTICS DASHBOARD */}
-            {activeTab === 'analytics' && (
-              <AdaptiveDashboard
-                selectedGrade={selectedLevel}
-                onNavigate={(tab) => setActiveTab(tab)}
-                onOpenExportModal={() => setIsExportModalOpen(true)}
-                currentUser={currentUser}
-                serverStats={serverStats}
-              />
+            {/* CÁC TAB HỌC TẬP YÊU CẦU ĐĂNG NHẬP / ĐĂNG KÝ */}
+            {!currentUser && activeTab !== 'dashboard' && activeTab !== 'hub' && activeTab !== 'guide' ? (
+              <div className="flex-1 flex flex-col items-center justify-center py-16 px-4 max-w-lg mx-auto text-center space-y-6 animate-fade-in">
+                <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-500 flex items-center justify-center text-white shadow-2xl shadow-indigo-500/30 mx-auto animate-bounce-soft">
+                  <GraduationCap className="w-10 h-10" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-2xl md:text-3xl font-black text-white font-outfit">Yêu Cầu Đăng Nhập Hệ Thống</h3>
+                  <p className="text-sm text-gray-300 leading-relaxed">
+                    Vui lòng <strong className="text-indigo-400">Đăng ký tài khoản mới</strong> hoặc <strong className="text-indigo-400">Đăng nhập</strong> để lưu hồ sơ học tập cá nhân, đo năng lực IRT và đồng bộ tiến độ của bạn!
+                  </p>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3 w-full justify-center pt-2">
+                  <button
+                    onClick={() => setIsAuthOpen(true)}
+                    className="px-6 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-xl shadow-indigo-500/30 transition cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <LogIn className="w-4 h-4" />
+                    <span>Đăng nhập / Đăng ký ngay</span>
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('dashboard')}
+                    className="px-6 py-3.5 rounded-2xl bg-white/5 hover:bg-white/10 text-gray-300 font-bold text-sm border border-white/10 transition cursor-pointer"
+                  >
+                    <span>Về trang chủ</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                {/* TAB DETAILED ANALYTICS DASHBOARD */}
+                {activeTab === 'analytics' && (
+                  <AdaptiveDashboard
+                    selectedGrade={selectedLevel}
+                    onNavigate={(tab) => setActiveTab(tab)}
+                    onOpenExportModal={() => setIsExportModalOpen(true)}
+                    currentUser={currentUser}
+                    serverStats={serverStats}
+                  />
+                )}
+
+                {/* TAB IRT ADAPTIVE TEST ENGINE */}
+                {activeTab === 'irt-test' && (
+                  <IRTTestEngine
+                    selectedGrade={selectedLevel}
+                    currentUser={currentUser}
+                  />
+                )}
+
+                {/* TAB SUPERMEMO-2 SPACED REPETITION FLASHCARDS */}
+                {activeTab === 'sm2-flashcards' && (
+                  <SM2Flashcards
+                    selectedGrade={selectedLevel}
+                    currentUser={currentUser}
+                  />
+                )}
+
+                {/* TAB CHAT AI MENTOR */}
+                {activeTab === 'chat' && <ChatMentor selectedGrade={selectedLevel} keys={keys} />}
+
+                {/* TAB PRONUNCIATION ASSESSOR */}
+                {activeTab === 'pronounce' && <PronunciationAssessor selectedGrade={selectedLevel} keys={keys} />}
+
+                {/* TAB ADAPTIVE INTEREST READING */}
+                {activeTab === 'reading' && <AdaptiveReading selectedGrade={selectedLevel} />}
+
+                {/* TAB ADAPTIVE LISTENING */}
+                {activeTab === 'listening' && <AdaptiveListening selectedGrade={selectedLevel} />}
+
+                {/* TAB OFFICIAL EXAMS REPOSITORY */}
+                {activeTab === 'official-exams' && (
+                  <OfficialExamRepository onStartExam={(tab) => setActiveTab(tab)} />
+                )}
+
+                {/* TAB USER GUIDE */}
+                {activeTab === 'guide' && <UserGuide onStartLearning={(tab) => {
+                  if (!currentUser) {
+                    setIsAuthOpen(true);
+                  } else {
+                    setActiveTab(tab);
+                  }
+                }} />}
+
+                {/* TAB VOCAB LIBRARY (student-facing) */}
+                {activeTab === 'vocab-library' && (
+                  <VocabLibrary selectedGrade={selectedLevel} />
+                )}
+
+                {/* TAB ITEM BANK MANAGER */}
+                {activeTab === 'item-bank' && <ItemBankManager />}
+
+                {/* TAB WRITING PRACTICE (AI-powered grammar & translation) */}
+                {activeTab === 'writing-practice' && (
+                  <WritingPractice selectedGrade={selectedLevel} keys={keys} />
+                )}
+
+                {/* TAB ADMIN PANEL */}
+                {activeTab === 'admin-panel' && <AdminPanel keys={keys} onSaveKeys={handleSaveKeys} />}
+              </>
             )}
-
-            {/* TAB IRT ADAPTIVE TEST ENGINE */}
-            {activeTab === 'irt-test' && (
-              <IRTTestEngine
-                selectedGrade={selectedLevel}
-                currentUser={currentUser}
-              />
-            )}
-
-            {/* TAB SUPERMEMO-2 SPACED REPETITION FLASHCARDS */}
-            {activeTab === 'sm2-flashcards' && (
-              <SM2Flashcards
-                selectedGrade={selectedLevel}
-                currentUser={currentUser}
-              />
-            )}
-
-            {/* TAB CHAT AI MENTOR */}
-            {activeTab === 'chat' && <ChatMentor selectedGrade={selectedLevel} keys={keys} />}
-
-            {/* TAB PRONUNCIATION ASSESSOR */}
-            {activeTab === 'pronounce' && <PronunciationAssessor selectedGrade={selectedLevel} keys={keys} />}
-
-            {/* TAB ADAPTIVE INTEREST READING */}
-            {activeTab === 'reading' && <AdaptiveReading selectedGrade={selectedLevel} />}
-
-            {/* TAB ADAPTIVE LISTENING */}
-            {activeTab === 'listening' && <AdaptiveListening selectedGrade={selectedLevel} />}
-
-            {/* TAB OFFICIAL EXAMS REPOSITORY */}
-            {activeTab === 'official-exams' && (
-              <OfficialExamRepository onStartExam={(tab) => setActiveTab(tab)} />
-            )}
-
-            {/* TAB USER GUIDE */}
-            {activeTab === 'guide' && <UserGuide onStartLearning={(tab) => setActiveTab(tab)} />}
-
-            {/* TAB VOCAB LIBRARY (student-facing) */}
-            {activeTab === 'vocab-library' && (
-              <VocabLibrary selectedGrade={selectedLevel} />
-            )}
-
-            {/* TAB ITEM BANK MANAGER */}
-            {activeTab === 'item-bank' && <ItemBankManager />}
-
-            {/* TAB WRITING PRACTICE (AI-powered grammar & translation) */}
-            {activeTab === 'writing-practice' && (
-              <WritingPractice selectedGrade={selectedLevel} keys={keys} />
-            )}
-
-            {/* TAB ADMIN PANEL */}
-            {activeTab === 'admin-panel' && <AdminPanel keys={keys} onSaveKeys={handleSaveKeys} />}
           </Suspense>
 
           {/* TAB SETTINGS */}
