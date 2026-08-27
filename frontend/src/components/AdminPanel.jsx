@@ -3,7 +3,8 @@ import {
   ShieldCheck, Users, Key, RefreshCw, Cpu,
   Download, Lock, Unlock, KeyRound, TrendingUp, FileSpreadsheet, Filter,
   Search, RotateCcw, AlertTriangle, Calendar,
-  Info, FileText, Zap, Mic, BookOpen, Plus, Trash2, Edit, Sparkles, Check, Globe
+  Info, FileText, Zap, Mic, BookOpen, Plus, Trash2, Edit, Sparkles, Check, Globe,
+  Copy, MessageSquare
 } from 'lucide-react';
 import axios from 'axios';
 
