@@ -72,6 +72,20 @@ export default function UserGuide({ onStartLearning }) {
         'Ghi âm giọng đọc và gửi lên hệ thống.',
         'Xem bảng phân tích điểm số: Từ phát âm đúng (màu xanh), từ sai (màu đỏ).'
       ]
+    },
+    {
+      id: 6,
+      title: 'Dành Cho Giáo Viên: Xáo Đề & Quản Trị Lớp Học THPT',
+      desc: 'Công cụ đắc lực hỗ trợ Thầy/Cô xáo đề Word (.docx) chuẩn Bộ GD&ĐT, giao bài online, AI chấm điểm tự động và xuất sổ điểm Excel.',
+      icon: Award,
+      color: 'bg-amber-600',
+      badge: 'Cổng Giáo Viên',
+      details: [
+        'Tải file Word (.docx / .doc) đề thi trực tiếp từ máy tính lên để xáo 4 mã đề (101-104).',
+        'Xuất file Word chuẩn in A4 kèm Bảng Ma Trận Đáp Án Chuẩn.',
+        'Tạo lớp học theo khối 10, 11, 12 và cấp mã lớp riêng biệt cho học sinh vào làm bài.',
+        'AI chấm điểm tự động ngay khi học sinh nộp bài và xuất Sổ Điểm Excel (.CSV) nộp trường.'
+      ]
     }
   ];
 
@@ -85,16 +99,16 @@ export default function UserGuide({ onStartLearning }) {
         </div>
 
         <h1 className="text-2xl md:text-3xl font-bold text-white tracking-normal leading-relaxed">
-          Các bước Luyện tập Tiếng Anh với AI English Mentor
+          Các bước Luyện tập Tiếng Anh &amp; Quản Lý Giảng Dạy THPT
         </h1>
         
         <p className="text-slate-300 text-sm max-w-2xl mx-auto leading-relaxed">
-          Tích hợp 2 thuật toán cốt lõi <strong className="text-indigo-400">IRT (Đánh giá thích ứng)</strong> &amp; <strong className="text-amber-400">SuperMemo-2 (Lặp ngắt quãng)</strong> giúp học sinh học tiếng Anh chủ động và hiệu quả.
+          Tích hợp 2 thuật toán cốt lõi <strong className="text-indigo-400">IRT (Đánh giá thích ứng)</strong>, <strong className="text-amber-400">SuperMemo-2 (Lặp ngắt quãng)</strong> &amp; <strong className="text-emerald-400">Cổng Quản Trị Giáo Viên</strong> giúp nâng cao chất lượng dạy và học.
         </p>
       </div>
 
       {/* Step Selector Horizontal Bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {steps.map((s) => {
           const Icon = s.icon;
           const isActive = activeStep === s.id;
