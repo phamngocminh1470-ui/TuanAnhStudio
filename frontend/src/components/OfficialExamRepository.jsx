@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   FileText, CheckCircle2, Award, Clock, ArrowRight, 
   Search, Filter, BookOpen, Download, ExternalLink, Sparkles, Zap, ChevronRight,
-  Eye, Check, X, HelpCircle, ChevronDown, ChevronUp, RotateCcw, AlertCircle, Building2, MapPin, GraduationCap
+  Eye, Check, X, HelpCircle, ChevronDown, ChevronUp, RotateCcw, AlertCircle, Building2, MapPin, GraduationCap, Lock
 } from 'lucide-react';
 import { COMPREHENSIVE_EXAMS_DATABASE } from '../data/officialExamsData';
 
@@ -140,24 +140,39 @@ export default function OfficialExamRepository({ onStartExam }) {
                   <span>Tra Cứu Nguồn thuvienhoclieu.com</span>
                 </a>
 
-                <button
-                  onClick={() => setShowAllSolutions(!showAllSolutions)}
-                  className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-200 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer border border-white/10"
-                >
-                  <Eye className="w-3.5 h-3.5 text-cyan-400" />
-                  <span>{showAllSolutions ? 'Ẩn Lời Giải Chi Tiết' : 'Hiện Toàn Bộ Lời Giải Chi Tiết'}</span>
-                </button>
+                {/* Chỉ hiện nút xem toàn bộ lời giải sau khi đã nộp bài */}
+                {examSubmitted && (
+                  <button
+                    onClick={() => setShowAllSolutions(!showAllSolutions)}
+                    className="px-4 py-2 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer border border-indigo-500/30"
+                  >
+                    <Eye className="w-3.5 h-3.5 text-indigo-400" />
+                    <span>{showAllSolutions ? 'Ẩn Lời Giải Chi Tiết' : 'Hiện Toàn Bộ Lời Giải Chi Tiết'}</span>
+                  </button>
+                )}
 
                 {!examSubmitted ? (
-                  <button
-                    onClick={() => {
-                      setExamSubmitted(true);
-                      setShowAllSolutions(true);
-                    }}
-                    className="px-6 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-extrabold text-xs shadow-lg shadow-emerald-500/20 transition cursor-pointer"
-                  >
-                    Nộp Bài &amp; Xem Điểm Ngay
-                  </button>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-amber-300 font-mono font-bold bg-amber-500/10 px-3 py-1.5 rounded-xl border border-amber-500/20">
+                      Đã làm: {Object.keys(userAnswers).length} / {activeViewingExam.questions.length} câu
+                    </span>
+                    <button
+                      onClick={() => {
+                        const answeredCount = Object.keys(userAnswers).length;
+                        const totalCount = activeViewingExam.questions.length;
+                        if (answeredCount < totalCount) {
+                          if (!window.confirm(`Bạn mới hoàn thành ${answeredCount}/${totalCount} câu hỏi. Bạn có chắc chắn muốn nộp bài để xem điểm và lời giải không?`)) {
+                            return;
+                          }
+                        }
+                        setExamSubmitted(true);
+                        setShowAllSolutions(true);
+                      }}
+                      className="px-6 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-extrabold text-xs shadow-lg shadow-emerald-500/20 transition cursor-pointer"
+                    >
+                      Nộp Bài &amp; Xem Điểm Ngay
+                    </button>
+                  </div>
                 ) : (
                   <button
                     onClick={() => {
@@ -169,7 +184,7 @@ export default function OfficialExamRepository({ onStartExam }) {
                     className="px-4 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xs font-bold border border-amber-500/30 transition flex items-center gap-1.5 cursor-pointer"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
-                    <span>Làm Lại Từ Đầu</span>
+                    <span>Làm Lại Đề Này</span>
                   </button>
                 )}
               </div>
@@ -276,29 +291,34 @@ export default function OfficialExamRepository({ onStartExam }) {
                     })}
                   </div>
 
-                  {/* Solution Toggle and Status */}
-                  <div className="flex items-center justify-between gap-4 pt-2">
-                    <button
-                      onClick={() => toggleExplanation(q.id)}
-                      className="text-xs font-bold text-indigo-400 hover:text-indigo-300 flex items-center gap-1.5 cursor-pointer"
-                    >
-                      <HelpCircle className="w-3.5 h-3.5" />
-                      <span>{isShown ? 'Thu gọn lời giải chi tiết' : 'Xem giải thích chuẩn sư phạm'}</span>
-                      {isShown ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                    </button>
+                  {/* Solution Toggle and Status (Chỉ mở sau khi Nộp bài) */}
+                  {examSubmitted ? (
+                    <div className="flex items-center justify-between gap-4 pt-2">
+                      <button
+                        onClick={() => toggleExplanation(q.id)}
+                        className="text-xs font-bold text-indigo-400 hover:text-indigo-300 flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <HelpCircle className="w-3.5 h-3.5" />
+                        <span>{isShown ? 'Thu gọn lời giải chi tiết' : 'Xem giải thích chuẩn sư phạm'}</span>
+                        {isShown ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                      </button>
 
-                    {examSubmitted && (
                       <span className={`text-xs font-bold flex items-center gap-1 ${
                         userAnswers[q.id] === q.correctAnswer ? 'text-emerald-400' : 'text-red-400'
                       }`}>
                         {userAnswers[q.id] === q.correctAnswer ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
                         {userAnswers[q.id] === q.correctAnswer ? 'Đúng' : `Sai (Đáp án: ${q.correctAnswer})`}
                       </span>
-                    )}
-                  </div>
+                    </div>
+                  ) : (
+                    <div className="pt-2 text-[11px] text-slate-500 italic flex items-center gap-1.5">
+                      <Lock className="w-3.5 h-3.5 text-slate-500" />
+                      <span>Đáp án chuẩn và lời giải chi tiết sẽ mở sau khi bạn hoàn thành và bấm "Nộp Bài &amp; Xem Điểm Ngay".</span>
+                    </div>
+                  )}
 
                   {/* Detailed Explanation Box */}
-                  {isShown && (
+                  {examSubmitted && isShown && (
                     <div className="p-5 rounded-2xl bg-[#060914] border border-indigo-500/25 space-y-3 animate-fade-in text-xs leading-relaxed">
                       <div className="flex items-center gap-2">
                         <span className="font-extrabold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-md border border-emerald-500/20">
