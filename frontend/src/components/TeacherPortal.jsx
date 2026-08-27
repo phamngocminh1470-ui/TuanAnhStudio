@@ -219,8 +219,18 @@ export default function TeacherPortal({ keys, onNavigate }) {
     e.preventDefault();
     const code = activationInputCode.trim().toUpperCase();
     
-    // Các mã hợp lệ: GV-THPT-2026, VIP-TEACHER, TUANANH-0975711254, 0975711254, GV-2026 hoặc bắt đầu bằng GV-
+    // Kiểm tra danh sách key được Admin cấp từ Admin Panel
+    let dynamicKeys = [];
+    try {
+      const saved = localStorage.getItem('admin_teacher_license_keys');
+      if (saved) dynamicKeys = JSON.parse(saved);
+    } catch (e) {}
+
+    const isMatchDynamicKey = dynamicKeys.some(k => k.key.toUpperCase() === code && k.status === 'active');
+    
+    // Các mã hợp lệ: dynamicKeys, GV-THPT-2026, VIP-TEACHER, TUANANH-0975711254, 0975711254, GV-2026 hoặc bắt đầu bằng GV-
     if (
+      isMatchDynamicKey ||
       code === 'GV-THPT-2026' || 
       code === 'VIP-TEACHER' || 
       code === '0975711254' || 
@@ -234,7 +244,7 @@ export default function TeacherPortal({ keys, onNavigate }) {
       setActivationError('');
       alert("✓ Xác thực thành công! Chào mừng Thầy/Cô đến với Cổng Quản Trị Giáo Viên THPT.");
     } else {
-      setActivationError("Mã kích hoạt không chính xác. Vui lòng liên hệ Admin qua Zalo 0975.711.254 để nhận mã miễn phí!");
+      setActivationError("Mã kích hoạt không chính xác hoặc đã bị khóa. Vui lòng liên hệ Admin qua Zalo 0975.711.254 để nhận mã miễn phí!");
     }
   };
 
