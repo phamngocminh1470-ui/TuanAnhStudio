@@ -130,7 +130,23 @@ def add_run_to_p(p, text, font_size=14, bold=False, italic=False):
     run.font.bold = bold
     run.font.italic = italic
     run.font.color.rgb = RGBColor(0, 0, 0)
-    return run
+def add_reference_item(doc, parts):
+    p = doc.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+    p.paragraph_format.left_indent = Inches(0.4)
+    p.paragraph_format.first_line_indent = Inches(-0.4)
+    p.paragraph_format.space_before = Pt(0)
+    p.paragraph_format.space_after = Pt(4)
+    p.paragraph_format.line_spacing = 1.15
+    
+    for text, italic, bold in parts:
+        run = p.add_run(text)
+        run.font.name = 'Times New Roman'
+        run.font.size = Pt(13)
+        run.font.italic = italic
+        run.font.bold = bold
+        run.font.color.rgb = RGBColor(0, 0, 0)
+    return p
 
 def add_toc_entry(doc, title, page_str, bold=False, italic=False, font_size=12.5, space_before=2, space_after=3):
     p = doc.add_paragraph()
@@ -345,16 +361,92 @@ def generate_main_report():
 
     add_heading_2(doc, "2. Hướng phát triển của đề tài:")
     add_p(doc, "- Mở rộng ngân hàng câu hỏi thích ứng lên 5.000+ câu bao phủ toàn bộ các dạng bài thi tuyển sinh Đại học ĐGNL HSA, TSA và chứng chỉ quốc tế IELTS/VSTEP.")
-    add_p(doc, "- Ứng dụng mô hình AI đa phương thức (Multimodal AI) để phân tích chuyển động cơ mặt và vị trí khẩu hình miệng qua camera theo thời gian thực.")
-
-    # VI. TÀI LIỆU THAM KHẢO (CHUẨN APA THEO QUY ĐỊNH CỦA SỞ)
+    # VI. TÀI LIỆU THAM KHẢO (CHUẨN APA 7TH EDITION THEO QUY ĐỊNH CỦA BỘ & SỞ GD&ĐT)
     add_heading_1(doc, "VI. TÀI LIỆU THAM KHẢO")
-    add_p(doc, "1. Bộ Giáo dục và Đào tạo (2018). Chương trình giáo dục phổ thông môn Tiếng Anh (ban hành kèm theo Thông tư số 32/2018/TT-BGDĐT).")
-    add_p(doc, "2. Bộ Giáo dục và Đào tạo (2024). Thông tư số 06/2024/TT-BGDĐT ban hành Quy chế Cuộc thi nghiên cứu khoa học, kỹ thuật cấp quốc gia dành cho học sinh trung học.")
-    add_p(doc, "3. Baker, F. B. (2001). The Basics of Item Response Theory. ERIC Clearinghouse on Assessment and Evaluation, University of Maryland, College Park, MD.")
-    add_p(doc, "4. Lord, F. M. (1980). Applications of Item Response Theory to Practical Testing Problems. Lawrence Erlbaum Associates, Hillsdale, NJ.")
-    add_p(doc, "5. Wozniak, P. A., & Gorzelanczyk, E. J. (1994). Optimization of repetition spacing in computer-assisted learning. Acta Neurobiologiae Experimentalis, 54(1), 59-62.")
-    add_p(doc, "6. Ebbinghaus, H. (1885). Memory: A Contribution to Experimental Psychology. Teachers College, Columbia University, New York.")
+    
+    add_heading_2(doc, "A. Tài liệu Tiếng Việt:")
+    add_reference_item(doc, [
+        ("1. Bộ Giáo dục và Đào tạo. (2018). ", False, False),
+        ("Chương trình giáo dục phổ thông môn Tiếng Anh ", True, False),
+        ("(Ban hành kèm theo Thông tư số 32/2018/TT-BGDĐT ngày 26/12/2018 của Bộ trưởng Bộ Giáo dục và Đào tạo). NXB Giáo dục Việt Nam.", False, False)
+    ])
+    add_reference_item(doc, [
+        ("2. Bộ Giáo dục và Đào tạo. (2024). ", False, False),
+        ("Quy chế Cuộc thi nghiên cứu khoa học, kỹ thuật cấp quốc gia dành cho học sinh trung học cơ sở và trung học phổ thông ", True, False),
+        ("(Ban hành kèm theo Thông tư số 06/2024/TT-BGDĐT ngày 10/4/2024 của Bộ trưởng Bộ Giáo dục và Đào tạo).", False, False)
+    ])
+    add_reference_item(doc, [
+        ("3. Hoàng Văn Vân (Tổng Chủ biên), Lương Quỳnh Trang (Chủ biên). (2022). ", False, False),
+        ("Tiếng Anh 10 - Global Success (Sách học sinh). ", True, False),
+        ("NXB Giáo dục Việt Nam.", False, False)
+    ])
+    add_reference_item(doc, [
+        ("4. Hoàng Văn Vân (Tổng Chủ biên), Phan Hà (Chủ biên). (2023). ", False, False),
+        ("Tiếng Anh 11 - Global Success (Sách học sinh). ", True, False),
+        ("NXB Giáo dục Việt Nam.", False, False)
+    ])
+    add_reference_item(doc, [
+        ("5. Hoàng Văn Vân (Tổng Chủ biên), Nguyễn Thị Chi (Chủ biên). (2024). ", False, False),
+        ("Tiếng Anh 12 - Global Success (Sách học sinh). ", True, False),
+        ("NXB Giáo dục Việt Nam.", False, False)
+    ])
+    add_reference_item(doc, [
+        ("6. Lâm Quang Thiệp. (2012). ", False, False),
+        ("Đo lường và Đánh giá hoạt động học tập trong nhà trường. ", True, False),
+        ("NXB Đại học Quốc gia Hà Nội.", False, False)
+    ])
+
+    add_heading_2(doc, "B. Tài liệu Tiếng Anh (English References - APA 7th Edition):")
+    add_reference_item(doc, [
+        ("1. Baker, F. B. (2001). ", False, False),
+        ("The Basics of Item Response Theory ", True, False),
+        ("(2nd ed.). ERIC Clearinghouse on Assessment and Evaluation, University of Maryland.", False, False)
+    ])
+    add_reference_item(doc, [
+        ("2. Deng, L., & Li, J. (2013). Machine learning paradigms for speech recognition: An overview. ", False, False),
+        ("IEEE Transactions on Audio, Speech, and Language Processing, ", True, False),
+        ("21(5), 1060–1089. https://doi.org/10.1109/TASL.2013.2244083", False, False)
+    ])
+    add_reference_item(doc, [
+        ("3. Ebbinghaus, H. (1885/2013). ", False, False),
+        ("Memory: A Contribution to Experimental Psychology ", True, False),
+        ("(H. A. Ruger & C. E. Bussenius, Trans.). Teachers College, Columbia University.", False, False)
+    ])
+    add_reference_item(doc, [
+        ("4. Embretson, S. E., & Reise, S. P. (2000). ", False, False),
+        ("Item Response Theory for Psychologists. ", True, False),
+        ("Lawrence Erlbaum Associates Publishers.", False, False)
+    ])
+    add_reference_item(doc, [
+        ("5. Levis, J. M. (2018). ", False, False),
+        ("Intelligibility, Oral Communication, and the Teaching of Pronunciation. ", True, False),
+        ("Cambridge University Press. https://doi.org/10.1017/9781108241564", False, False)
+    ])
+    add_reference_item(doc, [
+        ("6. Lord, F. M. (1980). ", False, False),
+        ("Applications of Item Response Theory to Practical Testing Problems. ", True, False),
+        ("Lawrence Erlbaum Associates.", False, False)
+    ])
+    add_reference_item(doc, [
+        ("7. Luckin, R., Holmes, W., Griffiths, M., & Forcier, L. B. (2016). ", False, False),
+        ("Intelligence Unleashed: An argument for AI in Education. ", True, False),
+        ("Pearson Education.", False, False)
+    ])
+    add_reference_item(doc, [
+        ("8. UNESCO. (2023). ", False, False),
+        ("Guidance for Generative AI in Education and Research. ", True, False),
+        ("United Nations Educational, Scientific and Cultural Organization.", False, False)
+    ])
+    add_reference_item(doc, [
+        ("9. Vanlehn, K. (2011). The relative effectiveness of human tutoring, intelligent tutoring systems, and other tutoring systems. ", False, False),
+        ("Educational Psychologist, ", True, False),
+        ("46(4), 197–221. https://doi.org/10.1080/00461520.2011.614136", False, False)
+    ])
+    add_reference_item(doc, [
+        ("10. Wozniak, P. A., & Gorzelanczyk, E. J. (1994). Optimization of repetition spacing in computer-assisted learning. ", False, False),
+        ("Acta Neurobiologiae Experimentalis, ", True, False),
+        ("54(1), 59–62.", False, False)
+    ])
 
     safe_save(doc, "BAO_CAO_THUC_HIEN_DU_AN_KHKT.docx")
 
