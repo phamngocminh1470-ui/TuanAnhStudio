@@ -29,7 +29,8 @@ const TeacherPortal = lazy(() => import('./components/TeacherPortal'));
 import { 
   Sparkles, MessageSquare, Mic, BookOpen, GraduationCap, LayoutDashboard, ChevronRight, 
   Settings, Key, Save, AlertCircle, CheckCircle, Cpu, Zap, Activity, HelpCircle, 
-  User, ShieldCheck, LogOut, LogIn, Clock, Headphones, Printer, Trophy, Database, BookMarked, PenLine, Camera, FileText
+  User, ShieldCheck, LogOut, LogIn, Clock, Headphones, Printer, Trophy, Database, BookMarked, PenLine, Camera, FileText,
+  Shuffle, Users
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -375,6 +376,29 @@ function App() {
               >
                 <BookMarked className="w-4 h-4 text-cyan-400" />
                 <span>Học Liệu Từ Vựng</span>
+              </button>
+            </div>
+
+            {/* Group: Cổng Giáo Viên */}
+            <div className="space-y-1">
+              <div className="text-[10px] font-bold text-amber-400 uppercase tracking-wider px-3 pb-1 flex items-center justify-between">
+                <span>Dành Cho Giáo Viên</span>
+                <span className="px-1.5 py-0.2 text-[8px] font-black rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">MỚI</span>
+              </div>
+
+              <button
+                onClick={() => setActiveTab('teacher-portal')}
+                className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
+                  activeTab === 'teacher-portal'
+                    ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-300 border border-amber-500/40 font-bold shadow-lg shadow-amber-500/10'
+                    : 'text-amber-300/90 hover:bg-amber-500/10 hover:text-amber-200'
+                }`}
+              >
+                <Shuffle className="w-4 h-4 text-amber-400" />
+                <div className="text-left">
+                  <div className="font-bold">Xáo Đề &amp; Quản Lý Lớp</div>
+                  <div className="text-[10px] text-gray-400 font-normal">Tạo 4 mã đề (101-104), chấm AI</div>
+                </div>
               </button>
             </div>
 
