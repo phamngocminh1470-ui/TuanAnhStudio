@@ -1,4 +1,13 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+# -*- coding: utf-8 -*-
+"""
+Script nâng cấp toàn diện tính năng Xáo Đề & Giao Bài trong TeacherPortal.jsx
+- Tích hợp thư viện mammoth đọc file Word (.docx) trực tiếp từ máy tính giáo viên
+- Hỗ trợ tải file .docx, .doc, .txt
+- Bóc tách câu hỏi thông minh đa dạng định dạng (kể cả 4 đáp án trên 1 dòng)
+- Bảng ma trận đáp án chuẩn chỉnh, xuất Word/PDF ngăn nắp không bị lộn xộn
+"""
+
+code = """import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   GraduationCap, Shuffle, Users, BookOpen, Sparkles, Plus, Trash2, 
   Copy, Check, Download, FileText, CheckCircle2, AlertCircle, Award, 
@@ -125,14 +134,14 @@ function parseExamTextToQuestions(text) {
   if (!text || !text.trim()) return [];
   
   // Chuẩn hóa dấu xuống dòng và khoảng trắng
-  const normalized = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  const normalized = text.replace(/\\r\\n/g, '\\n').replace(/\\r/g, '\\n');
   
   // Tách theo câu hỏi: Câu 1, Câu 1., Question 1, Question 1:
   const rawBlocks = normalized.split(/(?=(?:Câu|Question|Bài)\s+\d+[\s.:])/i).filter(b => b.trim().length > 0);
   const questions = [];
 
   rawBlocks.forEach((block, index) => {
-    const rawLines = block.trim().split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    const rawLines = block.trim().split('\\n').map(l => l.trim()).filter(l => l.length > 0);
     if (rawLines.length === 0) return;
 
     let questionText = rawLines[0];
@@ -143,7 +152,7 @@ function parseExamTextToQuestions(text) {
     let correctKey = 'A';
 
     // Trường hợp 4 đáp án nằm chung 1 dòng hoặc nhiều dòng
-    const blockContent = rawLines.join('\n');
+    const blockContent = rawLines.join('\\n');
     
     // Tìm đáp án đúng
     const ansMatch = blockContent.match(/(?:Đáp án|Đáp án đúng|Answer|Key)[\s.:]+([A-D])/i);
@@ -158,10 +167,10 @@ function parseExamTextToQuestions(text) {
     const optDMatch = blockContent.match(/(?:^|\s)(?:D[.:)]\s*)([\s\S]*?)(?=(?:$|Đáp án|Answer))/i);
 
     if (optAMatch && optBMatch && optCMatch && optDMatch) {
-      optionA = optAMatch[1].trim().split('\n')[0];
-      optionB = optBMatch[1].trim().split('\n')[0];
-      optionC = optCMatch[1].trim().split('\n')[0];
-      optionD = optDMatch[1].trim().split('\n')[0];
+      optionA = optAMatch[1].trim().split('\\n')[0];
+      optionB = optBMatch[1].trim().split('\\n')[0];
+      optionC = optCMatch[1].trim().split('\\n')[0];
+      optionD = optDMatch[1].trim().split('\\n')[0];
     } else {
       // Fallback theo từng dòng
       rawLines.forEach(l => {
@@ -523,7 +532,7 @@ body { font-family: 'Times New Roman', serif; font-size: 13pt; line-height: 1.35
 
     html += `</body></html>`;
 
-    const blob = new Blob(['\ufeff' + html], { type: 'application/msword;charset=utf-8' });
+    const blob = new Blob(['\\ufeff' + html], { type: 'application/msword;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -592,7 +601,7 @@ body { font-family: 'Times New Roman', serif; font-size: 13pt; line-height: 1.35
 
     html += `</body></html>`;
 
-    const blob = new Blob(['\ufeff' + html], { type: 'application/msword;charset=utf-8' });
+    const blob = new Blob(['\\ufeff' + html], { type: 'application/msword;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -822,15 +831,15 @@ body { font-family: 'Times New Roman', serif; font-size: 13pt; line-height: 1.35
   const handleExportGradebook = () => {
     if (!selectedClassWorkspace) return;
     const students = selectedClassWorkspace.students || [];
-    let csvContent = "data:text/csv;charset=utf-8,﻿";
-    csvContent += "STT,Họ và Tên,Email,Điểm KT 1,Điểm KT 2,Điểm Bài Luận,Điểm Trung Bình,Trạng Thái\n";
+    let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+    csvContent += "STT,Họ và Tên,Email,Điểm KT 1,Điểm KT 2,Điểm Bài Luận,Điểm Trung Bình,Trạng Thái\\n";
     students.forEach((st, idx) => {
-      csvContent += `${idx + 1},"${st.name}","${st.email || ''}",${st.score1 || 0},${st.score2 || 0},${st.essayScore || 0},${st.avg || 0},"${st.status}"\n`;
+      csvContent += `${idx + 1},"${st.name}","${st.email || ''}",${st.score1 || 0},${st.score2 || 0},${st.essayScore || 0},${st.avg || 0},"${st.status}"\\n`;
     });
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `So_Diem_${selectedClassWorkspace.name.replace(/\s+/g, '_')}.csv`);
+    link.setAttribute("download", `So_Diem_${selectedClassWorkspace.name.replace(/\\s+/g, '_')}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -1015,13 +1024,13 @@ Trả về định dạng JSON thuần túy:
   };
 
   const handleAIEssayCheck = async (topicId, topicPrompt) => {
-    if (!submitEssayContent.trim() || submitEssayContent.trim().split(/\s+/).length < 20) {
+    if (!submitEssayContent.trim() || submitEssayContent.trim().split(/\\s+/).length < 20) {
       alert("Vui lòng viết đoạn văn ít nhất 20 từ trước khi nộp!");
       return;
     }
     setIsEvaluatingEssay(true);
     try {
-      const wordCount = submitEssayContent.trim().split(/\s+/).length;
+      const wordCount = submitEssayContent.trim().split(/\\s+/).length;
       const prompt = `Bạn là giám khảo chấm thi Tốt nghiệp THPT môn Tiếng Anh. Hãy chấm đoạn văn sau theo 4 tiêu chí chuẩn Bộ GD&ĐT:
 Đề bài: "${topicPrompt}"
 Bài làm học sinh (${wordCount} từ): "${submitEssayContent}"
@@ -1601,7 +1610,7 @@ Trả về định dạng JSON thuần túy:
                           rows={8}
                           value={newAssignmentText}
                           onChange={(e) => setNewAssignmentText(e.target.value)}
-                          placeholder="Dán đề thi của Thầy/Cô vào đây theo định dạng:\nCâu 1: Question text...\nA. option 1\nB. option 2\nC. option 3\nD. option 4\nĐáp án: A"
+                          placeholder="Dán đề thi của Thầy/Cô vào đây theo định dạng:\\nCâu 1: Question text...\\nA. option 1\\nB. option 2\\nC. option 3\\nD. option 4\\nĐáp án: A"
                           className="w-full bg-black/60 border border-white/10 rounded-xl p-3 text-xs text-slate-200 font-mono focus:outline-none focus:border-indigo-400 resize-none leading-relaxed"
                         />
                       </div>
@@ -2023,7 +2032,7 @@ Trả về định dạng JSON thuần túy:
                 <span>Công Cụ Xáo Đề Thi &amp; Xuất File Word / In PDF</span>
               </h2>
               <p className="text-xs text-gray-400 mt-0.5">
-                Tải file Word (.docx / .doc) hoặc dán đề gốc $\rightarrow$ Hệ thống tự động đảo câu hỏi &amp; đáp án để tạo các mã đề kèm bảng đáp án. Xuất file Word (.doc) và in PDF chuẩn UTF-8 không lỗi font!
+                Tải file Word (.docx / .doc) hoặc dán đề gốc $\\rightarrow$ Hệ thống tự động đảo câu hỏi &amp; đáp án để tạo các mã đề kèm bảng đáp án. Xuất file Word (.doc) và in PDF chuẩn UTF-8 không lỗi font!
               </p>
             </div>
 
@@ -2166,11 +2175,11 @@ Trả về định dạng JSON thuần túy:
                         onClick={() => {
                           const active = shuffledExams.find(e => e.examCode === selectedExamCode);
                           if (!active) return;
-                          let text = `ĐỀ THI TIẾNG ANH - MÃ ĐỀ ${active.examCode}\n\n`;
+                          let text = `ĐỀ THI TIẾNG ANH - MÃ ĐỀ ${active.examCode}\\n\\n`;
                           active.questions.forEach(q => {
-                            text += `${q.questionText}\n`;
-                            q.options.forEach(o => text += `${o.key}. ${o.text}\n`);
-                            text += `\n`;
+                            text += `${q.questionText}\\n`;
+                            q.options.forEach(o => text += `${o.key}. ${o.text}\\n`);
+                            text += `\\n`;
                           });
                           copyToClipboard(text);
                         }}
@@ -2209,7 +2218,7 @@ Trả về định dạng JSON thuần túy:
                   <div>
                     <h4 className="font-extrabold text-base text-white">Chưa Có Mã Đề Nào Được Sinh</h4>
                     <p className="text-xs text-gray-400 mt-1 max-w-md">
-                      Bấm nút <strong>"📁 Tải File Đề (.docx / .doc / .txt)"</strong> hoặc dán đề thi ở cột bên trái $\rightarrow$ Bấm <strong>"Xáo Đề &amp; Sinh Mã Đề"</strong> để tải file Word và in PDF tự động!
+                      Bấm nút <strong>"📁 Tải File Đề (.docx / .doc / .txt)"</strong> hoặc dán đề thi ở cột bên trái $\\rightarrow$ Bấm <strong>"Xáo Đề &amp; Sinh Mã Đề"</strong> để tải file Word và in PDF tự động!
                     </p>
                   </div>
                 </div>
@@ -2402,7 +2411,7 @@ Trả về định dạng JSON thuần túy:
                         <span>Phần 2: Nộp Đoạn Văn / Bài Luận Theo Chủ Đề</span>
                       </h4>
                       <span className="text-[11px] font-mono text-gray-400">
-                        {submitEssayContent.trim() ? submitEssayContent.trim().split(/\s+/).length : 0} / 150 từ
+                        {submitEssayContent.trim() ? submitEssayContent.trim().split(/\\s+/).length : 0} / 150 từ
                       </span>
                     </div>
 
@@ -2494,3 +2503,9 @@ Trả về định dạng JSON thuần túy:
     </div>
   );
 }
+"""
+
+with open('frontend/src/components/TeacherPortal.jsx', 'w', encoding='utf-8') as f:
+    f.write(code)
+
+print("TeacherPortal.jsx upgraded with mammoth docx support, prominent upload button and clean layout!")
