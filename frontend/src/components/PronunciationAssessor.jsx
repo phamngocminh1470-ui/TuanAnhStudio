@@ -1,225 +1,13 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { Play, Mic, Square, Volume2, Award, RefreshCw, ChevronRight, ChevronLeft, HelpCircle, BookOpen, Sparkles, Plus, Wand2, Shuffle, AlertTriangle, CheckCircle2, AlertCircle } from 'lucide-react';
+import { EXTENDED_PRONUNCIATION_SENTENCES } from '../data/pronunciationSentencesData';
 
 const API_BASE = '/api';
 
-// Ngân hàng câu hỏi chấm phát âm Tiếng Anh phân loại theo cấp độ (15 - 20 câu mỗi trình độ)
+// Ngân hàng câu hỏi chấm phát âm Tiếng Anh mở rộng (285+ câu hỏi offline chuẩn SGK Global Success & CEFR)
 // Được gán kèm thông số độ khó IRT difficulty (b) từ -2.5 (dễ) đến +3.4 (rất khó)
-const SENTENCES_BY_GRADE = {
-  "6": [
-    { id: 101, text: "Hello, my name is Nam and I am in grade six.", level: "Lớp 6 - U1: Dễ (IRT: -2.5)", difficulty: -2.5 },
-    { id: 102, text: "My new school has a large playground and a modern library.", level: "Lớp 6 - U1: Dễ (IRT: -2.3)", difficulty: -2.3 },
-    { id: 103, text: "We have English lessons on Mondays and Wednesdays.", level: "Lớp 6 - U1: Dễ (IRT: -2.1)", difficulty: -2.1 },
-    { id: 104, text: "My favorite subject is Art because I love drawing pictures.", level: "Lớp 6 - U1: Dễ (IRT: -1.9)", difficulty: -1.9 },
-    { id: 105, text: "There are four people in my family: parents, my brother, and me.", level: "Lớp 6 - U2: Dễ (IRT: -1.7)", difficulty: -1.7 },
-    { id: 106, text: "We live in a small town house near a quiet river.", level: "Lớp 6 - U2: Dễ (IRT: -1.5)", difficulty: -1.5 },
-    { id: 107, text: "I often play football with my classmates after school.", level: "Lớp 6 - U3: TB (IRT: -1.3)", difficulty: -1.3 },
-    { id: 108, text: "We should brush our teeth twice a day to keep them healthy.", level: "Lớp 6 - U3: TB (IRT: -1.1)", difficulty: -1.1 },
-    { id: 109, text: "My bedroom has a big window, a desk, and a wardrobe.", level: "Lớp 6 - U2: TB (IRT: -0.9)", difficulty: -0.9 },
-    { id: 110, text: "Eating healthy food like vegetables helps us stay strong and active.", level: "Lớp 6 - U3: TB (IRT: -0.7)", difficulty: -0.7 },
-    { id: 111, text: "My mother is an English teacher and she works very hard.", level: "Lớp 6 - U3: TB (IRT: -0.5)", difficulty: -0.5 },
-    { id: 112, text: "Vietnamese children love celebrating Mid-Autumn Festival in autumn.", level: "Lớp 6 - U4: Khó (IRT: -0.3)", difficulty: -0.3 },
-    { id: 113, text: "We should put trash in the dustbin to keep our school clean.", level: "Lớp 6 - U4: Khó (IRT: -0.1)", difficulty: -0.1 },
-    { id: 114, text: "I usually do my homework and prepare lessons before having dinner.", level: "Lớp 6 - U5: Khó (IRT: 0.1)", difficulty: 0.1 },
-    { id: 115, text: "How do you go to school every day, by bicycle or on foot?", level: "Lớp 6 - U5: Rất Khó (IRT: 0.3)", difficulty: 0.3 }
-  ],
-  "7": [
-    { id: 201, text: "My favorite hobby is collecting beautiful paper models.", level: "Lớp 7 - U1: Dễ (IRT: -2.0)", difficulty: -2.0 },
-    { id: 202, text: "Doing community service helps us feel more responsible for society.", level: "Lớp 7 - U2: Dễ (IRT: -1.8)", difficulty: -1.8 },
-    { id: 203, text: "Eating fresh fruit and vegetables provides you with essential vitamins.", level: "Lớp 7 - U3: Dễ (IRT: -1.6)", difficulty: -1.6 },
-    { id: 204, text: "Vietnamese traditional food like Pho is very popular worldwide.", level: "Lớp 7 - U4: Dễ (IRT: -1.4)", difficulty: -1.4 },
-    { id: 205, text: "We should avoid drinking too many sweetened carbonated beverages.", level: "Lớp 7 - U3: Dễ (IRT: -1.2)", difficulty: -1.2 },
-    { id: 206, text: "Donating warm clothes to homeless children is a meaningful activity.", level: "Lớp 7 - U2: Dễ (IRT: -1.0)", difficulty: -1.0 },
-    { id: 207, text: "Littering in public places harms the environment and local scenery.", level: "Lớp 7 - U2: TB (IRT: -0.8)", difficulty: -0.8 },
-    { id: 208, text: "We should balance our eating habits and do exercise daily.", level: "Lớp 7 - U3: TB (IRT: -0.6)", difficulty: -0.6 },
-    { id: 209, text: "Music and arts make our lives more colorful and interesting.", level: "Lớp 7 - U4: TB (IRT: -0.4)", difficulty: -0.4 },
-    { id: 210, text: "My sister spends two hours playing the piano every weekend.", level: "Lớp 7 - U4: TB (IRT: -0.2)", difficulty: -0.2 },
-    { id: 211, text: "Volunteers help elderly people with their shopping and house cleaning.", level: "Lớp 7 - U2: TB (IRT: 0.0)", difficulty: 0.0 },
-    { id: 212, text: "Staying up late playing video games is bad for your health.", level: "Lớp 7 - U3: Khó (IRT: 0.2)", difficulty: 0.2 },
-    { id: 213, text: "Green lifestyle is becoming more popular among young students today.", level: "Lớp 7 - U5: Khó (IRT: 0.4)", difficulty: 0.4 },
-    { id: 214, text: "Doing outdoor activities keeps you fit and reduces academic stress.", level: "Lớp 7 - U5: Khó (IRT: 0.6)", difficulty: 0.6 },
-    { id: 215, text: "She wants to join the local club to protect wild animals.", level: "Lớp 7 - U5: Rất Khó (IRT: 0.8)", difficulty: 0.8 }
-  ],
-  "8": [
-    { id: 301, text: "Country life is extremely peaceful, simple, and healthy.", level: "Lớp 8 - U1: Dễ (IRT: -1.5)", difficulty: -1.5 },
-    { id: 302, text: "People in the highlands are friendly and hospitable to visitors.", level: "Lớp 8 - U2: Dễ (IRT: -1.3)", difficulty: -1.3 },
-    { id: 303, text: "We love participating in traditional folk games at local festivals.", level: "Lớp 8 - U3: Dễ (IRT: -1.1)", difficulty: -1.1 },
-    { id: 304, text: "Water pollution can cause severe diseases for local communities.", level: "Lớp 8 - U4: Dễ (IRT: -0.9)", difficulty: -0.9 },
-    { id: 305, text: "Protecting natural habitats is the best way to save endangered animals.", level: "Lớp 8 - U4: Dễ (IRT: -0.7)", difficulty: -0.7 },
-    { id: 306, text: "Online learning platforms provide flexible study schedules for high school students.", level: "Lớp 8 - U5: TB (IRT: -0.5)", difficulty: -0.5 },
-    { id: 307, text: "Modern technology has changed our communication habits and lifestyle.", level: "Lớp 8 - U5: TB (IRT: -0.3)", difficulty: -0.3 },
-    { id: 308, text: "People in big cities suffer from heavy traffic jams every day.", level: "Lớp 8 - U1: TB (IRT: -0.1)", difficulty: -0.1 },
-    { id: 309, text: "Traditional crafts are passed down from generation to generation in families.", level: "Lớp 8 - U2: TB (IRT: 0.1)", difficulty: 0.1 },
-    { id: 310, text: "Natural disasters like floods can destroy houses, roads, and crops.", level: "Lớp 8 - U3: TB (IRT: 0.3)", difficulty: 0.3 },
-    { id: 311, text: "Ethnic minority groups in Vietnam have their own unique customs.", level: "Lớp 8 - U2: TB (IRT: 0.5)", difficulty: 0.5 },
-    { id: 312, text: "Life in a megacity can be stressful due to noise pollution.", level: "Lớp 8 - U1: Khó (IRT: 0.7)", difficulty: 0.7 },
-    { id: 313, text: "We should recycle plastic bottles and tin cans to reduce waste.", level: "Lớp 8 - U4: Khó (IRT: 0.9)", difficulty: 0.9 },
-    { id: 314, text: "She enjoys reading books about history, space, and computer science.", level: "Lớp 8 - U5: Khó (IRT: 1.1)", difficulty: 1.1 },
-    { id: 315, text: "The historic monument attracts millions of international tourists annually.", level: "Lớp 8 - U3: Rất Khó (IRT: 1.3)", difficulty: 1.3 }
-  ],
-  "9": [
-    { id: 401, text: "Learning English helps us communicate with foreign friends easily.", level: "Lớp 9 - U1: Dễ (IRT: -1.0)", difficulty: -1.0 },
-    { id: 402, text: "Technology plays an important role in modern classrooms.", level: "Lớp 9 - U2: Dễ (IRT: -0.8)", difficulty: -0.8 },
-    { id: 403, text: "We must preserve natural wonders for our future generations.", level: "Lớp 9 - U3: Dễ (IRT: -0.6)", difficulty: -0.6 },
-    { id: 404, text: "Eco-tourism encourages local people to protect wild animals.", level: "Lớp 9 - U3: Dễ (IRT: -0.4)", difficulty: -0.4 },
-    { id: 405, text: "Air pollution is becoming a critical problem in megacities.", level: "Lớp 9 - U4: TB (IRT: -0.2)", difficulty: -0.2 },
-    { id: 406, text: "Developing critical thinking skills is vital for academic success.", level: "Lớp 9 - U5: TB (IRT: 0.0)", difficulty: 0.0 },
-    { id: 407, text: "High school students should limit their daily social media usage.", level: "Lớp 9 - U2: TB (IRT: 0.2)", difficulty: 0.2 },
-    { id: 408, text: "She wants to study abroad to experience different cultures.", level: "Lớp 9 - U1: TB (IRT: 0.4)", difficulty: 0.4 },
-    { id: 409, text: "Public transport is an effective solution to traffic congestion.", level: "Lớp 9 - U4: TB (IRT: 0.6)", difficulty: 0.6 },
-    { id: 410, text: "Biodiversity is crucial for maintaining global ecological balance.", level: "Lớp 9 - U3: TB (IRT: 0.8)", difficulty: 0.8 },
-    { id: 411, text: "Students should learn how to manage their stress before exams.", level: "Lớp 9 - U5: Khó (IRT: 1.0)", difficulty: 1.0 },
-    { id: 412, text: "Renewable energy sources like solar power are sustainable.", level: "Lớp 9 - U4: Khó (IRT: 1.2)", difficulty: 1.2 },
-    { id: 413, text: "Career guidance services help high school students make better choices.", level: "Lớp 9 - U5: Khó (IRT: 1.4)", difficulty: 1.4 },
-    { id: 414, text: "Preserving historical heritages requires active community cooperation.", level: "Lớp 9 - U3: Khó (IRT: 1.6)", difficulty: 1.6 },
-    { id: 415, text: "The rapid growth of cities leads to high demand for housing.", level: "Lớp 9 - U4: Rất Khó (IRT: 1.8)", difficulty: 1.8 }
-  ],
-  "10": [
-    { id: 501, text: "Helping with household chores contributes to family happiness.", level: "Lớp 10 - U1: Dễ (IRT: -0.5)", difficulty: -0.5 },
-    { id: 502, text: "Reducing carbon footprint is essential to fight climate change.", level: "Lớp 10 - U2: Dễ (IRT: -0.3)", difficulty: -0.3 },
-    { id: 503, text: "Independent teenagers know how to manage pocket money well.", level: "Lớp 10 - U3: Dễ (IRT: -0.1)", difficulty: -0.1 },
-    { id: 504, text: "We should balance academic study and entertainment activities.", level: "Lớp 10 - U1: TB (IRT: 0.1)", difficulty: 0.1 },
-    { id: 505, text: "Eco-friendly products like reusable bags are highly recommended.", level: "Lớp 10 - U2: TB (IRT: 0.3)", difficulty: 0.3 },
-    { id: 506, text: "Cultural diversity is shown through traditional clothing and festivals.", level: "Lớp 10 - U4: TB (IRT: 0.5)", difficulty: 0.5 },
-    { id: 507, text: "Gender equality ensures equal opportunities for men and women.", level: "Lớp 10 - U5: TB (IRT: 0.7)", difficulty: 0.7 },
-    { id: 508, text: "Organic farming methods avoid using harmful chemical fertilizers.", level: "Lớp 10 - U2: TB (IRT: 0.9)", difficulty: 0.9 },
-    { id: 509, text: "Greenhouse gases trap heat and warm the earth's atmosphere.", level: "Lớp 10 - U2: TB (IRT: 1.1)", difficulty: 1.1 },
-    { id: 510, text: "Community service projects improve local infrastructure and clean streets.", level: "Lớp 10 - U3: TB (IRT: 1.3)", difficulty: 1.3 },
-    { id: 511, text: "Time management skills help you complete academic tasks on time.", level: "Lớp 10 - U1: Khó (IRT: 1.5)", difficulty: 1.5 },
-    { id: 512, text: "Sustainable tourism minimizes negative impacts on local nature environments.", level: "Lớp 10 - U2: Khó (IRT: 1.7)", difficulty: 1.7 },
-    { id: 513, text: "Participating in youth organizations fosters leadership and communication.", level: "Lớp 10 - U3: Khó (IRT: 1.9)", difficulty: 1.9 },
-    { id: 514, text: "Digital literacy is an essential skill for modern young workers.", level: "Lớp 10 - U5: Khó (IRT: 2.1)", difficulty: 2.1 },
-    { id: 515, text: "Family support is a strong foundation for children's positive growth.", level: "Lớp 10 - U1: Rất Khó (IRT: 2.3)", difficulty: 2.3 }
-  ],
-  "11": [
-    { id: 601, text: "Generation gap is a common issue in traditional asian families.", level: "Lớp 11 - U1: Dễ (IRT: 0.0)", difficulty: 0.0 },
-    { id: 602, text: "Healthy relationships with peers are crucial for teenager mental health.", level: "Lớp 11 - U2: Dễ (IRT: 0.2)", difficulty: 0.2 },
-    { id: 603, text: "Volunteer work helps students develop soft skills and empathy.", level: "Lớp 11 - U3: Dễ (IRT: 0.4)", difficulty: 0.4 },
-    { id: 604, text: "Energy conservation reduces electricity bills and saves national resources.", level: "Lớp 11 - U4: TB (IRT: 0.6)", difficulty: 0.6 },
-    { id: 605, text: "Sustainable development models balance growth and environmental protection.", level: "Lớp 11 - U4: TB (IRT: 0.8)", difficulty: 0.8 },
-    { id: 606, text: "Vocational schools offer practical training courses for technical jobs.", level: "Lớp 11 - U5: TB (IRT: 1.0)", difficulty: 1.0 },
-    { id: 607, text: "Social media usage has a huge impact on teenager behavior.", level: "Lớp 11 - U2: TB (IRT: 1.2)", difficulty: 1.2 },
-    { id: 608, text: "Mental health awareness should be promoted in all public schools.", level: "Lớp 11 - U2: TB (IRT: 1.4)", difficulty: 1.4 },
-    { id: 609, text: "ASEAN members cooperate actively in economic and cultural fields.", level: "Lớp 11 - U3: TB (IRT: 1.6)", difficulty: 1.6 },
-    { id: 610, text: "Urbanization attracts young people to look for better job opportunities.", level: "Lớp 11 - U4: TB (IRT: 1.8)", difficulty: 1.8 },
-    { id: 611, text: "Distance learning has become popular after the global pandemic.", level: "Lớp 11 - U5: Khó (IRT: 2.0)", difficulty: 2.0 },
-    { id: 612, text: "Peer pressure can motivate students to perform better in study.", level: "Lớp 11 - U2: Khó (IRT: 2.2)", difficulty: 2.2 },
-    { id: 613, text: "Protecting historical sites preserves national identity and attracts tourists.", level: "Lớp 11 - U3: Khó (IRT: 2.4)", difficulty: 2.4 },
-    { id: 614, text: "Modern education systems focus on critical thinking and technological innovation.", level: "Lớp 11 - U5: Khó (IRT: 2.6)", difficulty: 2.6 },
-    { id: 615, text: "Intercultural communication reduces social prejudices and unnecessary conflicts.", level: "Lớp 11 - U3: Rất Khó (IRT: 2.8)", difficulty: 2.8 }
-  ],
-  "12": [
-    { id: 701, text: "Artificial intelligence is transforming global communication and economy.", level: "Lớp 12 - U1: Dễ (IRT: 0.5)", difficulty: 0.5 },
-    { id: 702, text: "Lifelong learning helps seniors adapt to rapid technology changes.", level: "Lớp 12 - U2: Dễ (IRT: 0.7)", difficulty: 0.7 },
-    { id: 703, text: "Green lifestyle involves recycling organic wastes and clean energy.", level: "Lớp 12 - U3: Dễ (IRT: 0.9)", difficulty: 0.9 },
-    { id: 704, text: "Globalization promotes international trade and global economic integration.", level: "Lớp 12 - U4: TB (IRT: 1.1)", difficulty: 1.1 },
-    { id: 705, text: "Robots are replacing human labors in repetitive manufacturing factories.", level: "Lớp 12 - U1: TB (IRT: 1.3)", difficulty: 1.3 },
-    { id: 706, text: "Preserving national heritage promotes tourism and local cultural pride.", level: "Lớp 12 - U3: TB (IRT: 1.5)", difficulty: 1.5 },
-    { id: 707, text: "Higher education opens up diverse career opportunities for graduates.", level: "Lớp 12 - U2: TB (IRT: 1.7)", difficulty: 1.7 },
-    { id: 708, text: "The modern job market demands specialized technical skills and adaptability.", level: "Lớp 12 - U2: TB (IRT: 1.9)", difficulty: 1.9 },
-    { id: 709, text: "Macroeconomic policies aim to control high inflation and encourage growth.", level: "Lớp 12 - U4: TB (IRT: 2.1)", difficulty: 2.1 },
-    { id: 710, text: "Digital economy creates many new business models and job vacancies.", level: "Lớp 12 - U1: TB (IRT: 2.3)", difficulty: 2.3 },
-    { id: 711, text: "Biotechnology plays a vital role in developing modern medical treatments.", level: "Lớp 12 - U5: Khó (IRT: 2.5)", difficulty: 2.5 },
-    { id: 712, text: "Global warming threatens coastal cities with rising sea levels annually.", level: "Lớp 12 - U3: Khó (IRT: 2.7)", difficulty: 2.7 },
-    { id: 713, text: "Automation increases efficiency but raises severe structural unemployment concerns.", level: "Lớp 12 - U1: Khó (IRT: 2.9)", difficulty: 2.9 },
-    { id: 714, text: "International diplomacy resolves military conflicts through peaceful conversations.", level: "Lớp 12 - U4: Khó (IRT: 3.1)", difficulty: 3.1 },
-    { id: 715, text: "Space exploration expands our deep knowledge of the vast universe.", level: "Lớp 12 - U5: Rất Khó (IRT: 3.3)", difficulty: 3.3 }
-  ],
-  "A1": [
-    { id: 1001, text: "Hello, my name is Alex and I am happy to meet you.", level: "Trình độ A1 - Cơ bản", difficulty: -2.5 },
-    { id: 1002, text: "Where are you from and what is your favorite food?", level: "Trình độ A1 - Giao tiếp", difficulty: -2.4 },
-    { id: 1003, text: "I live in a peaceful town with my family.", level: "Trình độ A1 - Đời sống", difficulty: -2.3 },
-    { id: 1004, text: "What time do you usually wake up in the morning?", level: "Trình độ A1 - Thói quen", difficulty: -2.2 },
-    { id: 1005, text: "My mother is a doctor and my father is a teacher.", level: "Trình độ A1 - Gia đình", difficulty: -2.1 },
-    { id: 1006, text: "Can you please tell me how to get to the nearest bus stop?", level: "Trình độ A1 - Hỏi đường", difficulty: -2.0 },
-    { id: 1007, text: "I like listening to music when I have free time.", level: "Trình độ A1 - Sở thích", difficulty: -1.9 },
-    { id: 1008, text: "How much does this pair of shoes cost?", level: "Trình độ A1 - Mua sắm", difficulty: -1.8 },
-    { id: 1009, text: "Today the weather is very nice and warm.", level: "Trình độ A1 - Thời tiết", difficulty: -1.7 },
-    { id: 1010, text: "Would you like a cup of hot tea or coffee?", level: "Trình độ A1 - Giao tiếp", difficulty: -1.6 },
-    { id: 1011, text: "I have two dogs and a small white cat at home.", level: "Trình độ A1 - Thú cưng", difficulty: -1.5 },
-    { id: 1012, text: "My favorite school subject is English because it is useful.", level: "Trình độ A1 - Học tập", difficulty: -1.4 },
-    { id: 1013, text: "What are your plans for this coming weekend?", level: "Trình độ A1 - Cuối tuần", difficulty: -1.3 },
-    { id: 1014, text: "Excuse me, where is the main library located?", level: "Trình độ A1 - Hỏi đường", difficulty: -1.2 },
-    { id: 1015, text: "We should eat fresh fruits to stay healthy.", level: "Trình độ A1 - Sức khỏe", difficulty: -1.1 },
-    { id: 1016, text: "She enjoys reading books before going to sleep.", level: "Trình độ A1 - Sở thích", difficulty: -1.0 },
-    { id: 1017, text: "Do you enjoy playing sports like football or tennis?", level: "Trình độ A1 - Thể thao", difficulty: -0.9 },
-    { id: 1018, text: "I usually go to school by bicycle every morning.", level: "Trình độ A1 - Đi lại", difficulty: -0.8 },
-    { id: 1019, text: "Please turn off the lights when you leave the room.", level: "Trình độ A1 - Đời sống", difficulty: -0.7 },
-    { id: 1020, text: "Learning new words every day is a great habit.", level: "Trình độ A1 - Học tập", difficulty: -0.6 }
-  ],
-  "A2": [
-    { id: 2001, text: "I am planning to visit my grandparents during the next vacation.", level: "Trình độ A2 - Du lịch", difficulty: -0.5 },
-    { id: 2002, text: "Could you please speak a little slower so I can understand better?", level: "Trình độ A2 - Giao tiếp", difficulty: -0.4 },
-    { id: 2003, text: "Doing outdoor exercise is good for both your physical and mental health.", level: "Trình độ A2 - Sức khỏe", difficulty: -0.3 },
-    { id: 2004, text: "In my opinion, learning English online gives students more flexibility.", level: "Trình độ A2 - Ý kiến", difficulty: -0.2 },
-    { id: 2005, text: "Many students enjoy joining social clubs to make new friends.", level: "Trình độ A2 - Trường học", difficulty: -0.1 },
-    { id: 2006, text: "Environmental pollution is a serious problem in modern cities.", level: "Trình độ A2 - Môi trường", difficulty: 0.0 },
-    { id: 2007, text: "We decided to stay home because it was raining heavily outside.", level: "Trình độ A2 - Giao tiếp", difficulty: 0.1 },
-    { id: 2008, text: "Technology has changed the way people communicate with each other.", level: "Trình độ A2 - Công nghệ", difficulty: 0.2 },
-    { id: 2009, text: "What is the most memorable experience you have ever had?", level: "Trình độ A2 - Kỷ niệm", difficulty: 0.3 },
-    { id: 2010, text: "Recycling plastic waste helps protect marine life and nature.", level: "Trình độ A2 - Môi trường", difficulty: 0.4 },
-    { id: 2011, text: "He has been practicing speaking English for over two years.", level: "Trình độ A2 - Học tập", difficulty: 0.5 },
-    { id: 2012, text: "Public transport is much cheaper and more convenient than private cars.", level: "Trình độ A2 - Đi lại", difficulty: 0.6 },
-    { id: 2013, text: "Volunteering is a great way to support poor people in your city.", level: "Trình độ A2 - Xã hội", difficulty: 0.7 },
-    { id: 2014, text: "She hopes to improve her pronunciation skills by using AI software.", level: "Trình độ A2 - Phát âm", difficulty: 0.8 },
-    { id: 2015, text: "Eating balanced meals regularly prevents many common diseases.", level: "Trình độ A2 - Sức khỏe", difficulty: 0.9 },
-    { id: 2016, text: "Our class is going on a field trip to the national museum next week.", level: "Trình độ A2 - Dã ngoại", difficulty: 0.95 },
-    { id: 2017, text: "Learning a new language opens up wonderful opportunities for travel.", level: "Trình độ A2 - Ngoại ngữ", difficulty: 0.98 },
-    { id: 2018, text: "They spent the whole afternoon playing board games together at home.", level: "Trình độ A2 - Giải trí", difficulty: 1.0 }
-  ],
-  "B1": [
-    { id: 3001, text: "Developing good critical thinking skills is essential for student success.", level: "Trình độ B1 - Kỹ năng", difficulty: 1.0 },
-    { id: 3002, text: "Renewable energy sources like solar and wind power are sustainable solutions.", level: "Trình độ B1 - Môi trường", difficulty: 1.1 },
-    { id: 3003, text: "Social media can have both positive and negative impacts on teenagers.", level: "Trình độ B1 - Xã hội", difficulty: 1.2 },
-    { id: 3004, text: "Participating in group discussions helps improve confidence and teamwork.", level: "Trình độ B1 - Kỹ năng", difficulty: 1.3 },
-    { id: 3005, text: "Cultural diversity makes our global society much richer and more vibrant.", level: "Trình độ B1 - Văn hóa", difficulty: 1.4 },
-    { id: 3006, text: "Independent learning encourages students to explore topics deeply.", level: "Trình độ B1 - Giáo dục", difficulty: 1.5 },
-    { id: 3007, text: "Managing time effectively reduces academic pressure during examination periods.", level: "Trình độ B1 - Học tập", difficulty: 1.6 },
-    { id: 3008, text: "Global warming poses significant threats to coastal cities worldwide.", level: "Trình độ B1 - Khí hậu", difficulty: 1.7 },
-    { id: 3009, text: "Career guidance programs help young people choose suitable career paths.", level: "Trình độ B1 - Hướng nghiệp", difficulty: 1.8 },
-    { id: 3010, text: "Preserving historical monuments fosters national pride among citizens.", level: "Trình độ B1 - Di sản", difficulty: 1.9 },
-    { id: 3011, text: "Online learning platforms provide flexible study schedules for high school students.", level: "Trình độ B1 - Học online", difficulty: 1.92 },
-    { id: 3012, text: "Modern technology has transformed our daily communication habits completely.", level: "Trình độ B1 - Công nghệ", difficulty: 1.95 },
-    { id: 3013, text: "Building a healthy routine requires discipline and clear daily objectives.", level: "Trình độ B1 - Thói quen", difficulty: 1.98 },
-    { id: 3014, text: "Team sports teach students valuable lessons about collaboration and leadership.", level: "Trình độ B1 - Thể thao", difficulty: 2.0 },
-    { id: 3015, text: "Understanding different perspectives is crucial for resolving interpersonal conflicts.", level: "Trình độ B1 - Giao tiếp", difficulty: 2.05 }
-  ],
-  "B2": [
-    { id: 4001, text: "Artificial intelligence is revolutionizing communication, healthcare, and finance.", level: "Trình độ B2 - Công nghệ", difficulty: 2.0 },
-    { id: 4002, text: "Globalization promotes economic integration but challenges local cultural identities.", level: "Trình độ B2 - Kinh tế", difficulty: 2.1 },
-    { id: 4003, text: "Sustainable development models aim to balance growth with environmental protection.", level: "Trình độ B2 - Phát triển", difficulty: 2.2 },
-    { id: 4004, text: "Automation increases productivity while introducing new challenges to the job market.", level: "Trình độ B2 - Việc làm", difficulty: 2.3 },
-    { id: 4005, text: "Lifelong learning is crucial for professionals adapting to rapid technological shifts.", level: "Trình độ B2 - Học tập", difficulty: 2.4 },
-    { id: 4006, text: "Effective intercultural communication minimizes prejudices in international teams.", level: "Trình độ B2 - Giao tiếp", difficulty: 2.5 },
-    { id: 4007, text: "Digital transformation enables institutions to deliver seamless remote services.", level: "Trình độ B2 - Chuyển đổi số", difficulty: 2.6 },
-    { id: 4008, text: "Promoting mental health awareness in education reduces student burnout.", level: "Trình độ B2 - Tâm lý", difficulty: 2.7 },
-    { id: 4009, text: "Macroeconomic stability encourages foreign investments and fosters long-term prosperity.", level: "Trình độ B2 - Tài chính", difficulty: 2.72 },
-    { id: 4010, text: "Biotechnology research plays a vital role in discovering innovative medical treatments.", level: "Trình độ B2 - Y học", difficulty: 2.75 },
-    { id: 4011, text: "Environmental conservation demands immediate collective efforts from communities globally.", level: "Trình độ B2 - Khí hậu", difficulty: 2.78 },
-    { id: 4012, text: "Ethical considerations must guide the rapid implementation of automated decision systems.", level: "Trình độ B2 - Đạo đức AI", difficulty: 2.8 },
-    { id: 4013, text: "Space exploration expands our deep understanding of the cosmos and technological boundaries.", level: "Trình độ B2 - Vũ trụ", difficulty: 2.82 },
-    { id: 4014, text: "Urbanization drives architectural innovation while putting pressure on municipal infrastructure.", level: "Trình độ B2 - Đô thị", difficulty: 2.85 },
-    { id: 4015, text: "Fostering creative problem-solving skills empowers youth to navigate complex future challenges.", level: "Trình độ B2 - Tương lai", difficulty: 2.88 }
-  ],
-  "C1": [
-    { id: 5001, text: "Addressing global climate change requires unprecedented international diplomatic cooperation.", level: "Trình độ C1 - Ngoại giao", difficulty: 2.8 },
-    { id: 5002, text: "Generative artificial intelligence models synthesize complex unstructured data efficiently.", level: "Trình độ C1 - Khoa học AI", difficulty: 2.9 },
-    { id: 5003, text: "Interdisciplinary research yields innovative breakthroughs for sustainable agriculture.", level: "Trình độ C1 - Nghiên cứu", difficulty: 3.0 },
-    { id: 5004, text: "Implementing rigorous macroeconomic policies stabilizes currency fluctuations effectively.", level: "Trình độ C1 - Tài chính", difficulty: 3.1 },
-    { id: 5005, text: "Biotechnology advancements offer profound solutions for hereditary medical conditions.", level: "Trình độ C1 - Y học", difficulty: 3.2 },
-    { id: 5006, text: "Quantum computing paradigms promise to solve previously intractable computational problems.", level: "Trình độ C1 - Lượng tử", difficulty: 3.22 },
-    { id: 5007, text: "Multilateral international agreements establish governance frameworks for planetary ecosystem preservation.", level: "Trình độ C1 - Thỏa thuận", difficulty: 3.24 },
-    { id: 5008, text: "Epistemological inquiry into artificial cognitive architectures redefines our understanding of intelligence.", level: "Trình độ C1 - Triết học AI", difficulty: 3.26 },
-    { id: 5009, text: "Socioeconomic disparity mitigation requires comprehensive fiscal reforms and educational equity initiatives.", level: "Trình độ C1 - Xã hội", difficulty: 3.28 },
-    { id: 5010, text: "Neuroplasticity mechanisms underlie the extraordinary cognitive adaptability demonstrated throughout human adulthood.", level: "Trình độ C1 - Não bộ", difficulty: 3.3 },
-    { id: 5011, text: "Sustainable architectural design integrates passive solar engineering and carbon-neutral construction materials.", level: "Trình độ C1 - Kiến trúc", difficulty: 3.32 },
-    { id: 5012, text: "Algorithmic transparency in financial markets prevents systemic risk and guarantees equitable trading.", level: "Trình độ C1 - Tài chính", difficulty: 3.34 },
-    { id: 5013, text: "Linguistic diversity preservation safeguards irreplaceable cultural heritage and indigenous ecological wisdom.", level: "Trình độ C1 - Ngôn ngữ", difficulty: 3.35 },
-    { id: 5014, text: "Autonomous navigational systems leverage sensor fusion and deep neural networks for real-time decision-making.", level: "Trình độ C1 - Tự hành", difficulty: 3.38 },
-    { id: 5015, text: "Diplomatic conflict resolution demands nuanced intercultural negotiation and mutual strategic concessions.", level: "Trình độ C1 - Hòa bình", difficulty: 3.4 }
-  ]
-};
+const SENTENCES_BY_GRADE = EXTENDED_PRONUNCIATION_SENTENCES;
 
 export default function PronunciationAssessor({ selectedGrade, keys }) {
   const [currentSentenceIndex, setCurrentSentenceIndex] = useState(0);
@@ -338,9 +126,15 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
   const sentences = useMemo(() => [...aiSentences, ...basePool], [aiSentences, basePool]);
   const currentSentence = sentences[currentSentenceIndex] || sentences[0] || { text: "Welcome to AI English Mentor.", level: "Default" };
 
-  // Reset khi đổi khối lớp
+  // Tự động random câu hỏi khi vào trang hoặc đổi khối lớp
   useEffect(() => {
-    setCurrentSentenceIndex(0);
+    const bank = SENTENCES_BY_GRADE[selectedGrade] || SENTENCES_BY_GRADE["12"] || [];
+    if (bank.length > 0) {
+      const randIdx = Math.floor(Math.random() * bank.length);
+      setCurrentSentenceIndex(randIdx);
+    } else {
+      setCurrentSentenceIndex(0);
+    }
     setAiSentences([]);
     setAssessmentResult(null);
     setTheta(0.0);
