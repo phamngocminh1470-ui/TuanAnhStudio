@@ -63,7 +63,35 @@ def safe_save(doc, filename):
         doc.save(alt_path)
         print(f"[OK] Do file đang mở trong Word, đã lưu bản cập nhật tại: {alt_path}")
 
-def add_p(doc, text="", font_size=14, bold=False, italic=False, align=WD_ALIGN_PARAGRAPH.LEFT, space_before=0, space_after=4, line_spacing=1.15):
+def add_footer_page_number(doc):
+    for section in doc.sections:
+        section.different_first_page_header_footer = True
+        footer = section.footer
+        p = footer.paragraphs[0] if footer.paragraphs else footer.add_paragraph()
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p.text = ""
+        
+        r = p.add_run()
+        r.font.name = 'Times New Roman'
+        r.font.size = Pt(11)
+        r.font.color.rgb = RGBColor(0, 0, 0)
+        
+        fldChar1 = OxmlElement('w:fldChar')
+        fldChar1.set(qn('w:fldCharType'), 'begin')
+        instrText = OxmlElement('w:instrText')
+        instrText.set(qn('xml:space'), 'preserve')
+        instrText.text = 'PAGE'
+        fldChar2 = OxmlElement('w:fldChar')
+        fldChar2.set(qn('w:fldCharType'), 'separate')
+        fldChar3 = OxmlElement('w:fldChar')
+        fldChar3.set(qn('w:fldCharType'), 'end')
+        
+        r._r.append(fldChar1)
+        r._r.append(instrText)
+        r._r.append(fldChar2)
+        r._r.append(fldChar3)
+
+def add_p(doc, text="", font_size=14, bold=False, italic=False, align=WD_ALIGN_PARAGRAPH.JUSTIFY, space_before=0, space_after=4, line_spacing=1.15):
     p = doc.add_paragraph()
     p.alignment = align
     p.paragraph_format.space_before = Pt(space_before)
@@ -79,13 +107,13 @@ def add_p(doc, text="", font_size=14, bold=False, italic=False, align=WD_ALIGN_P
     return p
 
 def add_heading_1(doc, text):
-    return add_p(doc, text, font_size=14, bold=True, space_before=12, space_after=4)
+    return add_p(doc, text, font_size=14, bold=True, align=WD_ALIGN_PARAGRAPH.LEFT, space_before=14, space_after=4)
 
 def add_heading_2(doc, text):
-    return add_p(doc, text, font_size=13.5, bold=True, italic=True, space_before=8, space_after=3)
+    return add_p(doc, text, font_size=13.5, bold=True, italic=True, align=WD_ALIGN_PARAGRAPH.LEFT, space_before=8, space_after=3)
 
 def add_heading_3(doc, text):
-    return add_p(doc, text, font_size=13, bold=True, space_before=6, space_after=2)
+    return add_p(doc, text, font_size=13, bold=True, align=WD_ALIGN_PARAGRAPH.LEFT, space_before=6, space_after=2)
 
 def add_run_to_p(p, text, font_size=14, bold=False, italic=False):
     run = p.add_run(text)
@@ -102,8 +130,9 @@ def add_run_to_p(p, text, font_size=14, bold=False, italic=False):
 def generate_main_report():
     doc = docx.Document()
     apply_page_setup(doc)
+    add_footer_page_number(doc)
 
-    # TRANG BÌA (Chuẩn mẫu Sở GD&ĐT, bảo đảm vô danh trường/thí sinh)
+    # TRANG 1: TRANG BÌA (Chuẩn mẫu Sở GD&ĐT, bảo đảm vô danh trường/thí sinh)
     add_p(doc, "BỘ GIÁO DỤC VÀ ĐÀO TẠO - SỞ GIÁO DỤC VÀ ĐÀO TẠO", font_size=13, bold=True, align=WD_ALIGN_PARAGRAPH.CENTER, space_after=2)
     add_p(doc, "CUỘC THI NGHIÊN CỨU KHOA HỌC KỸ THUẬT HỌC SINH TRUNG HỌC", font_size=13, bold=True, align=WD_ALIGN_PARAGRAPH.CENTER, space_after=18)
     
@@ -120,7 +149,67 @@ def generate_main_report():
     
     doc.add_page_break()
 
-    # TRANG TÓM TẮT DỰ ÁN (BẮT BUỘC THEO TRANG 6 VĂN BẢN SỞ)
+    # TRANG 2: MỤC LỤC BÁO CÁO
+    add_p(doc, "MỤC LỤC", font_size=16, bold=True, align=WD_ALIGN_PARAGRAPH.CENTER, space_before=6, space_after=14)
+    
+    toc_table = doc.add_table(rows=18, cols=2)
+    toc_table.alignment = WD_TABLE_ALIGNMENT.CENTER
+    set_table_borders(toc_table, color="D0D0D0", sz="2")
+
+    # Header Mục lục
+    h_cell_0 = toc_table.rows[0].cells[0]
+    h_cell_1 = toc_table.rows[0].cells[1]
+    set_cell_margins(h_cell_0, top=100, bottom=100, left=120, right=120)
+    set_cell_margins(h_cell_1, top=100, bottom=100, left=120, right=120)
+    set_cell_background(h_cell_0, "F0F0F0")
+    set_cell_background(h_cell_1, "F0F0F0")
+    
+    p0 = h_cell_0.paragraphs[0]
+    p0.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    add_run_to_p(p0, "Nội dung đề mục", font_size=13, bold=True)
+    
+    p1 = h_cell_1.paragraphs[0]
+    p1.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    add_run_to_p(p1, "Trang", font_size=13, bold=True)
+
+    toc_items = [
+        ("TÓM TẮT DỰ ÁN NGHIÊN CỨU", "Trang 3", True, False),
+        ("I. LÝ DO CHỌN DỰ ÁN", "Trang 4", True, False),
+        ("II. MỤC ĐÍCH NGHIÊN CỨU, CÂU HỎI & GIẢ THUYẾT KHOA HỌC", "Trang 5", True, False),
+        ("   1. Mục đích nghiên cứu", "Trang 5", False, True),
+        ("   2. Câu hỏi nghiên cứu (Research Questions)", "Trang 5", False, True),
+        ("   3. Giả thuyết khoa học (Scientific Hypotheses)", "Trang 5", False, True),
+        ("III. THIẾT KẾ VÀ PHƯƠNG PHÁP NGHIÊN CỨU", "Trang 6", True, False),
+        ("   1. Phương pháp Kiểm tra Thích ứng Thông minh (Adaptive Testing)", "Trang 6", False, True),
+        ("   2. Phương pháp Tối ưu Ghi nhớ Từ vựng (Spaced Repetition)", "Trang 6", False, True),
+        ("   3. Kiến trúc Công nghệ AI Đa Tầng & Chế độ Offline Fallback", "Trang 7", False, True),
+        ("   4. Nhận diện rủi ro và giải pháp an toàn dữ liệu", "Trang 7", False, True),
+        ("IV. TIẾN HÀNH NGHIÊN CỨU VÀ KẾT QUẢ THỰC NGHIỆM", "Trang 8", True, False),
+        ("   1. Quá trình thực nghiệm 120 học sinh trong 8 tuần", "Trang 8", False, True),
+        ("   2. Bảng số liệu đối chứng và kết quả tăng trưởng điểm số", "Trang 9", False, True),
+        ("   3. Đánh giá độ chuẩn xác phát âm IPA và phản hồi người học", "Trang 10", False, True),
+        ("V. KẾT LUẬN VÀ HƯỚNG PHÁT TRIỂN", "Trang 11", True, False),
+        ("VI. TÀI LIỆU THAM KHẢO", "Trang 13", True, False)
+    ]
+
+    for idx, (title, page_str, is_bold, is_italic) in enumerate(toc_items, start=1):
+        row = toc_table.rows[idx]
+        c0 = row.cells[0]
+        c1 = row.cells[1]
+        set_cell_margins(c0, top=60, bottom=60, left=120, right=120)
+        set_cell_margins(c1, top=60, bottom=60, left=120, right=120)
+        
+        p_title = c0.paragraphs[0]
+        p_title.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        add_run_to_p(p_title, title, font_size=12.5, bold=is_bold, italic=is_italic)
+        
+        p_page = c1.paragraphs[0]
+        p_page.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        add_run_to_p(p_page, page_str, font_size=12, bold=is_bold)
+
+    doc.add_page_break()
+
+    # TRANG 3: TRANG TÓM TẮT DỰ ÁN (BẮT BUỘC THEO TRANG 6 VĂN BẢN SỞ)
     add_p(doc, "TÓM TẮT DỰ ÁN NGHIÊN CỨU", font_size=15, bold=True, align=WD_ALIGN_PARAGRAPH.CENTER, space_before=6, space_after=14)
     
     p = add_p(doc, "1. Tính mới của dự án (Novelty): ", font_size=14, bold=True, space_after=3)
@@ -146,7 +235,7 @@ def generate_main_report():
     add_p(doc, "1. Phương pháp luyện đề tĩnh truyền thống (One-size-fits-all): Mọi học sinh với trình độ chênh lệch đều phải giải cùng một bộ đề 50 câu cố định. Học sinh giỏi cảm thấy tẻ nhạt với câu dễ, trong khi học sinh yếu nhanh chóng nản lòng khi gặp các câu hỏi phân hóa quá sức.", space_before=2)
     add_p(doc, "2. Thiếu môi trường phản hồi phát âm chuẩn xác: Việc phát âm sai phụ âm cuối (/s/, /t/, /d/), sai trọng âm và nuốt âm diễn ra phổ biến nhưng giáo viên trên lớp không thể chỉnh sửa riêng cho từng học sinh trong thời lượng 45 phút tiết học.", space_before=2)
     add_p(doc, "3. Chi phí học gia sư 1:1 quá cao: Đa số học sinh ở vùng nông thôn, gia đình có hoàn cảnh khó khăn không đủ điều kiện tài chính để theo học các trung tâm ngoại ngữ cao cấp hoặc thuê gia sư riêng.", space_before=2)
-    add_p(doc, "Xuất phát từ thực tế đó, nhóm tác giả đã nghiên cứu và phát triển 'Hệ thống gia sư AI thích ứng và đo lường năng lực học tiếng Anh theo mô hình toán học IRT 2PL kết hợp SuperMemo-2' nhằm tạo ra một giải pháp công nghệ giáo dục toàn diện, thông minh, hiệu quả cao và hoàn toàn miễn phí cho cộng đồng học sinh.", space_before=4)
+    add_p(doc, "Xuất phát từ thực tế đó, nhóm tác giả đã nghiên cứu và phát triển 'Hệ thống gia sư AI thích ứng và hỗ trợ luyện thi tiếng Anh thông minh kết hợp công nghệ chấm phát âm và ghi nhớ dài hạn' nhằm tạo ra một giải pháp công nghệ giáo dục toàn diện, thông minh, hiệu quả cao và hoàn toàn miễn phí cho cộng đồng học sinh.", space_before=4)
 
     # II. MỤC ĐÍCH NGHIÊN CỨU, CÂU HỎI & GIẢ THUYẾT KHOA HỌC
     add_heading_1(doc, "II. MỤC ĐÍCH NGHIÊN CỨU, CÂU HỎI & GIẢ THUYẾT KHOA HỌC")
