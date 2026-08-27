@@ -131,13 +131,13 @@ export default function OfficialExamRepository({ onStartExam }) {
 
               <div className="flex flex-wrap items-center gap-3">
                 <a
-                  href="https://thuvienhoclieu.com/de-thi-minh-hoa-tot-nghiep-thpt-mon-tieng-anh/"
+                  href="https://thuvienhoclieu.com/"
                   target="_blank"
                   rel="noreferrer"
                   className="px-4 py-2 rounded-xl bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 text-xs font-bold border border-emerald-500/40 flex items-center gap-1.5 transition cursor-pointer"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
-                  <span>Đối Chiếu Đề Gốc thuvienhoclieu.com</span>
+                  <span>Tra Cứu Nguồn thuvienhoclieu.com</span>
                 </a>
 
                 <button
