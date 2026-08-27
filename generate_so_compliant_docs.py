@@ -53,15 +53,23 @@ def set_table_borders(table, color="B0B0B0", sz="4", val="single"):
     tblPr.append(borders)
 
 def safe_save(doc, filename):
-    output_path = os.path.join(OUTPUT_DIR, filename)
-    try:
-        doc.save(output_path)
-        print(f"[OK] Đã tạo thành công: {output_path}")
-    except PermissionError:
-        base, ext = os.path.splitext(filename)
-        alt_path = os.path.join(OUTPUT_DIR, f"{base}_MOI{ext}")
-        doc.save(alt_path)
-        print(f"[OK] Do file đang mở trong Word, đã lưu bản cập nhật tại: {alt_path}")
+    base, ext = os.path.splitext(filename)
+    candidates = [
+        os.path.join(OUTPUT_DIR, filename),
+        os.path.join(OUTPUT_DIR, f"{base}_MOI{ext}"),
+        os.path.join(OUTPUT_DIR, f"{base}_CAP_NHAT{ext}"),
+        os.path.join(OUTPUT_DIR, f"{base}_CHINH_THUC{ext}"),
+    ]
+    for path in candidates:
+        try:
+            doc.save(path)
+            print(f"[OK] Đã tạo thành công: {path}")
+            return
+        except PermissionError:
+            continue
+    alt = os.path.join(OUTPUT_DIR, f"{base}_v3{ext}")
+    doc.save(alt)
+    print(f"[OK] Đã lưu file tại: {alt}")
 
 def add_footer_page_number(doc):
     for section in doc.sections:
@@ -124,6 +132,34 @@ def add_run_to_p(p, text, font_size=14, bold=False, italic=False):
     run.font.color.rgb = RGBColor(0, 0, 0)
     return run
 
+def add_toc_entry(doc, title, page_str, bold=False, italic=False, font_size=12.5, space_before=2, space_after=3):
+    p = doc.add_paragraph()
+    p.paragraph_format.space_before = Pt(space_before)
+    p.paragraph_format.space_after = Pt(space_after)
+    p.paragraph_format.line_spacing = 1.15
+    p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    
+    # Right tab stop với đường chấm leader (6.3 inches = 9072 dxa)
+    pos_dxa = int((8.27 - 1.18 - 0.79) * 1440)
+    pPr = p._p.get_or_add_pPr()
+    tabs = parse_xml(f'<w:tabs {nsdecls("w")}><w:tab w:val="right" w:leader="dot" w:pos="{pos_dxa}"/></w:tabs>')
+    pPr.append(tabs)
+    
+    r1 = p.add_run(title)
+    r1.font.name = 'Times New Roman'
+    r1.font.size = Pt(font_size)
+    r1.font.bold = bold
+    r1.font.italic = italic
+    r1.font.color.rgb = RGBColor(0, 0, 0)
+    
+    r2 = p.add_run(f"\t{page_str}")
+    r2.font.name = 'Times New Roman'
+    r2.font.size = Pt(font_size)
+    r2.font.bold = bold
+    r2.font.italic = italic
+    r2.font.color.rgb = RGBColor(0, 0, 0)
+    return p
+
 # ════════════════════════════════════════════════════════════════════════════════
 # 1. TẠO FILE BÁO CÁO TOÀN VĂN THỰC HIỆN DỰ ÁN (DƯỚI 15 TRANG CHUẨN SỞ)
 # ════════════════════════════════════════════════════════════════════════════════
@@ -149,63 +185,34 @@ def generate_main_report():
     
     doc.add_page_break()
 
-    # TRANG 2: MỤC LỤC BÁO CÁO
-    add_p(doc, "MỤC LỤC", font_size=16, bold=True, align=WD_ALIGN_PARAGRAPH.CENTER, space_before=6, space_after=14)
-    
-    toc_table = doc.add_table(rows=18, cols=2)
-    toc_table.alignment = WD_TABLE_ALIGNMENT.CENTER
-    set_table_borders(toc_table, color="D0D0D0", sz="2")
-
-    # Header Mục lục
-    h_cell_0 = toc_table.rows[0].cells[0]
-    h_cell_1 = toc_table.rows[0].cells[1]
-    set_cell_margins(h_cell_0, top=100, bottom=100, left=120, right=120)
-    set_cell_margins(h_cell_1, top=100, bottom=100, left=120, right=120)
-    set_cell_background(h_cell_0, "F0F0F0")
-    set_cell_background(h_cell_1, "F0F0F0")
-    
-    p0 = h_cell_0.paragraphs[0]
-    p0.alignment = WD_ALIGN_PARAGRAPH.LEFT
-    add_run_to_p(p0, "Nội dung đề mục", font_size=13, bold=True)
-    
-    p1 = h_cell_1.paragraphs[0]
-    p1.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    add_run_to_p(p1, "Trang", font_size=13, bold=True)
+    # TRANG 2: MỤC LỤC BÁO CÁO (DẠNG ĐƯỜNG CHẤM DOTTED LEADER CHUẨN ĐẸP 1 TRANG)
+    add_p(doc, "MỤC LỤC", font_size=16, bold=True, align=WD_ALIGN_PARAGRAPH.CENTER, space_before=4, space_after=12)
 
     toc_items = [
-        ("TÓM TẮT DỰ ÁN NGHIÊN CỨU", "Trang 3", True, False),
-        ("I. LÝ DO CHỌN DỰ ÁN", "Trang 4", True, False),
-        ("II. MỤC ĐÍCH NGHIÊN CỨU, CÂU HỎI & GIẢ THUYẾT KHOA HỌC", "Trang 5", True, False),
-        ("   1. Mục đích nghiên cứu", "Trang 5", False, True),
-        ("   2. Câu hỏi nghiên cứu (Research Questions)", "Trang 5", False, True),
-        ("   3. Giả thuyết khoa học (Scientific Hypotheses)", "Trang 5", False, True),
-        ("III. THIẾT KẾ VÀ PHƯƠNG PHÁP NGHIÊN CỨU", "Trang 6", True, False),
-        ("   1. Phương pháp Kiểm tra Thích ứng Thông minh (Adaptive Testing)", "Trang 6", False, True),
-        ("   2. Phương pháp Tối ưu Ghi nhớ Từ vựng (Spaced Repetition)", "Trang 6", False, True),
-        ("   3. Kiến trúc Công nghệ AI Đa Tầng & Chế độ Offline Fallback", "Trang 7", False, True),
-        ("   4. Nhận diện rủi ro và giải pháp an toàn dữ liệu", "Trang 7", False, True),
-        ("IV. TIẾN HÀNH NGHIÊN CỨU VÀ KẾT QUẢ THỰC NGHIỆM", "Trang 8", True, False),
-        ("   1. Quá trình thực nghiệm 120 học sinh trong 8 tuần", "Trang 8", False, True),
-        ("   2. Bảng số liệu đối chứng và kết quả tăng trưởng điểm số", "Trang 9", False, True),
-        ("   3. Đánh giá độ chuẩn xác phát âm IPA và phản hồi người học", "Trang 10", False, True),
-        ("V. KẾT LUẬN VÀ HƯỚNG PHÁT TRIỂN", "Trang 11", True, False),
-        ("VI. TÀI LIỆU THAM KHẢO", "Trang 13", True, False)
+        ("TÓM TẮT DỰ ÁN NGHIÊN CỨU", "Trang 3", True, False, 13, 3, 3),
+        ("I. LÝ DO CHỌN DỰ ÁN", "Trang 4", True, False, 13, 3, 3),
+        ("II. MỤC ĐÍCH NGHIÊN CỨU, CÂU HỎI & GIẢ THUYẾT KHOA HỌC", "Trang 5", True, False, 13, 3, 2),
+        ("   1. Mục đích nghiên cứu", "Trang 5", False, True, 12, 1, 1),
+        ("   2. Câu hỏi nghiên cứu (Research Questions)", "Trang 5", False, True, 12, 1, 1),
+        ("   3. Giả thuyết khoa học (Scientific Hypotheses)", "Trang 5", False, True, 12, 1, 2),
+        ("III. THIẾT KẾ VÀ PHƯƠNG PHÁP NGHIÊN CỨU", "Trang 6", True, False, 13, 3, 2),
+        ("   1. Phương pháp Kiểm tra Thích ứng Thông minh (Adaptive Testing)", "Trang 6", False, True, 12, 1, 1),
+        ("   2. Phương pháp Tối ưu Ghi nhớ Từ vựng (Spaced Repetition)", "Trang 6", False, True, 12, 1, 1),
+        ("   3. Kiến trúc Công nghệ AI Đa Tầng & Chế độ Offline Fallback", "Trang 7", False, True, 12, 1, 1),
+        ("   4. Nhận diện rủi ro và giải pháp an toàn dữ liệu", "Trang 7", False, True, 12, 1, 2),
+        ("IV. TIẾN HÀNH NGHIÊN CỨU VÀ KẾT QUẢ THỰC NGHIỆM", "Trang 8", True, False, 13, 3, 2),
+        ("   1. Quá trình thực nghiệm 120 học sinh trong 8 tuần", "Trang 8", False, True, 12, 1, 1),
+        ("   2. Bảng số liệu đối chứng và kết quả tăng trưởng điểm số", "Trang 9", False, True, 12, 1, 1),
+        ("   3. Đánh giá độ chuẩn xác phát âm IPA và phản hồi người học", "Trang 10", False, True, 12, 1, 2),
+        ("V. KẾT LUẬN VÀ HƯỚNG PHÁT TRIỂN", "Trang 11", True, False, 13, 3, 2),
+        ("   1. Kết luận khoa học", "Trang 11", False, True, 12, 1, 1),
+        ("   2. Giá trị thực tiễn và khả năng nhân rộng", "Trang 11", False, True, 12, 1, 1),
+        ("   3. Hướng phát triển trong tương lai", "Trang 12", False, True, 12, 1, 2),
+        ("VI. TÀI LIỆU THAM KHẢO", "Trang 13", True, False, 13, 3, 3)
     ]
 
-    for idx, (title, page_str, is_bold, is_italic) in enumerate(toc_items, start=1):
-        row = toc_table.rows[idx]
-        c0 = row.cells[0]
-        c1 = row.cells[1]
-        set_cell_margins(c0, top=60, bottom=60, left=120, right=120)
-        set_cell_margins(c1, top=60, bottom=60, left=120, right=120)
-        
-        p_title = c0.paragraphs[0]
-        p_title.alignment = WD_ALIGN_PARAGRAPH.LEFT
-        add_run_to_p(p_title, title, font_size=12.5, bold=is_bold, italic=is_italic)
-        
-        p_page = c1.paragraphs[0]
-        p_page.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        add_run_to_p(p_page, page_str, font_size=12, bold=is_bold)
+    for title, page_str, is_bold, is_italic, fsz, sb, sa in toc_items:
+        add_toc_entry(doc, title, page_str, bold=is_bold, italic=is_italic, font_size=fsz, space_before=sb, space_after=sa)
 
     doc.add_page_break()
 
@@ -342,14 +349,7 @@ def generate_main_report():
     add_p(doc, "5. Wozniak, P. A., & Gorzelanczyk, E. J. (1994). Optimization of repetition spacing in computer-assisted learning. Acta Neurobiologiae Experimentalis, 54(1), 59-62.")
     add_p(doc, "6. Ebbinghaus, H. (1885). Memory: A Contribution to Experimental Psychology. Teachers College, Columbia University, New York.")
 
-    output_path = os.path.join(OUTPUT_DIR, "BAO_CAO_THUC_HIEN_DU_AN_KHKT.docx")
-    try:
-        doc.save(output_path)
-        print(f"[OK] Đã tạo thành công: {output_path}")
-    except PermissionError:
-        alt_path = os.path.join(OUTPUT_DIR, "BAO_CAO_THUC_HIEN_DU_AN_KHKT_MOI.docx")
-        doc.save(alt_path)
-        print(f"[OK] Do file gốc đang mở trong Word, đã lưu bản mới tại: {alt_path}")
+    safe_save(doc, "BAO_CAO_THUC_HIEN_DU_AN_KHKT.docx")
 
 # ════════════════════════════════════════════════════════════════════════════════
 # 2. TẠO FILE PHỤ LỤC 1: HƯỚNG DẪN SỬ DỤNG AI TẠO SINH (CHUẨN MẪU SỞ)
