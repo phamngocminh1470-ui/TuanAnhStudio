@@ -24,6 +24,7 @@ const WritingPractice = lazy(() => import('./components/WritingPractice'));
 const PhotoExamSolverModal = lazy(() => import('./components/PhotoExamSolverModal'));
 const OfficialExamRepository = lazy(() => import('./components/OfficialExamRepository'));
 const TeacherPortal = lazy(() => import('./components/TeacherPortal'));
+const StudentClassroom = lazy(() => import('./components/StudentClassroom'));
 
 
 import { 
@@ -272,6 +273,18 @@ function App() {
               >
                 <Zap className="w-4 h-4 text-emerald-400" />
                 <span>Luyện Đề Thích Ứng THPT</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('student-classroom')}
+                className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
+                  activeTab === 'student-classroom'
+                    ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-300 border border-cyan-500/40 font-bold shadow-lg shadow-cyan-500/10'
+                    : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
+                }`}
+              >
+                <GraduationCap className="w-4 h-4 text-cyan-400" />
+                <span>Lớp Học &amp; Bài Tập Của Tôi</span>
               </button>
 
               <button
@@ -643,6 +656,15 @@ function App() {
                 {/* TAB ADAPTIVE LISTENING */}
                 {activeTab === 'listening' && <AdaptiveListening selectedGrade={selectedLevel} />}
 
+                {/* TAB STUDENT CLASSROOM (HỌC SINH VÀO LÀM BÀI) */}
+                {activeTab === 'student-classroom' && (
+                  <StudentClassroom
+                    classes={portalClasses}
+                    setClasses={updatePortalClasses}
+                    onNavigate={(tab) => setActiveTab(tab)}
+                  />
+                )}
+
                 {/* TAB OFFICIAL EXAMS REPOSITORY */}
                 {activeTab === 'official-exams' && (
                   <OfficialExamRepository onStartExam={(tab) => setActiveTab(tab)} />
@@ -672,7 +694,13 @@ function App() {
 
                 {/* TAB TEACHER PORTAL */}
                 {activeTab === 'teacher-portal' && (
-                  <TeacherPortal keys={keys} currentUser={currentUser} />
+                  <TeacherPortal 
+                    keys={keys} 
+                    currentUser={currentUser} 
+                    classes={portalClasses} 
+                    setClasses={updatePortalClasses}
+                    onNavigate={(tab) => setActiveTab(tab)}
+                  />
                 )}
 
                 {/* TAB ADMIN PANEL */}

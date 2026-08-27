@@ -287,7 +287,7 @@ const INITIAL_CLASSES = [
   }
 ];
 
-export default function TeacherPortal({ keys, onNavigate }) {
+export default function TeacherPortal({ keys, classes: propClasses, setClasses: propSetClasses, onNavigate }) {
   // ════════════════════════════════════════════════════════════════════════════
   // 0. BẢO MẬT & KÍCH HOẠT QUYỀN GIÁO VIÊN
   // ════════════════════════════════════════════════════════════════════════════
@@ -647,10 +647,9 @@ body { font-family: 'Times New Roman', serif; font-size: 13pt; line-height: 1.35
     setTimeout(() => setCopiedKey(false), 2000);
   };
 
-  // ════════════════════════════════════════════════════════════════════════════
-  // 2. TÍNH NĂNG GIAO BÀI TẬP CỦA GIÁO VIÊN & HỌC SINH LÀM TRỰC TUYẾN
-  // ════════════════════════════════════════════════════════════════════════════
-  const [classes, setClasses] = useState(INITIAL_CLASSES);
+  const [internalClasses, setInternalClasses] = useState(INITIAL_CLASSES);
+  const classes = propClasses || internalClasses;
+  const setClasses = propSetClasses || setInternalClasses;
   const [newClassName, setNewClassName] = useState('');
   const [newClassGrade, setNewClassGrade] = useState('10');
   const [isCreatingClass, setIsCreatingClass] = useState(false);
@@ -1805,82 +1804,28 @@ Trả về định dạng JSON thuần túy:
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setIsTeacherAdminView(!isTeacherAdminView)}
-                    className={`px-3 py-2 rounded-xl text-xs font-bold transition border cursor-pointer ${
-                      isTeacherAdminView
-                        ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                        : 'bg-white/5 text-gray-400 border-white/10 hover:text-white'
-                    }`}
-                  >
-                    {isTeacherAdminView ? '👁 Chế Độ Giáo Viên' : '🎓 Chế Độ Học Sinh'}
-                  </button>
-
-                  <button
-                    onClick={() => setIsCreatingClass(!isCreatingClass)}
-                    className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center gap-2 shadow-lg shadow-emerald-500/20 cursor-pointer"
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span>{isCreatingClass ? 'Đóng Form' : '+ Tạo Lớp Học Mới'}</span>
-                  </button>
-                </div>
+                <button
+                  onClick={() => setIsCreatingClass(!isCreatingClass)}
+                  className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center gap-2 shadow-lg shadow-emerald-500/20 cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>{isCreatingClass ? 'Đóng Form' : '+ Tạo Lớp Học Mới'}</span>
+                </button>
               </div>
 
-              {/* Ô NHẬP MÃ LỚP DÀNH CHO HỌC SINH */}
-              <div className="glass p-5 rounded-2xl border border-amber-500/30 bg-gradient-to-r from-amber-950/30 via-orange-950/20 to-black/40 space-y-3">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <h3 className="font-extrabold text-sm text-amber-300 flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-amber-400" />
-                    <span>Tham Gia Lớp Học Bằng Mã (Dành Cho Học Sinh Vào Làm Bài)</span>
-                  </h3>
-                  {joinedClassCode && (
-                    <button
-                      onClick={handleLeaveClass}
-                      className="text-xs text-red-400 hover:text-red-300 underline font-bold cursor-pointer"
-                    >
-                      Rời Khỏi Lớp Này / Nhập Mã Khác
-                    </button>
-                  )}
-                </div>
-
-                {joinedClassCode ? (
-                  <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex flex-wrap items-center justify-between gap-3 text-xs text-emerald-300">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-                      <span>
-                        Bạn đang tham gia: <strong className="text-white uppercase font-mono text-sm ml-1">{joinedClassCode}</strong> ({classes.find(c => c.code === joinedClassCode)?.name || 'Lớp Học'}).
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => {
-                        const found = classes.find(c => c.code === joinedClassCode);
-                        if (found) setSelectedClassWorkspace(found);
-                      }}
-                      className="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow cursor-pointer flex items-center gap-1.5"
-                    >
-                      <span>Vào Lớp Làm Bài Ngay</span>
-                      <ChevronRight className="w-3.5 h-3.5" />
-                    </button>
+              {/* Hướng Dẫn Giáo Viên Giao Mã Cho Học Sinh */}
+              <div className="glass p-4 md:p-5 rounded-2xl border border-cyan-500/30 bg-gradient-to-r from-cyan-950/30 via-[#0a1329] to-blue-950/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shrink-0">
+                    <GraduationCap className="w-5 h-5" />
                   </div>
-                ) : (
-                  <form onSubmit={handleJoinClassByCode} className="flex flex-col sm:flex-row gap-2">
-                    <input
-                      type="text"
-                      required
-                      value={studentInputCode}
-                      onChange={(e) => setStudentInputCode(e.target.value)}
-                      placeholder="Nhập mã lớp do Thầy/Cô cung cấp (Ví dụ: ENG-10A1-26)..."
-                      className="flex-1 bg-black/60 border border-amber-500/30 rounded-xl px-4 py-2.5 text-xs text-white uppercase font-mono tracking-wider focus:outline-none focus:border-amber-400 font-bold"
-                    />
-                    <button
-                      type="submit"
-                      className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-extrabold text-xs shadow-lg shadow-orange-500/25 transition cursor-pointer shrink-0"
-                    >
-                      Xác Nhận Vào Lớp
-                    </button>
-                  </form>
-                )}
+                  <div>
+                    <h4 className="font-extrabold text-white text-sm">💡 Hướng Dẫn Cấp Mã Cho Học Sinh Vào Làm Bài:</h4>
+                    <p className="text-slate-300 mt-0.5">
+                      Thầy/Cô chỉ cần bấm <strong>[Copy]</strong> mã lớp bên dưới (ví dụ: <span className="text-amber-400 font-mono font-bold">ENG-10A1-26</span>) gửi cho học sinh. Học sinh chỉ cần vào mục <strong>"Lớp Học &amp; Bài Tập Của Tôi"</strong> ở menu bên trái để vào lớp làm bài thi trực tuyến!
+                    </p>
+                  </div>
+                </div>
               </div>
 
               {/* Form tạo lớp mới */}
