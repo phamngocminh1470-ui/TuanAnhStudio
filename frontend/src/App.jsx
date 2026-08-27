@@ -36,6 +36,14 @@ import axios from 'axios';
 
 const API_BASE = '/api';
 
+const DEFAULT_TESTER_USER = {
+  id: 'guest_user',
+  username: 'Khách Trải Nghiệm',
+  full_name: 'Thí sinh / Giám khảo KHKT',
+  role: 'admin',
+  grade: '10'
+};
+
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [selectedLevel, setSelectedLevel] = useState('10');
@@ -43,7 +51,13 @@ function App() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isPhotoSolverOpen, setIsPhotoSolverOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const savedUser = localStorage.getItem('user_session');
+      if (savedUser) return JSON.parse(savedUser);
+    } catch (e) {}
+    return DEFAULT_TESTER_USER;
+  });
   const [isAdminMode, setIsAdminMode] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
@@ -65,28 +79,29 @@ function App() {
       axios.defaults.headers.common['Authorization'] = `Bearer ${savedToken}`;
     }
 
-    // Khôi phục user session
+    // Khôi phục user session nếu có, nếu không thì dùng DEFAULT_TESTER_USER
     const savedUser = localStorage.getItem('user_session');
     if (savedUser) {
       try {
         const user = JSON.parse(savedUser);
         setCurrentUser(user);
-        // Sync khối lớp từ profile user
         if (user.grade) setSelectedLevel(user.grade);
-      } catch (e) {}
+      } catch (e) {
+        setCurrentUser(DEFAULT_TESTER_USER);
+      }
+    } else {
+      setCurrentUser(DEFAULT_TESTER_USER);
     }
 
-    // Axios interceptor: tự động xử lý 401 (token hết hạn)
+    // Axios interceptor
     const interceptor = axios.interceptors.response.use(
       res => res,
       err => {
         if (err.response?.status === 401 && localStorage.getItem('auth_token')) {
-          // Token hết hạn → logout
           localStorage.removeItem('auth_token');
           localStorage.removeItem('user_session');
           delete axios.defaults.headers.common['Authorization'];
-          setCurrentUser(null);
-          setIsAuthOpen(true);
+          setCurrentUser(DEFAULT_TESTER_USER);
         }
         return Promise.reject(err);
       }
