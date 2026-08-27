@@ -109,6 +109,20 @@ export default function GuestLandingPage({ onOpenAuth, onStartTrial, selectedGra
       ],
       mockupBg: 'from-purple-600/20 to-violet-600/10',
       tabAction: 'sm2-flashcards'
+    },
+    {
+      id: 'teacher',
+      label: '📑 Cổng Giáo Viên & Xáo Đề',
+      badge: 'Teacher Hub 4.0',
+      title: 'Tự động xáo đề thi 101-104 & Quản lý lớp học thông minh',
+      desc: 'Giáo viên chỉ cần dán 1 đề gốc, hệ thống tự động đảo ngẫu nhiên câu hỏi và đáp án để tạo ra 2, 4, 6 hoặc 8 mã đề riêng biệt kèm Bảng ma trận đáp án tổng hợp đối chiếu tức thì.',
+      features: [
+        'Xáo đề thi trắc nghiệm tạo 4 mã đề (101, 102, 103, 104) trong 1 giây',
+        'Tạo mã lớp học (Class Code) để học sinh tự đăng ký và nộp bài',
+        'Tạo thử thách từ vựng tuần theo Topic kết hợp AI chấm điểm ngữ pháp'
+      ],
+      mockupBg: 'from-amber-600/20 to-orange-600/10',
+      tabAction: 'teacher-portal'
     }
   ];
 

@@ -146,6 +146,20 @@ export default function MegaNavbar({
                   </button>
                 </div>
               ))}
+
+              {/* Nút Cổng Giáo Viên Trực Tiếp */}
+              <button
+                onClick={() => { onNavigate('teacher-portal'); setOpenDropdown(null); }}
+                className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-200 flex items-center gap-1.5 cursor-pointer ml-1.5 ${
+                  activeTab === 'teacher-portal'
+                    ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg shadow-orange-500/25 ring-1 ring-amber-400/50'
+                    : 'bg-gradient-to-r from-amber-500/15 to-orange-500/15 hover:from-amber-500/25 hover:to-orange-500/25 text-amber-300 border border-amber-500/30 shadow-sm'
+                }`}
+              >
+                <Shuffle className="w-3.5 h-3.5 text-amber-400" />
+                <span>Cổng Giáo Viên</span>
+                <span className="px-1.5 py-0.5 text-[9px] font-black rounded-md bg-amber-500 text-slate-950 uppercase tracking-tighter">Xáo Đề</span>
+              </button>
             </nav>
           </div>
 

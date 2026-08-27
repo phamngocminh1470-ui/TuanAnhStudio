@@ -539,8 +539,8 @@ function App() {
               )
             )}
 
-            {/* CÁC TAB HỌC TẬP YÊU CẦU ĐĂNG NHẬP / ĐĂNG KÝ */}
-            {!currentUser && activeTab !== 'dashboard' && activeTab !== 'hub' && activeTab !== 'guide' ? (
+            {/* CÁC TAB HỌC TẬP YÊU CẦU ĐĂNG NHẬP / ĐĂNG KÝ (Ngoại trừ Dashboard, Hướng dẫn & Cổng Giáo Viên) */}
+            {!currentUser && activeTab !== 'dashboard' && activeTab !== 'hub' && activeTab !== 'guide' && activeTab !== 'teacher-portal' ? (
               <div className="flex-1 flex flex-col items-center justify-center py-16 px-4 max-w-lg mx-auto text-center space-y-6 animate-fade-in">
                 <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-500 flex items-center justify-center text-white shadow-2xl shadow-indigo-500/30 mx-auto animate-bounce-soft">
                   <GraduationCap className="w-10 h-10" />

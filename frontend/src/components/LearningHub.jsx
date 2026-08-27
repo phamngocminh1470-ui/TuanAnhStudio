@@ -4,7 +4,7 @@ import {
   ChevronRight, Clock, Award, Compass, 
   BrainCircuit, FileText, CheckCircle2, Flame, ArrowRight,
   Target, GraduationCap, Layers, Bot, Mic, PenLine, Database,
-  Download, Camera, Eye, Lock, RefreshCw, BarChart3, Star, Check
+  Download, Camera, Eye, Lock, RefreshCw, BarChart3, Star, Check, Shuffle
 } from 'lucide-react';
 
 export default function LearningHub({
@@ -120,6 +120,19 @@ export default function LearningHub({
           action: () => onNavigate('chat'),
           icon: Bot,
           bgGradient: 'from-[#261d08] via-[#1a1305] to-[#0d0902]',
+          borderColor: 'border-amber-500/30 hover:border-amber-400',
+          iconColor: 'text-amber-400 bg-amber-500/20 shadow-amber-500/20'
+        },
+        {
+          id: 'teacher-hub-card',
+          title: 'Cổng Giáo Viên • Xáo Đề 101-104 & Quản Lý Lớp',
+          desc: 'Tự động đảo câu hỏi và đáp án từ đề gốc thành 4-8 mã đề kèm bảng ma trận đáp án, quản lý nhóm lớp và thử thách từ vựng tuần.',
+          badge: 'Dành Cho Giáo Viên',
+          badgeColor: 'text-amber-400 bg-amber-500/15 border-amber-500/30',
+          meta: 'Xáo 2-8 Mã đề • Quản lý lớp',
+          action: () => onNavigate('teacher-portal'),
+          icon: Shuffle,
+          bgGradient: 'from-[#281a0c] via-[#1c1208] to-[#0f0904]',
           borderColor: 'border-amber-500/30 hover:border-amber-400',
           iconColor: 'text-amber-400 bg-amber-500/20 shadow-amber-500/20'
         },
