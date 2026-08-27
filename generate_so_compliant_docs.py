@@ -189,26 +189,27 @@ def generate_main_report():
     add_p(doc, "MỤC LỤC", font_size=16, bold=True, align=WD_ALIGN_PARAGRAPH.CENTER, space_before=4, space_after=12)
 
     toc_items = [
-        ("TÓM TẮT DỰ ÁN NGHIÊN CỨU", "Trang 3", True, False, 13, 3, 3),
-        ("I. LÝ DO CHỌN DỰ ÁN", "Trang 4", True, False, 13, 3, 3),
-        ("II. MỤC ĐÍCH NGHIÊN CỨU, CÂU HỎI & GIẢ THUYẾT KHOA HỌC", "Trang 5", True, False, 13, 3, 2),
+        ("TÓM TẮT DỰ ÁN NGHIÊN CỨU", "Trang 3", True, False, 13, 2, 2),
+        ("I. LÝ DO CHỌN DỰ ÁN", "Trang 4", True, False, 13, 2, 2),
+        ("II. MỤC ĐÍCH NGHIÊN CỨU, CÂU HỎI & GIẢ THUYẾT KHOA HỌC", "Trang 5", True, False, 13, 2, 2),
         ("   1. Mục đích nghiên cứu", "Trang 5", False, True, 12, 1, 1),
         ("   2. Câu hỏi nghiên cứu (Research Questions)", "Trang 5", False, True, 12, 1, 1),
-        ("   3. Giả thuyết khoa học (Scientific Hypotheses)", "Trang 5", False, True, 12, 1, 2),
-        ("III. THIẾT KẾ VÀ PHƯƠNG PHÁP NGHIÊN CỨU", "Trang 6", True, False, 13, 3, 2),
+        ("   3. Giả thuyết khoa học (Scientific Hypotheses)", "Trang 5", False, True, 12, 1, 1),
+        ("III. THIẾT KẾ VÀ PHƯƠNG PHÁP NGHIÊN CỨU", "Trang 6", True, False, 13, 2, 2),
         ("   1. Phương pháp Kiểm tra Thích ứng Thông minh (Adaptive Testing)", "Trang 6", False, True, 12, 1, 1),
         ("   2. Phương pháp Tối ưu Ghi nhớ Từ vựng (Spaced Repetition)", "Trang 6", False, True, 12, 1, 1),
-        ("   3. Kiến trúc Công nghệ AI Đa Tầng & Chế độ Offline Fallback", "Trang 7", False, True, 12, 1, 1),
-        ("   4. Nhận diện rủi ro và giải pháp an toàn dữ liệu", "Trang 7", False, True, 12, 1, 2),
-        ("IV. TIẾN HÀNH NGHIÊN CỨU VÀ KẾT QUẢ THỰC NGHIỆM", "Trang 8", True, False, 13, 3, 2),
+        ("   3. Khung Không gian Chuyên biệt Dành Cho Giáo Viên & Xáo Đề Thi", "Trang 7", False, True, 12, 1, 1),
+        ("   4. Kiến trúc Công nghệ AI Đa Tầng & Chế độ Offline Fallback", "Trang 7", False, True, 12, 1, 1),
+        ("   5. Nhận diện rủi ro và giải pháp an toàn dữ liệu", "Trang 8", False, True, 12, 1, 1),
+        ("IV. TIẾN HÀNH NGHIÊN CỨU VÀ KẾT QUẢ THỰC NGHIỆM", "Trang 8", True, False, 13, 2, 2),
         ("   1. Quá trình thực nghiệm 120 học sinh trong 8 tuần", "Trang 8", False, True, 12, 1, 1),
         ("   2. Bảng số liệu đối chứng và kết quả tăng trưởng điểm số", "Trang 9", False, True, 12, 1, 1),
-        ("   3. Đánh giá độ chuẩn xác phát âm IPA và phản hồi người học", "Trang 10", False, True, 12, 1, 2),
-        ("V. KẾT LUẬN VÀ HƯỚNG PHÁT TRIỂN", "Trang 11", True, False, 13, 3, 2),
+        ("   3. Đánh giá độ chuẩn xác phát âm IPA và phản hồi người học", "Trang 10", False, True, 12, 1, 1),
+        ("V. KẾT LUẬN VÀ HƯỚNG PHÁT TRIỂN", "Trang 11", True, False, 13, 2, 2),
         ("   1. Kết luận khoa học", "Trang 11", False, True, 12, 1, 1),
         ("   2. Giá trị thực tiễn và khả năng nhân rộng", "Trang 11", False, True, 12, 1, 1),
-        ("   3. Hướng phát triển trong tương lai", "Trang 12", False, True, 12, 1, 2),
-        ("VI. TÀI LIỆU THAM KHẢO", "Trang 13", True, False, 13, 3, 3)
+        ("   3. Hướng phát triển trong tương lai", "Trang 12", False, True, 12, 1, 1),
+        ("VI. TÀI LIỆU THAM KHẢO", "Trang 13", True, False, 13, 2, 2)
     ]
 
     for title, page_str, is_bold, is_italic, fsz, sb, sa in toc_items:
@@ -276,14 +277,20 @@ def generate_main_report():
     add_p(doc, "• Xếp lịch ôn tập thông minh: Những từ vựng khó, học sinh hay phát âm sai sẽ được hệ thống xếp lịch nhắc ôn lại ngay ngày hôm sau; những từ vựng học sinh đã thuộc lòng sẽ được tự động giãn cách lịch nhắc ôn (sau 4 ngày, 7 ngày, 15 ngày, 1 tháng).")
     add_p(doc, "• Lợi ích vượt trội: Giúp từ vựng được khắc sâu vào trí nhớ dài hạn mà học sinh không cần phải mất hàng giờ học vẹt toàn bộ danh sách từ mỗi ngày.")
 
-    add_heading_2(doc, "3. Kiến trúc Công nghệ AI Đa Tầng và Khả năng vận hành độc lập (Offline Fallback):")
+    add_heading_2(doc, "3. Khung Không gian Chuyên biệt Dành Cho Giáo Viên (Teacher Hub):")
+    add_p(doc, "Nhằm phục vụ tối đa nhu cầu giảng dạy và quản lý lớp học thực tế của giáo viên phổ thông, hệ thống tích hợp phân hệ chuyên biệt với 3 tính năng đột phá:")
+    add_p(doc, "• Tính năng Xáo Đề Thi Thông Minh (Smart Exam Shuffler): Tự động phân tích đề thi trắc nghiệm gốc, đảo ngẫu nhiên thứ tự câu hỏi và đảo các phương án A, B, C, D để sinh ra 2, 4, 6 hoặc 8 mã đề riêng biệt (101, 102, 103, 104...) cùng Bảng ma trận đáp án tổng hợp đối chiếu tức thì. Giúp giáo viên tiết kiệm hơn 90% thời gian ra đề và chống gian lận hiệu quả khi kiểm tra trên lớp.")
+    add_p(doc, "• Quản lý Lớp học & Mã Tham gia (Classroom Management): Giáo viên dễ dàng tạo các lớp học theo khối (Lớp 10, 11, 12) và cấp Mã Lớp (Class Code) để học sinh tự tham gia, theo dõi điểm số trung bình và mức độ chuyên cần của cả lớp.")
+    add_p(doc, "• Thử thách Từ vựng theo Topic Hàng tuần (Weekly Challenge): Giáo viên đặt chủ đề theo tuần (Environment, AI, Heritage...); học sinh nộp 1 từ vựng mới + đặt câu hoàn chỉnh. Hệ thống AI tự động chấm điểm ngữ pháp thang 10 và gợi ý câu nâng cấp chuẩn Band 8.0+.")
+
+    add_heading_2(doc, "4. Kiến trúc Công nghệ AI Đa Tầng và Khả năng vận hành độc lập (Offline Fallback):")
     add_p(doc, "Hệ thống được thiết kế theo kiến trúc 4 tầng công nghệ tối ưu:")
     add_p(doc, "- Tầng 1 (Chấm phát âm chuyên sâu): Microsoft Azure Speech Services phân tích sóng âm thanh thực tế, bóc tách và phản hồi chi tiết từng phụ âm, nguyên âm chuẩn quốc tế IPA.")
     add_p(doc, "- Tầng 2 (Gia sư Sư phạm thông minh): Google Gemini AI đóng vai trò gia sư Socrates đối thoại 1:1, không giải hộ mà đặt câu hỏi gợi mở từng bước giúp học sinh tự tìm ra đáp án đúng.")
     add_p(doc, "- Tầng 3 (Tốc độ phản hồi cực nhanh): Tích hợp mô hình Groq Llama-3 và Whisper cho tốc độ phản hồi gần như tức thì (độ trễ dưới 0.8 giây), không giật lag.")
     add_p(doc, "- Tầng 4 (Chế độ hoạt động Offline dự phòng): Khi mất kết nối internet hoặc API ngoài gặp sự cố, hệ thống tự động chuyển sang kho 285+ câu hỏi nội bộ và thuật toán chấm điểm dự phòng, đảm bảo việc học và kiểm tra của học sinh không bao giờ bị gián đoạn.")
 
-    add_heading_2(doc, "4. Nhận diện rủi ro và giải pháp an toàn dữ liệu:")
+    add_heading_2(doc, "5. Nhận diện rủi ro và giải pháp an toàn dữ liệu:")
     add_p(doc, "- Bảo mật thông tin học sinh: Toàn bộ mật khẩu người dùng được mã hóa bảo mật theo tiêu chuẩn quốc tế, truyền tải an toàn qua giao thức bảo mật HTTPS.")
     add_p(doc, "- Kiểm soát nội dung học tập: Toàn bộ nội dung câu hỏi và hướng dẫn của AI được khóa chặt trong chương trình SGK Tiếng Anh mới (Global Success) của Bộ GD&ĐT, bảo đảm chuẩn xác về mặt sư phạm và kiến thức.")
 

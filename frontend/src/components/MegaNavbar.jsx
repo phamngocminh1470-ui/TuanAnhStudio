@@ -4,7 +4,8 @@ import {
   Bot, Trophy, BrainCircuit, Database, HelpCircle, Activity,
   ChevronDown, LogIn, User, Sparkles, BookMarked, Layers, FileText,
   Flame, Award, CheckCircle2, ShieldCheck, Settings, LogOut,
-  Menu, X, LayoutDashboard, Clock, MessageSquare, Compass, ChevronRight
+  Menu, X, LayoutDashboard, Clock, MessageSquare, Compass, ChevronRight,
+  Shuffle, Users
 } from 'lucide-react';
 
 export default function MegaNavbar({
@@ -67,12 +68,14 @@ export default function MegaNavbar({
 
   const giaSuItems = [
     { id: 'photo-solver', title: 'Chụp ảnh giải đề AI', desc: 'Tải ảnh bài tập & nhận lời giải từng bước', badge: 'MỚI', icon: Sparkles, action: () => { if (onOpenPhotoSolver) onOpenPhotoSolver(); setOpenDropdown(null); setIsMobileDrawerOpen(false); } },
+    { id: 'teacher-hub', title: 'Cổng Giáo Viên • Xáo Đề & Quản Lý', desc: 'Xáo 1 đề thành 4 mã đề (101-104), quản lý lớp & giao topic tuần', badge: 'GV • HOT', icon: Shuffle, action: () => { onNavigate('teacher-portal'); setOpenDropdown(null); setIsMobileDrawerOpen(false); } },
     { id: 'chat-ai', title: 'Hỏi bài AI - Socrates 1:1', desc: 'Gia sư AI gợi mở tư duy đàm thoại 24/7', icon: Bot, action: () => { onNavigate('chat'); setOpenDropdown(null); setIsMobileDrawerOpen(false); } },
     { id: 'writing', title: 'Chấm bài luận & Đoạn văn AI', desc: 'Dàn ý, bài mẫu chuẩn 9-10 & sửa lỗi từng câu', badge: 'MỚI', icon: PenLine, action: () => { onNavigate('writing-practice'); setOpenDropdown(null); setIsMobileDrawerOpen(false); } },
     { id: 'pronounce', title: 'Luyện phát âm chuẩn IPA', desc: 'Nhận diện sóng âm 44 âm quốc tế chuẩn xác', badge: 'AI', icon: Mic, action: () => { onNavigate('pronounce'); setOpenDropdown(null); setIsMobileDrawerOpen(false); } },
   ];
 
   const congCuItems = [
+    { id: 'teacher-hub-2', title: 'Xáo Đề Thi (101, 102, 103, 104)', desc: 'Tự động đảo câu hỏi, đảo đáp án & xuất bảng ma trận', badge: 'GV • HOT', icon: Shuffle, action: () => { onNavigate('teacher-portal'); setOpenDropdown(null); setIsMobileDrawerOpen(false); } },
     { id: 'irt-engine', title: 'Luyện đề thích ứng IRT', desc: 'Tự động chỉnh độ khó theo năng lực', icon: Zap, action: () => { onNavigate('irt-test'); setOpenDropdown(null); setIsMobileDrawerOpen(false); } },
     { id: 'sm2-vocab', title: 'Từ vựng Não bộ SM-2', desc: 'Thuật toán lặp lại ngắt quãng Spaced Repetition', icon: BrainCircuit, action: () => { onNavigate('sm2-flashcards'); setOpenDropdown(null); setIsMobileDrawerOpen(false); } },
     { id: 'reading-ai', title: 'Đọc thích ứng SGK', desc: 'Đoạn văn tự điều chỉnh theo sở thích & trình độ', icon: BookOpen, action: () => { onNavigate('reading'); setOpenDropdown(null); setIsMobileDrawerOpen(false); } },
@@ -83,6 +86,7 @@ export default function MegaNavbar({
   ];
 
   const congDongItems = [
+    { id: 'teacher-hub-3', title: 'Cổng Giáo Viên & Quản Lý Lớp', desc: 'Tạo nhóm học sinh, giao bài tập & chấm câu AI', badge: 'HOT', icon: Users, action: () => { onNavigate('teacher-portal'); setOpenDropdown(null); setIsMobileDrawerOpen(false); } },
     { id: 'guide', title: 'Hướng dẫn sử dụng', desc: 'Video & tài liệu chi tiết từng tính năng', icon: HelpCircle, action: () => { onNavigate('guide'); setOpenDropdown(null); setIsMobileDrawerOpen(false); } },
     { id: 'project', title: 'Giới thiệu Dự án KHKT', desc: 'Đề tài Nghiên cứu KHKT Quốc Gia', badge: 'KHKT', icon: GraduationCap, action: () => { onNavigate('guide'); setOpenDropdown(null); setIsMobileDrawerOpen(false); } },
     ...(currentUser && currentUser.role === 'admin' ? [

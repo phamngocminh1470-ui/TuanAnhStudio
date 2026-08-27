@@ -23,6 +23,7 @@ const VocabLibrary = lazy(() => import('./components/VocabLibrary'));
 const WritingPractice = lazy(() => import('./components/WritingPractice'));
 const PhotoExamSolverModal = lazy(() => import('./components/PhotoExamSolverModal'));
 const OfficialExamRepository = lazy(() => import('./components/OfficialExamRepository'));
+const TeacherPortal = lazy(() => import('./components/TeacherPortal'));
 
 
 import { 
@@ -632,6 +633,11 @@ function App() {
                 {/* TAB WRITING PRACTICE (AI-powered grammar & translation) */}
                 {activeTab === 'writing-practice' && (
                   <WritingPractice selectedGrade={selectedLevel} keys={keys} />
+                )}
+
+                {/* TAB TEACHER PORTAL */}
+                {activeTab === 'teacher-portal' && (
+                  <TeacherPortal keys={keys} currentUser={currentUser} />
                 )}
 
                 {/* TAB ADMIN PANEL */}
