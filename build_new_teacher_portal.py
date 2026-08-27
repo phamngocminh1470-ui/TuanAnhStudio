@@ -1,4 +1,14 @@
-import React, { useState, useEffect, useMemo } from 'react';
+# -*- coding: utf-8 -*-
+"""
+Script xây dựng mới toàn diện component TeacherPortal.jsx
+Bao gồm:
+1. Màn hình khóa bảo mật & kích hoạt giáo viên (Liên hệ Zalo: 0975711254 - Admin Tuấn Anh)
+2. Không gian quản trị lớp học riêng tư (Private Classroom Workspace: Overview, Assignments, Gradebook, Announcements, Vocab & Essay)
+3. Thử thách tuần toàn diện: Từ vựng + Đặt câu + Viết đoạn văn/Bài luận (AI chấm 4 tiêu chí THPT)
+4. Công cụ xáo đề thi 101-104 tự động từ đề của giáo viên
+"""
+
+code = """import React, { useState, useEffect, useMemo } from 'react';
 import { 
   GraduationCap, Shuffle, Users, BookOpen, Sparkles, Plus, Trash2, 
   Copy, Check, Download, FileText, CheckCircle2, AlertCircle, Award, 
@@ -278,7 +288,7 @@ export default function TeacherPortal({ keys, onNavigate }) {
     const questions = [];
 
     rawBlocks.forEach((block, index) => {
-      const lines = block.trim().split('\n').map(l => l.trim()).filter(l => l.length > 0);
+      const lines = block.trim().split('\\n').map(l => l.trim()).filter(l => l.length > 0);
       if (lines.length === 0) return;
 
       const questionLine = lines[0];
@@ -295,10 +305,10 @@ export default function TeacherPortal({ keys, onNavigate }) {
       }
 
       const options = [
-        { key: 'A', text: optionA.replace(/^[A-D][.:]\s*/i, '') },
-        { key: 'B', text: optionB.replace(/^[A-D][.:]\s*/i, '') },
-        { key: 'C', text: optionC.replace(/^[A-D][.:]\s*/i, '') },
-        { key: 'D', text: optionD.replace(/^[A-D][.:]\s*/i, '') }
+        { key: 'A', text: optionA.replace(/^[A-D][.:]\\s*/i, '') },
+        { key: 'B', text: optionB.replace(/^[A-D][.:]\\s*/i, '') },
+        { key: 'C', text: optionC.replace(/^[A-D][.:]\\s*/i, '') },
+        { key: 'D', text: optionD.replace(/^[A-D][.:]\\s*/i, '') }
       ].filter(o => o.text.trim().length > 0);
 
       questions.push({
@@ -493,15 +503,15 @@ export default function TeacherPortal({ keys, onNavigate }) {
   const handleExportGradebook = () => {
     if (!selectedClassWorkspace) return;
     const students = selectedClassWorkspace.students || [];
-    let csvContent = "data:text/csv;charset=utf-8,﻿";
-    csvContent += "STT,Họ và Tên,Email,Điểm KT 1,Điểm KT 2,Điểm Bài Luận,Điểm Trung Bình,Trạng Thái\n";
+    let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+    csvContent += "STT,Họ và Tên,Email,Điểm KT 1,Điểm KT 2,Điểm Bài Luận,Điểm Trung Bình,Trạng Thái\\n";
     students.forEach((st, idx) => {
-      csvContent += `${idx + 1},"${st.name}","${st.email || ''}",${st.score1 || 0},${st.score2 || 0},${st.essayScore || 0},${st.avg || 0},"${st.status}"\n`;
+      csvContent += `${idx + 1},"${st.name}","${st.email || ''}",${st.score1 || 0},${st.score2 || 0},${st.essayScore || 0},${st.avg || 0},"${st.status}"\\n`;
     });
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `So_Diem_${selectedClassWorkspace.name.replace(/\s+/g, '_')}.csv`);
+    link.setAttribute("download", `So_Diem_${selectedClassWorkspace.name.replace(/\\s+/g, '_')}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -662,13 +672,13 @@ Trả về định dạng JSON thuần túy:
 
   // AI Chấm Bài Viết Đoạn Văn / Bài Luận Theo 4 Tiêu Chí THPT
   const handleAIEssayCheck = async (topicId, topicPrompt) => {
-    if (!submitEssayContent.trim() || submitEssayContent.trim().split(/\s+/).length < 20) {
+    if (!submitEssayContent.trim() || submitEssayContent.trim().split(/\\s+/).length < 20) {
       alert("Vui lòng viết đoạn văn ít nhất 20 từ trước khi nộp!");
       return;
     }
     setIsEvaluatingEssay(true);
     try {
-      const wordCount = submitEssayContent.trim().split(/\s+/).length;
+      const wordCount = submitEssayContent.trim().split(/\\s+/).length;
       const prompt = `Bạn là giám khảo chấm thi Tốt nghiệp THPT môn Tiếng Anh. Hãy chấm đoạn văn sau theo 4 tiêu chí chuẩn Bộ GD&ĐT:
 Đề bài: "${topicPrompt}"
 Bài làm học sinh (${wordCount} từ): "${submitEssayContent}"
@@ -1736,7 +1746,7 @@ Trả về định dạng JSON thuần túy (không markdown):
                         <span>Phần 2: Nộp Đoạn Văn / Bài Luận Theo Topic</span>
                       </h4>
                       <span className="text-[11px] font-mono text-gray-400">
-                        {submitEssayContent.trim() ? submitEssayContent.trim().split(/\s+/).length : 0} / 150 từ
+                        {submitEssayContent.trim() ? submitEssayContent.trim().split(/\\s+/).length : 0} / 150 từ
                       </span>
                     </div>
 
@@ -1924,11 +1934,11 @@ Trả về định dạng JSON thuần túy (không markdown):
                       onClick={() => {
                         const active = shuffledExams.find(e => e.examCode === selectedExamCode);
                         if (!active) return;
-                        let text = `ĐỀ THI TIẾNG ANH - MÃ ĐỀ ${active.examCode}\n\n`;
+                        let text = `ĐỀ THI TIẾNG ANH - MÃ ĐỀ ${active.examCode}\\n\\n`;
                         active.questions.forEach(q => {
-                          text += `${q.questionText}\n`;
-                          q.options.forEach(o => text += `${o.key}. ${o.text}\n`);
-                          text += `\n`;
+                          text += `${q.questionText}\\n`;
+                          q.options.forEach(o => text += `${o.key}. ${o.text}\\n`);
+                          text += `\\n`;
                         });
                         copyToClipboard(text);
                       }}
@@ -1979,3 +1989,9 @@ Trả về định dạng JSON thuần túy (không markdown):
     </div>
   );
 }
+"""
+
+with open('frontend/src/components/TeacherPortal.jsx', 'w', encoding='utf-8') as f:
+    f.write(code)
+
+print("TeacherPortal.jsx successfully upgraded with security gate, private workspace and essay challenges!")
