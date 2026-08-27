@@ -282,6 +282,39 @@ export default function TeacherPortal({ keys, currentUser }) {
   const [newClassGrade, setNewClassGrade] = useState('10');
   const [isCreatingClass, setIsCreatingClass] = useState(false);
 
+  // Quản lý mã lớp tham gia của học sinh (Ẩn hết các lớp khác khi học sinh nhập mã)
+  const [studentInputCode, setStudentInputCode] = useState('');
+  const [joinedClassCode, setJoinedClassCode] = useState(() => localStorage.getItem('joined_class_code') || '');
+  const [isTeacherAdminView, setIsTeacherAdminView] = useState(true);
+
+  const handleJoinClassByCode = (e) => {
+    e.preventDefault();
+    const code = studentInputCode.trim().toUpperCase();
+    if (!code) return;
+    const found = classes.find(c => c.code.toUpperCase() === code);
+    if (!found) {
+      alert(`Không tìm thấy lớp học có mã "${code}". Vui lòng kiểm tra lại mã do Thầy/Cô cung cấp!`);
+      return;
+    }
+    setJoinedClassCode(code);
+    localStorage.setItem('joined_class_code', code);
+    setIsTeacherAdminView(false);
+    alert(`✓ Chúc mừng bạn đã tham gia: ${found.name}! Các lớp học khác đã được ẩn để bảo mật.`);
+  };
+
+  const handleLeaveClass = () => {
+    setJoinedClassCode('');
+    localStorage.removeItem('joined_class_code');
+    setStudentInputCode('');
+  };
+
+  // Xóa lớp học (Dành cho Giáo viên & Admin)
+  const handleDeleteClass = (classId) => {
+    if (window.confirm("Thầy/Cô có chắc chắn muốn xóa lớp học này không? Toàn bộ danh sách học sinh và dữ liệu lớp sẽ bị gỡ bỏ.")) {
+      setClasses(prev => prev.filter(c => c.id !== classId));
+    }
+  };
+
   const handleCreateClass = () => {
     if (!newClassName.trim()) return;
     const randomSuffix = Math.floor(10 + Math.random() * 90);
@@ -309,12 +342,59 @@ export default function TeacherPortal({ keys, currentUser }) {
   const [isCreatingTopic, setIsCreatingTopic] = useState(false);
 
   // Form học sinh nộp thử nghiệm
-  const [studentSubmitName, setStudentSubmitName] = useState('Học sinh thử nghiệm');
+  const [studentSubmitName, setStudentSubmitName] = useState('Học sinh');
   const [submitWord, setSubmitWord] = useState('');
   const [submitMeaning, setSubmitMeaning] = useState('');
   const [submitSentence, setSubmitSentence] = useState('');
   const [isEvaluatingSentence, setIsEvaluatingSentence] = useState(false);
   const [evalResult, setEvalResult] = useState(null);
+
+  // Xóa chủ đề Topic (Admin / Giáo viên)
+  const handleDeleteTopic = (topicId) => {
+    if (window.confirm("Thầy/Cô có chắc chắn muốn xóa chủ đề Topic này không?")) {
+      setTopics(prev => prev.filter(t => t.id !== topicId));
+    }
+  };
+
+  // Xóa bài nộp / từ vựng của học sinh (Admin / Giáo viên)
+  const handleDeleteSubmission = (topicId, submissionId) => {
+    if (window.confirm("Bạn có chắc chắn muốn xóa bài nộp từ vựng này không?")) {
+      setTopics(prev => prev.map(t => {
+        if (t.id === topicId) {
+          return { ...t, submissions: t.submissions.filter(s => s.id !== submissionId) };
+        }
+        return t;
+      }));
+    }
+  };
+
+  // Thêm từ vựng tự do (Học sinh tự viết tự thêm trước, không bắt buộc phải đặt câu ngay)
+  const handleQuickAddVocab = (topicId) => {
+    if (!submitWord.trim()) {
+      alert("Vui lòng nhập từ vựng tiếng Anh bạn muốn thêm!");
+      return;
+    }
+    const newSub = {
+      id: `sub-${Date.now()}`,
+      studentName: studentSubmitName || 'Học sinh',
+      word: submitWord.trim(),
+      meaning: submitMeaning.trim() || 'Đang cập nhật nghĩa',
+      sentence: submitSentence.trim() || `Từ vựng mới: ${submitWord.trim()}`,
+      aiScore: submitSentence.trim() ? 8.5 : 8.0,
+      aiFeedback: submitSentence.trim() ? 'Đã lưu vào sổ tay từ vựng của lớp.' : 'Đã thêm từ vựng thành công!',
+      status: 'approved'
+    };
+    setTopics(prev => prev.map(t => {
+      if (t.id === topicId) {
+        return { ...t, submissions: [newSub, ...t.submissions] };
+      }
+      return t;
+    }));
+    setSubmitWord('');
+    setSubmitMeaning('');
+    setSubmitSentence('');
+    alert("✓ Đã lưu từ vựng vào sổ tay của lớp thành công!");
+  };
 
   const handleCreateTopic = () => {
     if (!newTopicTitle.trim()) return;
@@ -335,8 +415,8 @@ export default function TeacherPortal({ keys, currentUser }) {
 
   // AI Chấm điểm câu học sinh đặt
   const handleAISentenceCheck = async (topicId) => {
-    if (!submitWord.trim() || !submitSentence.trim()) {
-      alert("Vui lòng nhập từ vựng và câu bạn đã đặt!");
+    if (!submitWord.trim()) {
+      alert("Vui lòng nhập từ vựng tiếng Anh!");
       return;
     }
 
@@ -344,16 +424,16 @@ export default function TeacherPortal({ keys, currentUser }) {
     setEvalResult(null);
 
     try {
-      // Gọi API Gemini AI để chấm ngữ pháp câu học sinh đặt
+      // Gọi API Gemini AI để chấm ngữ pháp câu học sinh đặt nếu có
       const prompt = `Bạn là giám khảo tiếng Anh chuyên nghiệp. Hãy chấm điểm và nhận xét câu tiếng Anh sau do học sinh đặt chứa từ vựng "${submitWord}":
-Câu học sinh đặt: "${submitSentence}"
+Câu học sinh đặt: "${submitSentence || submitWord}"
 Nghĩa tiếng Việt của từ: "${submitMeaning}"
 
 Trả về định dạng JSON thuần túy (không markdown):
 {
   "score": (Điểm từ 0 đến 10),
   "is_correct": (true/false),
-  "grammar_analysis": "(Phân tích ngữ pháp ngắn gọn, chỉ ra lỗi sai nếu có)",
+  "grammar_analysis": "(Phân tích ngắn gọn, chỉ ra lỗi sai nếu có)",
   "improved_sentence": "(Phiên bản câu nâng cấp chuẩn Band 8.0+)",
   "feedback": "(Lời khuyên động viên học sinh)"
 }`;
@@ -1006,33 +1086,48 @@ Trả về định dạng JSON thuần túy (không markdown):
                       Lớp {top.grade}
                     </span>
                   </div>
-                  <div className="text-[11px] text-gray-400">
-                    Đã có <strong className="text-emerald-400">{top.submissions.length} bài nộp</strong>
+                  <div className="flex items-center gap-3">
+                    <span className="text-[11px] text-gray-400">
+                      Đã có <strong className="text-emerald-400">{top.submissions.length} bài nộp</strong>
+                    </span>
+                    {/* Nút xóa Topic dành cho Admin/Giáo viên */}
+                    <button
+                      onClick={() => handleDeleteTopic(top.id)}
+                      className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition cursor-pointer border border-red-500/20"
+                      title="Xóa Topic tuần này"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </div>
 
                 <p className="text-xs text-gray-300 italic">"{top.description}"</p>
 
-                {/* Form nộp thử bài đặt câu cho học sinh */}
+                {/* Form thêm từ vựng tự do cho học sinh */}
                 <div className="bg-black/30 p-4 rounded-xl border border-indigo-500/20 space-y-3">
-                  <h4 className="font-bold text-xs text-indigo-300 flex items-center gap-1.5">
-                    <Send className="w-3.5 h-3.5" />
-                    <span>Thực Hành Nộp Từ Vựng &amp; Đặt Câu (AI Chấm Điểm Ngay)</span>
-                  </h4>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h4 className="font-bold text-xs text-indigo-300 flex items-center gap-1.5">
+                      <BookOpen className="w-3.5 h-3.5 text-amber-400" />
+                      <span>Thêm Từ Vựng Mới &amp; Đặt Câu (Tự Do &amp; Linh Hoạt)</span>
+                    </h4>
+                    <span className="text-[10px] text-gray-400">
+                      * Học sinh có thể tự thêm từ vựng trước, không bắt buộc phải đặt câu ngay
+                    </span>
+                  </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                     <input
                       type="text"
                       value={submitWord}
                       onChange={(e) => setSubmitWord(e.target.value)}
-                      placeholder="Từ vựng mới (VD: Preservation)..."
-                      className="bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none"
+                      placeholder="Từ vựng mới (VD: Biodiversity)... *"
+                      className="bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500/50"
                     />
                     <input
                       type="text"
                       value={submitMeaning}
                       onChange={(e) => setSubmitMeaning(e.target.value)}
-                      placeholder="Nghĩa tiếng Việt (VD: Sự bảo tồn)..."
+                      placeholder="Nghĩa tiếng Việt (VD: Đa dạng sinh học)..."
                       className="bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none"
                     />
                     <input
@@ -1049,19 +1144,27 @@ Trả về định dạng JSON thuần túy (không markdown):
                       type="text"
                       value={submitSentence}
                       onChange={(e) => setSubmitSentence(e.target.value)}
-                      placeholder="Nhập 1 câu tiếng Anh hoàn chỉnh có chứa từ vựng trên..."
+                      placeholder="(Tùy chọn) Nhập 1 câu tiếng Anh có chứa từ vựng trên nếu muốn AI chấm ngữ pháp..."
                       className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500/50"
                     />
                   </div>
 
-                  <div className="flex justify-end">
+                  <div className="flex flex-wrap items-center justify-end gap-2 pt-1">
+                    <button
+                      onClick={() => handleQuickAddVocab(top.id)}
+                      className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-gray-200 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer border border-white/10"
+                    >
+                      <Plus className="w-3.5 h-3.5 text-amber-400" />
+                      <span>Tự Thêm Vào Sổ Tay (Không Cần AI)</span>
+                    </button>
+
                     <button
                       onClick={() => handleAISentenceCheck(top.id)}
                       disabled={isEvaluatingSentence}
                       className="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-extrabold flex items-center gap-2 cursor-pointer disabled:opacity-50 shadow"
                     >
                       <Sparkles className={`w-3.5 h-3.5 ${isEvaluatingSentence ? 'animate-spin' : ''}`} />
-                      <span>{isEvaluatingSentence ? 'AI Đang Chấm Ngữ Pháp...' : 'Nộp Bài & AI Chấm Ngay'}</span>
+                      <span>{isEvaluatingSentence ? 'AI Đang Chấm...' : 'Nộp Bài & AI Chấm Ngữ Pháp'}</span>
                     </button>
                   </div>
                 </div>
@@ -1069,17 +1172,31 @@ Trả về định dạng JSON thuần túy (không markdown):
                 {/* Danh sách bài nộp của học sinh */}
                 {top.submissions.length > 0 && (
                   <div className="space-y-2.5 pt-2">
-                    <h5 className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
-                      Bài Đã Nộp &amp; Kết Quả Chấm AI ({top.submissions.length}):
-                    </h5>
+                    <div className="flex items-center justify-between">
+                      <h5 className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                        Sổ Tay Từ Vựng &amp; Bài Nộp ({top.submissions.length}):
+                      </h5>
+                      <span className="text-[10px] text-gray-500">Giáo viên/Admin có thể bấm 🗑 để xóa từ</span>
+                    </div>
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {top.submissions.map(sub => (
-                        <div key={sub.id} className="bg-black/40 p-3.5 rounded-xl border border-white/5 space-y-2">
+                        <div key={sub.id} className="bg-black/40 p-3.5 rounded-xl border border-white/5 space-y-2 relative group/sub">
                           <div className="flex items-center justify-between">
                             <span className="font-extrabold text-xs text-white">{sub.studentName}</span>
-                            <span className="px-2 py-0.5 rounded-full text-[11px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                              {sub.aiScore} / 10 Điểm
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className="px-2 py-0.5 rounded-full text-[11px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                                {sub.aiScore} / 10 Điểm
+                              </span>
+                              {/* Nút xóa bài nộp dành cho Admin/Giáo viên */}
+                              <button
+                                onClick={() => handleDeleteSubmission(top.id, sub.id)}
+                                className="p-1 rounded-md text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition cursor-pointer"
+                                title="Xóa từ vựng này"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
                           </div>
                           <div>
                             <span className="text-amber-400 font-bold text-xs">{sub.word}</span>
@@ -1089,7 +1206,7 @@ Trả về định dạng JSON thuần túy (không markdown):
                             "{sub.sentence}"
                           </p>
                           <p className="text-[11px] text-indigo-300 leading-relaxed">
-                            💡 <strong>AI Nhận xét:</strong> {sub.aiFeedback}
+                            💡 <strong>Ghi chú / Nhận xét:</strong> {sub.aiFeedback}
                           </p>
                         </div>
                       ))}
@@ -1103,7 +1220,7 @@ Trả về định dạng JSON thuần túy (không markdown):
       )}
 
       {/* ═══════════════════════════════════════════════════════════════════════ */}
-      {/* SECTION 3: QUẢN LÝ LỚP HỌC & MÃ THAM GIA                               */}
+      {/* SECTION 3: QUẢN LÝ LỚP HỌC & MÃ THAM GIA BẢO MẬT                       */}
       {/* ═══════════════════════════════════════════════════════════════════════ */}
       {activeSection === 'classes' && (
         <div className="space-y-6">
@@ -1111,20 +1228,85 @@ Trả về định dạng JSON thuần túy (không markdown):
             <div>
               <h2 className="text-lg font-extrabold text-white font-outfit flex items-center gap-2">
                 <Users className="w-5 h-5 text-emerald-400" />
-                <span>Danh Sách Lớp Học &amp; Quản Lý Học Sinh</span>
+                <span>Danh Sách Lớp Học &amp; Quản Lý Mã Tham Gia</span>
               </h2>
               <p className="text-xs text-gray-400 mt-0.5">
-                Giáo viên tạo lớp học và cung cấp <strong>Mã Lớp (Class Code)</strong> cho học sinh tham gia để theo dõi tiến độ và giao bài tập.
+                Giáo viên cấp <strong>Mã Lớp (Class Code)</strong> cho học sinh. Học sinh khi nhập mã sẽ <strong>chỉ thấy đúng lớp của mình và ẩn hoàn toàn các lớp khác</strong>.
               </p>
             </div>
 
-            <button
-              onClick={() => setIsCreatingClass(!isCreatingClass)}
-              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center gap-2 shadow-lg shadow-emerald-500/20 cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              <span>{isCreatingClass ? 'Đóng Form' : '+ Tạo Lớp Học Mới'}</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setIsTeacherAdminView(!isTeacherAdminView)}
+                className={`px-3 py-2 rounded-xl text-xs font-bold transition border cursor-pointer ${
+                  isTeacherAdminView
+                    ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                    : 'bg-white/5 text-gray-400 border-white/10 hover:text-white'
+                }`}
+              >
+                {isTeacherAdminView ? '👁 Chế Độ Giáo Viên (Xem Tất Cả)' : '🎓 Chế Độ Học Sinh'}
+              </button>
+
+              <button
+                onClick={() => setIsCreatingClass(!isCreatingClass)}
+                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center gap-2 shadow-lg shadow-emerald-500/20 cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                <span>{isCreatingClass ? 'Đóng Form' : '+ Tạo Lớp Học Mới'}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Ô NHẬP MÃ LỚP DÀNH CHO HỌC SINH */}
+          <div className="glass p-5 rounded-2xl border border-amber-500/30 bg-gradient-to-r from-amber-950/30 via-orange-950/20 to-black/40 space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h3 className="font-extrabold text-sm text-amber-300 flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-amber-400" />
+                <span>Tham Gia Lớp Học Bằng Mã (Dành Cho Học Sinh)</span>
+              </h3>
+              {joinedClassCode && (
+                <button
+                  onClick={handleLeaveClass}
+                  className="text-xs text-red-400 hover:text-red-300 underline font-bold cursor-pointer"
+                >
+                  Rời Khỏi Lớp Này / Nhập Mã Khác
+                </button>
+              )}
+            </div>
+
+            {joinedClassCode ? (
+              <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex flex-wrap items-center justify-between gap-3 text-xs text-emerald-300">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+                  <span>
+                    Bạn đang tham gia lớp: <strong className="text-white uppercase font-mono text-sm ml-1">{joinedClassCode}</strong> ({classes.find(c => c.code === joinedClassCode)?.name || 'Lớp Học'}). <em>Tất cả các lớp học khác đã được ẩn hoàn toàn để bảo mật.</em>
+                  </span>
+                </div>
+                <button
+                  onClick={handleLeaveClass}
+                  className="px-3 py-1 rounded-lg bg-emerald-600 text-white font-bold text-xs shadow"
+                >
+                  Đổi Lớp
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleJoinClassByCode} className="flex flex-col sm:flex-row gap-2">
+                <input
+                  type="text"
+                  required
+                  value={studentInputCode}
+                  onChange={(e) => setStudentInputCode(e.target.value)}
+                  placeholder="Nhập mã lớp do Thầy/Cô cung cấp (Ví dụ: ENG-10A1-26)..."
+                  className="flex-1 bg-black/60 border border-amber-500/30 rounded-xl px-4 py-2.5 text-xs text-white uppercase font-mono tracking-wider focus:outline-none focus:border-amber-400"
+                />
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-extrabold text-xs shadow-lg shadow-orange-500/25 transition cursor-pointer shrink-0"
+                >
+                  Xác Nhận Vào Lớp
+                </button>
+              </form>
+            )}
           </div>
 
           {/* Form tạo lớp mới */}
@@ -1172,51 +1354,67 @@ Trả về định dạng JSON thuần túy (không markdown):
             </div>
           )}
 
-          {/* Danh sách các Lớp học */}
+          {/* Danh sách các Lớp học (Đã lọc theo mã nếu là học sinh tham gia) */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {classes.map(cls => (
-              <div key={cls.id} className="glass p-5 rounded-2xl border border-white/10 space-y-4 hover:border-emerald-500/30 transition-all group">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                      Khối {cls.grade}
-                    </span>
-                    <h3 className="font-extrabold text-sm text-white mt-1.5 group-hover:text-emerald-300 transition">
-                      {cls.name}
-                    </h3>
-                  </div>
-                </div>
+            {classes
+              .filter(cls => {
+                if (isTeacherAdminView) return true;
+                if (!joinedClassCode) return true;
+                return cls.code.toUpperCase() === joinedClassCode.toUpperCase();
+              })
+              .map(cls => (
+                <div key={cls.id} className="glass p-5 rounded-2xl border border-white/10 space-y-4 hover:border-emerald-500/30 transition-all group relative">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                        Khối {cls.grade}
+                      </span>
+                      <h3 className="font-extrabold text-sm text-white mt-1.5 group-hover:text-emerald-300 transition">
+                        {cls.name}
+                      </h3>
+                    </div>
 
-                {/* Mã Lớp Tham Gia */}
-                <div className="bg-black/40 p-3 rounded-xl border border-white/5 flex items-center justify-between">
-                  <div>
-                    <div className="text-[10px] text-gray-400 uppercase font-semibold">Mã Lớp Học Sinh Tham Gia:</div>
-                    <div className="text-sm font-black font-mono text-amber-400 tracking-wider">{cls.code}</div>
+                    {/* Nút xóa lớp học (Dành cho Giáo viên & Admin) */}
+                    <button
+                      onClick={() => handleDeleteClass(cls.id)}
+                      className="p-1.5 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition cursor-pointer border border-transparent hover:border-red-500/20"
+                      title="Xóa lớp học này (Admin/Giáo viên)"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
-                  <button
-                    onClick={() => copyToClipboard(cls.code)}
-                    className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white transition cursor-pointer"
-                    title="Sao chép mã lớp gửi cho học sinh"
-                  >
-                    <Copy className="w-4 h-4" />
-                  </button>
-                </div>
 
-                <div className="grid grid-cols-3 gap-2 text-center pt-2 border-t border-white/5">
-                  <div>
-                    <div className="text-xs font-bold text-white">{cls.studentCount}</div>
-                    <div className="text-[10px] text-gray-400">Học sinh</div>
+                  {/* Mã Lớp Tham Gia */}
+                  <div className="bg-black/40 p-3 rounded-xl border border-white/5 flex items-center justify-between">
+                    <div>
+                      <div className="text-[10px] text-gray-400 uppercase font-semibold">Mã Lớp Học Sinh Tham Gia:</div>
+                      <div className="text-sm font-black font-mono text-amber-400 tracking-wider">{cls.code}</div>
+                    </div>
+                    <button
+                      onClick={() => copyToClipboard(cls.code)}
+                      className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white transition cursor-pointer flex items-center gap-1 text-xs"
+                      title="Sao chép mã lớp gửi cho học sinh"
+                    >
+                      <Copy className="w-3.5 h-3.5 text-amber-400" />
+                      <span>Copy</span>
+                    </button>
                   </div>
-                  <div>
-                    <div className="text-xs font-bold text-emerald-400">{cls.avgScore} / 10</div>
-                    <div className="text-[10px] text-gray-400">Điểm TB</div>
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold text-indigo-400">{cls.activeAssignments}</div>
-                    <div className="text-[10px] text-gray-400">Bài tập</div>
+
+                  <div className="grid grid-cols-3 gap-2 text-center pt-2 border-t border-white/5">
+                    <div>
+                      <div className="text-xs font-bold text-white">{cls.studentCount}</div>
+                      <div className="text-[10px] text-gray-400">Học sinh</div>
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-emerald-400">{cls.avgScore} / 10</div>
+                      <div className="text-[10px] text-gray-400">Điểm TB</div>
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-indigo-400">{cls.activeAssignments}</div>
+                      <div className="text-[10px] text-gray-400">Bài tập</div>
+                    </div>
                   </div>
                 </div>
-              </div>
             ))}
           </div>
         </div>
