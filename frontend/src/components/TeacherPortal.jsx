@@ -102,18 +102,49 @@ const INITIAL_CLASSES = [
 ];
 
 export default function TeacherPortal({ keys, currentUser }) {
-  const [activeSection, setActiveSection] = useState('shuffler'); // 'shuffler' | 'classes' | 'weekly-topic' | 'assignments'
+  const [activeSection, setActiveSection] = useState('shuffler'); // 'shuffler' | 'classes' | 'weekly-topic' | 'register-teacher'
+  const [isTeacherContactModalOpen, setIsTeacherContactModalOpen] = useState(false);
+
+  // Form liên hệ đăng ký giáo viên
+  const [teacherName, setTeacherName] = useState('');
+  const [teacherSchool, setTeacherSchool] = useState('');
+  const [teacherSubject, setTeacherSubject] = useState('Tiếng Anh (THPT)');
+  const [teacherPhone, setTeacherPhone] = useState('');
+  const [teacherMessage, setTeacherMessage] = useState('');
+  const [isSentTeacherContact, setIsSentTeacherContact] = useState(false);
 
   // ════════════════════════════════════════════════════════════════════════════
-  // 1. TÍNH NĂNG XÁO ĐỀ THI & SINH NHIỀU MÃ ĐỀ (MULTI-CODE EXAM SHUFFLER)
+  // 1. TÍNH NĂNG XÁO ĐỀ THI CỦA CHÍNH GIÁO VIÊN
   // ════════════════════════════════════════════════════════════════════════════
-  const [rawExamText, setRawExamText] = useState(SAMPLE_EXAM_TEXT);
+  const [rawExamText, setRawExamText] = useState('');
   const [numCodes, setNumCodes] = useState(4); // 2, 4, 6, 8 mã đề
   const [codePrefix, setCodePrefix] = useState('10'); // 101, 102, 103, 104
-  const [shuffleOptions, setShuffleOptions] = useState(true); // Có đảo phương án A,B,C,D không
+  const [shuffleOptions, setShuffleOptions] = useState(true);
   const [shuffledExams, setShuffledExams] = useState(null);
   const [selectedExamCode, setSelectedExamCode] = useState(null);
   const [copiedKey, setCopiedKey] = useState(false);
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target?.result;
+      if (typeof content === 'string') {
+        setRawExamText(content);
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const handleSendTeacherRegistration = (e) => {
+    e.preventDefault();
+    if (!teacherName || !teacherPhone) {
+      alert("Vui lòng điền Họ tên và Số điện thoại / Zalo để Ban Quản Trị liên hệ cấp tài khoản!");
+      return;
+    }
+    setIsSentTeacherContact(true);
+  };
 
   // Phân tích văn bản đề thi gốc thành mảng các Object câu hỏi
   const parseRawExam = (text) => {
@@ -431,45 +462,185 @@ Trả về định dạng JSON thuần túy (không markdown):
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex flex-wrap items-center gap-2 mt-6 pt-4 border-t border-white/10">
-          <button
-            onClick={() => setActiveSection('shuffler')}
-            className={`px-4 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center gap-2 cursor-pointer ${
-              activeSection === 'shuffler'
-                ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg shadow-orange-500/25'
-                : 'bg-white/5 hover:bg-white/10 text-gray-300 border border-white/5'
-            }`}
-          >
-            <Shuffle className="w-4 h-4" />
-            <span>Xáo Đề Thi &amp; Sinh Nhiều Mã Đề (101 - 104)</span>
-            <span className="px-1.5 py-0.5 text-[9px] font-black rounded bg-white/20 text-white uppercase">Đặc Biệt</span>
-          </button>
+        <div className="flex flex-wrap items-center justify-between gap-2 mt-6 pt-4 border-t border-white/10">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => setActiveSection('shuffler')}
+              className={`px-4 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center gap-2 cursor-pointer ${
+                activeSection === 'shuffler'
+                  ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg shadow-orange-500/25'
+                  : 'bg-white/5 hover:bg-white/10 text-gray-300 border border-white/5'
+              }`}
+            >
+              <Shuffle className="w-4 h-4" />
+              <span>Xáo Đề Thi Của Giáo Viên (101 - 104)</span>
+              <span className="px-1.5 py-0.5 text-[9px] font-black rounded bg-white/20 text-white uppercase">Đặc Biệt</span>
+            </button>
 
-          <button
-            onClick={() => setActiveSection('weekly-topic')}
-            className={`px-4 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center gap-2 cursor-pointer ${
-              activeSection === 'weekly-topic'
-                ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/25'
-                : 'bg-white/5 hover:bg-white/10 text-gray-300 border border-white/5'
-            }`}
-          >
-            <Sparkles className="w-4 h-4" />
-            <span>Thử Thách Từ Vựng &amp; Đặt Câu Hàng Tuần (AI Chấm)</span>
-          </button>
+            <button
+              onClick={() => setActiveSection('weekly-topic')}
+              className={`px-4 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center gap-2 cursor-pointer ${
+                activeSection === 'weekly-topic'
+                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/25'
+                  : 'bg-white/5 hover:bg-white/10 text-gray-300 border border-white/5'
+              }`}
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>Thử Thách Từ Vựng &amp; Đặt Câu Hàng Tuần (AI Chấm)</span>
+            </button>
 
+            <button
+              onClick={() => setActiveSection('classes')}
+              className={`px-4 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center gap-2 cursor-pointer ${
+                activeSection === 'classes'
+                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-500/25'
+                  : 'bg-white/5 hover:bg-white/10 text-gray-300 border border-white/5'
+              }`}
+            >
+              <Users className="w-4 h-4" />
+              <span>Quản Lý Lớp Học &amp; Mã Tham Gia</span>
+            </button>
+          </div>
+
+          {/* Nút Liên hệ đăng ký tài khoản Giáo viên */}
           <button
-            onClick={() => setActiveSection('classes')}
-            className={`px-4 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center gap-2 cursor-pointer ${
-              activeSection === 'classes'
-                ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-500/25'
-                : 'bg-white/5 hover:bg-white/10 text-gray-300 border border-white/5'
-            }`}
+            onClick={() => setIsTeacherContactModalOpen(true)}
+            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-black shadow-lg shadow-blue-500/25 flex items-center gap-2 transition cursor-pointer border border-cyan-400/30"
           >
-            <Users className="w-4 h-4" />
-            <span>Quản Lý Lớp Học &amp; Mã Tham Gia</span>
+            <MessageSquare className="w-4 h-4 text-cyan-200" />
+            <span>Liên Hệ Cấp Quyền &amp; Đăng Ký Tài Khoản Giáo Viên</span>
           </button>
         </div>
       </div>
+
+      {/* MODAL LIÊN HỆ ĐĂNG KÝ GIÁO VIÊN */}
+      {isTeacherContactModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
+          <div className="glass p-6 md:p-8 rounded-3xl border border-cyan-500/30 bg-[#0a1024] max-w-xl w-full space-y-6 shadow-2xl relative">
+            <div className="flex items-start justify-between pb-3 border-b border-white/10">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+                  <GraduationCap className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-extrabold text-white font-outfit">Đăng Ký &amp; Cấp Quyền Giáo Viên</h3>
+                  <p className="text-xs text-gray-400">Ban Quản Trị sẽ xác thực và cấp mã tạo lớp học riêng</p>
+                </div>
+              </div>
+              <button
+                onClick={() => { setIsTeacherContactModalOpen(false); setIsSentTeacherContact(false); }}
+                className="text-gray-400 hover:text-white p-1 rounded-lg bg-white/5 hover:bg-white/10 transition cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {isSentTeacherContact ? (
+              <div className="p-6 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-center space-y-3">
+                <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto" />
+                <h4 className="font-extrabold text-base text-white">Đã Gửi Thông Tin Đăng Ký Thành Công!</h4>
+                <p className="text-xs text-gray-300 leading-relaxed">
+                  Ban Quản Trị Hệ Thống sẽ liên hệ trực tiếp qua Zalo / Số điện thoại <strong>{teacherPhone}</strong> để gửi thông tin tài khoản và kích hoạt phân quyền Giáo viên cho Thầy/Cô trong vòng 2-4 giờ làm việc.
+                </p>
+                <div className="pt-2">
+                  <button
+                    onClick={() => { setIsTeacherContactModalOpen(false); setIsSentTeacherContact(false); }}
+                    className="px-6 py-2.5 rounded-xl bg-emerald-600 text-white font-bold text-xs shadow cursor-pointer"
+                  >
+                    Đóng Hộp Thoại
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleSendTeacherRegistration} className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[11px] text-gray-300 font-bold block mb-1">Họ và Tên Thầy / Cô *:</label>
+                    <input
+                      type="text"
+                      required
+                      value={teacherName}
+                      onChange={(e) => setTeacherName(e.target.value)}
+                      placeholder="Ví dụ: Thầy Nguyễn Văn Tuấn..."
+                      className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500/50"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] text-gray-300 font-bold block mb-1">Số Điện Thoại / Zalo *:</label>
+                    <input
+                      type="tel"
+                      required
+                      value={teacherPhone}
+                      onChange={(e) => setTeacherPhone(e.target.value)}
+                      placeholder="Ví dụ: 0912 345 678..."
+                      className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500/50"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[11px] text-gray-300 font-bold block mb-1">Trường Đang Công Tác:</label>
+                    <input
+                      type="text"
+                      value={teacherSchool}
+                      onChange={(e) => setTeacherSchool(e.target.value)}
+                      placeholder="Ví dụ: THPT Chuyên, THCS..."
+                      className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500/50"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] text-gray-300 font-bold block mb-1">Khối Lớp Giảng Dạy:</label>
+                    <select
+                      value={teacherSubject}
+                      onChange={(e) => setTeacherSubject(e.target.value)}
+                      className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+                    >
+                      <option value="Tiếng Anh THPT (Lớp 10, 11, 12)">Tiếng Anh THPT (Lớp 10, 11, 12)</option>
+                      <option value="Tiếng Anh THCS (Lớp 6, 7, 8, 9)">Tiếng Anh THCS (Lớp 6, 7, 8, 9)</option>
+                      <option value="Luyện thi Chuyên Anh &amp; HSG">Luyện thi Chuyên Anh &amp; HSG</option>
+                      <option value="Luyện thi ĐGNL HSA / TSA / IELTS">Luyện thi ĐGNL HSA / TSA / IELTS</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[11px] text-gray-300 font-bold block mb-1">Yêu Cầu / Lời Nhắn Đến BQT:</label>
+                  <textarea
+                    rows={3}
+                    value={teacherMessage}
+                    onChange={(e) => setTeacherMessage(e.target.value)}
+                    placeholder="Ví dụ: Tôi muốn tạo 3 lớp học trực tuyến cho học sinh khối 10 và xuất mã đề thi định kỳ..."
+                    className="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-cyan-500/50 resize-none"
+                  />
+                </div>
+
+                <div className="bg-cyan-500/10 p-3 rounded-xl border border-cyan-500/20 text-[11px] text-cyan-300 flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 shrink-0 text-cyan-400" />
+                  <span>Hệ thống tài khoản và tính năng Quản lý lớp học được cung cấp <strong>hoàn toàn miễn phí</strong> cho tất cả Thầy/Cô trên toàn quốc.</span>
+                </div>
+
+                <div className="flex justify-end gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsTeacherContactModalOpen(false)}
+                    className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 text-xs font-bold"
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-extrabold text-xs shadow-lg shadow-blue-500/25 flex items-center gap-2 cursor-pointer"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    <span>Gửi Thông Tin Đăng Ký</span>
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ═══════════════════════════════════════════════════════════════════════ */}
       {/* SECTION 1: TÍNH NĂNG XÁO ĐỀ THI & TẠO NHIỀU MÃ ĐỀ                       */}
@@ -480,29 +651,58 @@ Trả về định dạng JSON thuần túy (không markdown):
             {/* Cột Trái: Nhập Đề Gốc & Tùy Chọn */}
             <div className="lg:col-span-5 space-y-4">
               <div className="glass p-5 rounded-2xl border border-white/10 space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <h3 className="font-extrabold text-sm text-white flex items-center gap-2">
                     <FileText className="w-4 h-4 text-amber-400" />
-                    <span>Đề Thi Gốc / Đề Cương Cần Xáo</span>
+                    <span>Đề Thi Trắc Nghiệm Của Giáo Viên</span>
                   </h3>
-                  <button
-                    onClick={() => setRawExamText(SAMPLE_EXAM_TEXT)}
-                    className="text-[11px] text-indigo-400 hover:text-indigo-300 underline font-medium cursor-pointer"
-                  >
-                    Dán Đề Mẫu Chuẩn
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setRawExamText('')}
+                      className="text-[11px] text-gray-400 hover:text-red-400 underline font-medium cursor-pointer"
+                      title="Xóa trắng để dán đề mới"
+                    >
+                      Xóa Trắng
+                    </button>
+                    <button
+                      onClick={() => setRawExamText(SAMPLE_EXAM_TEXT)}
+                      className="text-[11px] text-amber-400 hover:text-amber-300 underline font-medium cursor-pointer"
+                    >
+                      Dán Đề Mẫu Tham Khảo
+                    </button>
+                  </div>
                 </div>
 
-                <p className="text-[11px] text-gray-400">
-                  Dán nội dung đề thi trắc nghiệm (Câu 1: ... A. ... B. ... C. ... D. ... Đáp án: A). Hệ thống sẽ tự động bóc tách và đảo câu hỏi + đảo phương án.
-                </p>
+                <div className="flex items-center gap-2 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-300">
+                  <Sparkles className="w-4 h-4 shrink-0 text-amber-400" />
+                  <span>Thầy/Cô có thể <strong>dán trực tiếp</strong> đề thi của mình vào ô bên dưới, hoặc bấm <strong>chọn tệp .txt / đề thi</strong> để tải lên.</span>
+                </div>
+
+                {/* Nút Upload tệp đề thi */}
+                <div className="flex items-center gap-2">
+                  <label className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-bold cursor-pointer border border-white/10 transition">
+                    <Download className="w-3.5 h-3.5 rotate-180 text-amber-400" />
+                    <span>Tải Lên Tệp Đề Thi (.txt)</span>
+                    <input
+                      type="file"
+                      accept=".txt,.doc,.docx"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
+                  </label>
+                  {rawExamText && (
+                    <span className="text-[11px] text-emerald-400 font-mono">
+                      ✓ Đã có {rawExamText.split('\n').length} dòng văn bản
+                    </span>
+                  )}
+                </div>
 
                 <textarea
                   value={rawExamText}
                   onChange={(e) => setRawExamText(e.target.value)}
                   rows={14}
                   className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-xs font-mono text-gray-200 focus:outline-none focus:border-amber-500/50 resize-y leading-relaxed"
-                  placeholder="Dán nội dung đề thi vào đây..."
+                  placeholder="Thầy/Cô dán đề thi trắc nghiệm của mình vào đây (Hỗ trợ định dạng: Câu 1: ... A. ... B. ... C. ... D. ... Đáp án: A)..."
                 />
 
                 {/* Tùy chọn xáo đề */}
@@ -552,7 +752,7 @@ Trả về định dạng JSON thuần túy (không markdown):
                   className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-extrabold text-xs uppercase tracking-wider transition-all shadow-lg shadow-orange-500/25 flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <Shuffle className="w-4 h-4" />
-                  <span>Xáo Đề &amp; Sinh {numCodes} Mã Đề Tức Thì</span>
+                  <span>Xáo Đề Thi Của Tôi &amp; Sinh {numCodes} Mã Đề</span>
                 </button>
               </div>
             </div>

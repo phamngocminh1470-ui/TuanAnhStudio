@@ -1216,12 +1216,14 @@ export default function OfficialExamRepository({ onStartExam }) {
           
           {/* Header - Minimalist Luxury Typography */}
           <div className="border-b border-white/10 pb-8 pt-4 space-y-6">
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="text-[11px] font-mono font-bold text-emerald-400 tracking-widest uppercase">
                 02 • KHO ĐỀ TIÊU CHUẨN ĐỘC BẢN ({COMPREHENSIVE_EXAMS_DATABASE.length} BỘ ĐỀ CHÍNH THỨC)
               </span>
               <span className="h-3 w-[1px] bg-white/20" />
-              <span className="text-xs text-slate-400 font-medium">Trích nguồn chính thức từ Sở GD&ĐT các Tỉnh Thành</span>
+              <span className="text-xs text-amber-300 font-bold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                Nguồn: Thư Viện Học Liệu (thuvienhoclieu.com)
+              </span>
             </div>
 
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -1229,8 +1231,8 @@ export default function OfficialExamRepository({ onStartExam }) {
                 <h1 className="text-4xl md:text-6xl font-black text-white tracking-tight font-outfit leading-none">
                   Đề thật, lời giải thật.
                 </h1>
-                <p className="text-sm md:text-base text-slate-400 mt-3 max-w-2xl font-normal">
-                  Kho đề thi trích nguồn chính thức từ Bộ GD&ĐT, Sở Hà Nội, Sở TP.HCM, Nghệ An, Nam Định, Đà Nẵng, Chuyên Ams, CNN và Đánh giá Năng lực kèm lời giải chi tiết 100%.
+                <p className="text-sm md:text-base text-slate-300 mt-3 max-w-3xl font-normal leading-relaxed">
+                  Toàn bộ đề thi trích nguồn chính thức từ <strong className="text-emerald-400">Thư Viện Học Liệu (thuvienhoclieu.com)</strong>: Đề minh họa Tốt nghiệp THPT của Bộ GD&ĐT, đề khảo sát Sở GD&ĐT Hà Nội, Sở TP.HCM, Nghệ An, Nam Định, đề thi tuyển sinh vào 10 và Đánh giá năng lực HSA/TSA kèm lời giải chi tiết 100%.
                 </p>
               </div>
 
@@ -1244,6 +1246,25 @@ export default function OfficialExamRepository({ onStartExam }) {
                   className="w-full pl-11 pr-4 py-3 bg-[#0d1220] border border-white/10 rounded-2xl text-xs text-white placeholder-slate-500 outline-none focus:border-emerald-500 transition"
                 />
               </div>
+            </div>
+
+            {/* Banner Cam kết nguồn tư liệu chuẩn Bộ GD&ĐT */}
+            <div className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-950/40 via-teal-950/30 to-blue-950/40 border border-emerald-500/30 text-xs text-emerald-300 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-2.5">
+                <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-400" />
+                <span>
+                  <strong>100% Đề Chuẩn Hóa:</strong> Không tự biên soạn tùy tiện — Toàn bộ đề thi được trích xuất nguyên bản từ đề minh họa THPT và tài liệu giảng dạy của <strong>thuvienhoclieu.com</strong> đầy đủ cả Cấp 2 và Cấp 3.
+                </span>
+              </div>
+              <a
+                href="https://thuvienhoclieu.com/"
+                target="_blank"
+                rel="noreferrer"
+                className="px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 text-[11px] font-bold border border-emerald-500/30 transition shrink-0 flex items-center gap-1.5 w-fit"
+              >
+                <span>thuvienhoclieu.com</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
             </div>
 
             {/* TAB SWITCHER: CẤP 3 vs CẤP 2 (RÕ RÀNG MINH BẠCH) */}
