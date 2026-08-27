@@ -45,7 +45,7 @@ export default function MegaNavbar({
     return () => { document.body.style.overflow = 'unset'; };
   }, [isMobileDrawerOpen]);
 
-  const grades = [
+  const gradeLevels = [
     { id: '10', label: 'Khối 10' },
     { id: '11', label: 'Khối 11' },
     { id: '12', label: 'Khối 12' }

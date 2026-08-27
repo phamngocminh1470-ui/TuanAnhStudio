@@ -189,13 +189,9 @@ function App() {
   };
 
   const gradeLevels = [
-    { id: '6', label: 'Lớp 6' },
-    { id: '7', label: 'Lớp 7' },
-    { id: '8', label: 'Lớp 8' },
-    { id: '9', label: 'Lớp 9' },
-    { id: '10', label: 'Lớp 10' },
-    { id: '11', label: 'Lớp 11' },
-    { id: '12', label: 'Lớp 12' },
+    { id: '10', label: 'Khối 10' },
+    { id: '11', label: 'Khối 11' },
+    { id: '12', label: 'Khối 12' },
   ];
 
   return (
