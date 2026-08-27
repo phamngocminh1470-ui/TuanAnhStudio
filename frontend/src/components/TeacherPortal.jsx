@@ -676,10 +676,9 @@ Trả về định dạng JSON thuần túy (không markdown):
                       onChange={(e) => setTeacherSubject(e.target.value)}
                       className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
                     >
-                      <option value="Tiếng Anh THPT (Lớp 10, 11, 12)">Tiếng Anh THPT (Lớp 10, 11, 12)</option>
-                      <option value="Tiếng Anh THCS (Lớp 6, 7, 8, 9)">Tiếng Anh THCS (Lớp 6, 7, 8, 9)</option>
-                      <option value="Luyện thi Chuyên Anh &amp; HSG">Luyện thi Chuyên Anh &amp; HSG</option>
-                      <option value="Luyện thi ĐGNL HSA / TSA / IELTS">Luyện thi ĐGNL HSA / TSA / IELTS</option>
+                      <option value="Tiếng Anh THPT (Lớp 10, 11, 12) - Sách Mới GDPT 2018">Tiếng Anh THPT (Lớp 10, 11, 12) - Sách Mới GDPT 2018</option>
+                      <option value="Ôn Thi Tốt Nghiệp THPT Quốc Gia (Cấu Trúc Mới 40 Câu)">Ôn Thi Tốt Nghiệp THPT Quốc Gia (Cấu Trúc Mới 40 Câu)</option>
+                      <option value="Luyện thi Đánh Giá Năng Lực (HSA / TSA) &amp; HSG">Luyện thi Đánh Giá Năng Lực (HSA / TSA) &amp; HSG</option>
                     </select>
                   </div>
                 </div>

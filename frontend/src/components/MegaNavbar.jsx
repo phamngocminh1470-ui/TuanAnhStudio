@@ -45,25 +45,21 @@ export default function MegaNavbar({
     return () => { document.body.style.overflow = 'unset'; };
   }, [isMobileDrawerOpen]);
 
-  const gradeLevels = [
-    { id: '6', label: 'Lớp 6' },
-    { id: '7', label: 'Lớp 7' },
-    { id: '8', label: 'Lớp 8' },
-    { id: '9', label: 'Lớp 9' },
-    { id: '10', label: 'Lớp 10' },
-    { id: '11', label: 'Lớp 11' },
-    { id: '12', label: 'Lớp 12' }
+  const grades = [
+    { id: '10', label: 'Khối 10' },
+    { id: '11', label: 'Khối 11' },
+    { id: '12', label: 'Khối 12' }
   ];
 
   // Menu items config
   const kyThiItems = [
     { id: 'official-repo', title: 'Kho Đề Thật • Lời Giải Thật', desc: 'Đề THPT 2026, Chuyên Hà Nội, ĐGNL HSA/TSA', badge: 'HOT', icon: FileText, action: () => { onNavigate('official-exams'); setOpenDropdown(null); setIsMobileDrawerOpen(false); } },
     { id: 'thpt', title: 'Thi thử Thích ứng IRT', desc: 'Hệ thống tự chỉnh độ khó theo năng lực', badge: 'Chuẩn Mới', icon: Zap, action: () => { onNavigate('irt-test'); setOpenDropdown(null); setIsMobileDrawerOpen(false); } },
-    { id: 'dgnl', title: 'ĐGNL & Đánh Giá Tư Duy', desc: 'HSA • TSA • V-ACT', badge: 'MAX', icon: Award, action: () => { onNavigate('irt-test'); setOpenDropdown(null); setIsMobileDrawerOpen(false); } },
+    { id: 'dgnl', title: 'ĐGNL & Đánh Giá Tư Duy', desc: 'HSA • TSA ĐHQG & Bách Khoa', badge: 'MAX', icon: Award, action: () => { onNavigate('irt-test'); setOpenDropdown(null); setIsMobileDrawerOpen(false); } },
     { id: 'hsa', title: 'HSA - ĐHQG HN', desc: 'Đề thi tư duy định lượng & định tính', icon: BookOpen, action: () => { onNavigate('reading'); setOpenDropdown(null); setIsMobileDrawerOpen(false); } },
     { id: 'tsa', title: 'TSA - Bách Khoa', desc: 'Đánh giá tư duy logic & giải quyết vấn đề', icon: BrainCircuit, action: () => { onNavigate('irt-test'); setOpenDropdown(null); setIsMobileDrawerOpen(false); } },
     { id: 'sgk', title: 'Sách SGK Global Success', desc: 'Chương trình GDPT mới Lớp 10-11-12', badge: 'NEW', icon: BookMarked, action: () => { onNavigate('vocab-library'); setOpenDropdown(null); setIsMobileDrawerOpen(false); } },
-    { id: 'ielts', title: 'IELTS / VSTEP Hub', desc: 'Luyện 4 kỹ năng chuẩn quốc tế', badge: 'NEW', icon: Trophy, action: () => { onNavigate('reading'); setOpenDropdown(null); setIsMobileDrawerOpen(false); } },
+    { id: 'thpt-chuan', title: 'Ôn Thi Tốt Nghiệp THPT', desc: 'Chuẩn 40 câu cấu trúc mới Bộ GD&ĐT', badge: 'CHUẨN', icon: Trophy, action: () => { onNavigate('official-exams'); setOpenDropdown(null); setIsMobileDrawerOpen(false); } },
   ];
 
   const giaSuItems = [

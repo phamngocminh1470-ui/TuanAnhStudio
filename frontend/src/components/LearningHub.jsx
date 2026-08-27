@@ -153,8 +153,8 @@ export default function LearningHub({
     },
     {
       id: 'skills',
-      name: '🌍 IELTS & Kỹ Năng Toàn Diện',
-      desc: 'Listening • Reading • Writing • Speaking chuẩn khung năng lực KNLNNVN',
+      name: '🎯 4 Kỹ Năng Tiếng Anh THPT Chuẩn GDPT 2018',
+      desc: 'Nghe • Đọc • Viết • Nói bám sát cấu trúc thi Tốt nghiệp THPT & SGK Mới',
       cards: [
         {
           id: 'pronounce-speech',

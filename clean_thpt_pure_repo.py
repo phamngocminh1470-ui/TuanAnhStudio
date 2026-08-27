@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+# -*- coding: utf-8 -*-
+
+new_code = '''import React, { useState } from 'react';
 import { 
   FileText, CheckCircle2, Award, Clock, ArrowRight, 
   Search, Filter, BookOpen, Download, ExternalLink, Sparkles, Zap, ChevronRight,
@@ -469,3 +471,9 @@ export default function OfficialExamRepository({ onStartExam }) {
     </div>
   );
 }
+'''
+
+with open('frontend/src/components/OfficialExamRepository.jsx', 'w', encoding='utf-8') as f:
+    f.write(new_code)
+
+print("Updated OfficialExamRepository.jsx to 100% THPT pure focus with ZERO fake metrics!")

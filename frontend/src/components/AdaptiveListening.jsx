@@ -178,87 +178,37 @@ export default function AdaptiveListening({ selectedGrade = '10', theta = 0.0 })
             <span>LUYỆN NGHE SONG SONG &amp; ĐA CẤP ĐỘ</span>
           </div>
           <h1 className="text-2xl md:text-4xl font-extrabold text-white font-outfit leading-relaxed">
-            Hệ thống Luyện Nghe AI Thích ứng Cấp độ
+            Luyện Nghe Tiếng Anh THPT Thích Ứng (Lớp 10 - 11 - 12)
           </h1>
           <p className="text-slate-300 text-sm leading-relaxed max-w-3xl">
-            Tự chọn luyện nghe theo chương trình Phổ thông (Lớp 6-12) hoặc theo chứng chỉ Quốc tế (KET, PET, IELTS). Nghe kết hợp đọc lời song song và ôn tập trắc nghiệm thông minh.
+            Luyện nghe bám sát chương trình Tiếng Anh THPT GDPT 2018 (Sách Global Success &amp; Friends Global Lớp 10, 11, 12). Nghe kết hợp đọc lời song song, tra từ vựng và làm bài tập trắc nghiệm củng cố.
           </p>
         </div>
 
         {/* Level Selectors & Category Filters */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 pt-4 border-t border-white/5">
-          {/* Mode Selector */}
-          <div className="md:col-span-4 space-y-2">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-              <ListFilter className="w-3.5 h-3.5 text-purple-400" /> Chọn hệ luyện nghe:
-            </span>
-            <div className="flex bg-slate-900/80 p-1 rounded-xl border border-slate-800">
+        <div className="pt-4 border-t border-white/5 space-y-2">
+          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+            <Target className="w-3.5 h-3.5 text-amber-400" /> Chọn Khối Lớp THPT:
+          </span>
+          
+          <div className="flex flex-wrap gap-2">
+            {[
+              { id: '10', label: 'Khối 10 (Global Success 10)' },
+              { id: '11', label: 'Khối 11 (Global Success 11)' },
+              { id: '12', label: 'Khối 12 & Ôn Thi Tốt Nghiệp THPT' }
+            ].map((gr) => (
               <button
-                onClick={() => setListeningMode('grade')}
-                className={`flex-1 py-2 rounded-lg text-xs font-bold transition cursor-pointer ${
-                  listeningMode === 'grade' 
-                    ? 'bg-purple-600 text-white shadow-md' 
-                    : 'text-slate-400 hover:text-white'
+                key={gr.id}
+                onClick={() => { setActiveGrade(gr.id); setListeningMode('grade'); }}
+                className={`px-5 py-2.5 rounded-xl text-xs font-extrabold transition cursor-pointer border ${
+                  activeGrade === gr.id
+                    ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-300 border-amber-500/50 shadow-md'
+                    : 'bg-slate-800/50 text-slate-400 border-slate-800 hover:text-slate-200'
                 }`}
               >
-                Hệ Phổ thông (Grade)
+                {gr.label}
               </button>
-              <button
-                onClick={() => setListeningMode('exam')}
-                className={`flex-1 py-2 rounded-lg text-xs font-bold transition cursor-pointer ${
-                  listeningMode === 'exam' 
-                    ? 'bg-purple-600 text-white shadow-md' 
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                Hệ Chứng chỉ (KET/PET/IELTS)
-              </button>
-            </div>
-          </div>
-
-          {/* Level Filter Dropdowns */}
-          <div className="md:col-span-8 space-y-2">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-              <Target className="w-3.5 h-3.5 text-amber-400" /> Chọn cấp độ chi tiết:
-            </span>
-            
-            {listeningMode === 'grade' ? (
-              <div className="flex flex-wrap gap-2">
-                {['6', '7', '8', '9', '10', '11', '12'].map((gr) => (
-                  <button
-                    key={gr}
-                    onClick={() => setActiveGrade(gr)}
-                    className={`px-4 py-2 rounded-xl text-xs font-extrabold transition cursor-pointer border ${
-                      activeGrade === gr
-                        ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-md'
-                        : 'bg-slate-800/50 text-slate-400 border-slate-800 hover:text-slate-200'
-                    }`}
-                  >
-                    Lớp {gr}
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <div className="flex gap-2">
-                {[
-                  { id: 'KET', label: 'KET Listening (CEFR A2)' },
-                  { id: 'PET', label: 'PET Listening (CEFR B1)' },
-                  { id: 'IELTS', label: 'IELTS Listening (CEFR B2/C1)' }
-                ].map((ex) => (
-                  <button
-                    key={ex.id}
-                    onClick={() => setActiveExam(ex.id)}
-                    className={`px-4 py-2.5 rounded-xl text-xs font-extrabold transition cursor-pointer border flex-1 md:flex-initial text-center ${
-                      activeExam === ex.id
-                        ? 'bg-emerald-600/20 text-emerald-300 border-emerald-500/50 shadow-md'
-                        : 'bg-slate-800/50 text-slate-400 border-slate-800 hover:text-slate-200'
-                    }`}
-                  >
-                    {ex.label}
-                  </button>
-                ))}
-              </div>
-            )}
+            ))}
           </div>
         </div>
 

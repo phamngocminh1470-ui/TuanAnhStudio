@@ -143,7 +143,7 @@ export default function WritingPractice({ selectedGrade, keys }) {
     setEssayOutline(null);
     setEssayVocab(null);
 
-    const prompt = `You are a top-tier IELTS and Vietnamese National High School Exam (THPT) English Teacher.
+    const prompt = `You are an expert Vietnamese National High School Exam (THPT) English Teacher specializing in the GDPT 2018 curriculum.
 Topic: "${currentPromptText}"
 Target Grade: Grade ${selectedGrade || '12'}
 
