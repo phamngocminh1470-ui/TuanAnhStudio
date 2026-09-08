@@ -1,6 +1,8 @@
 import os
 import json
 import base64
+import asyncio
+import time
 import httpx
 from gtts import gTTS
 import google.generativeai as genai
@@ -45,24 +47,45 @@ async def test_api_connection(provider: str, key: str) -> dict:
     
     try:
         if prov == "gemini":
-            genai.configure(api_key=clean_k)
-            candidates = ["gemini-flash-latest", "gemini-2.5-flash", "gemini-1.5-flash-latest", "gemini-1.5-flash", "gemini-pro-latest"]
+            headers = {"x-goog-api-key": clean_k, "Content-Type": "application/json"}
+            candidates = [
+                "gemini-3.1-flash-lite-preview",
+                "gemini-3.1-flash-lite",
+                "gemini-flash-latest",
+                "gemini-pro-latest",
+                "gemini-2.5-pro",
+                "gemini-2.0-flash",
+                "gemini-1.5-flash"
+            ]
             last_err = None
-            for mod in candidates:
-                try:
-                    model = genai.GenerativeModel(mod)
-                    resp = model.generate_content("Ping")
-                    latency = int((time.time() - start_t) * 1000)
-                    return {
-                        "status": "success",
-                        "latency_ms": latency,
-                        "model": f"{mod} (Google Gemini)",
-                        "reply": resp.text.strip() if resp and resp.text else "Kết nối thành công!"
-                    }
-                except Exception as e:
-                    last_err = e
-                    continue
-            return {"status": "error", "message": f"Không thể kết nối Gemini: {str(last_err)}"}
+            async with httpx.AsyncClient(timeout=8.0) as client:
+                for mod in candidates:
+                    try:
+                        url = f"https://generativelanguage.googleapis.com/v1beta/models/{mod}:generateContent"
+                        res = await client.post(url, headers=headers, json={"contents": [{"parts": [{"text": "Ping"}]}]})
+                        if res.status_code == 200:
+                            latency = int((time.time() - start_t) * 1000)
+                            model_title = f"{mod} (Google Gemini Pro)" if "pro" in mod.lower() else f"{mod} (Google Gemini 3.1 Flash)"
+                            return {
+                                "status": "success",
+                                "latency_ms": latency,
+                                "model": model_title,
+                                "reply": "Kết nối thành công! Khóa API Google Gemini Pro/Flash sẵn sàng."
+                            }
+                        elif res.status_code == 401:
+                            return {
+                                "status": "error",
+                                "message": "Google báo lỗi (401 Chưa xác thực): Khóa API chưa được cấp quyền gọi API. Vui lòng kiểm tra lại trên Google AI Studio."
+                            }
+                        elif res.status_code == 429:
+                            last_err = f"Model {mod} đang vượt hạn mức (429 Rate Limit)"
+                            continue
+                        else:
+                            last_err = f"{mod} ({res.status_code}): {res.text[:100]}"
+                    except Exception as e:
+                        last_err = str(e)
+                        continue
+            return {"status": "error", "message": f"Không thể kết nối Gemini: {last_err}"}
             
         elif prov == "groq":
             async with httpx.AsyncClient(timeout=15.0) as client:
@@ -424,26 +447,39 @@ async def chat_with_gemini(
     active_gemini = clean_api_key(custom_key) or GEMINI_API_KEY
     if (engine_mode == "gemini" or not active_groq) and active_gemini and sanitized_messages:
         try:
-            genai.configure(api_key=active_gemini)
-            model = None
-            for mod_name in ["gemini-flash-latest", "gemini-2.5-flash", "gemini-1.5-flash-latest", "gemini-1.5-flash"]:
-                try:
-                    model = genai.GenerativeModel(
-                        model_name=mod_name,
-                        system_instruction=system_instruction
-                    )
-                    break
-                except Exception:
-                    continue
-            contents = []
+            candidates = [
+                "gemini-3.1-flash-lite-preview",
+                "gemini-3.1-flash-lite",
+                "gemini-flash-latest",
+                "gemini-pro-latest",
+                "gemini-2.5-pro",
+                "gemini-2.0-flash"
+            ]
+            # 1. Gọi trực tiếp bằng REST HTTP (Tương thích 100% với key AQ. mới và model 3.x)
+            headers = {"x-goog-api-key": active_gemini, "Content-Type": "application/json"}
+            gem_contents = []
             for msg in sanitized_messages:
-                contents.append({
-                    "role": msg["role"],
-                    "parts": [msg["content"]]
-                })
-            response = model.generate_content(contents)
-            if response and response.text:
-                return response.text
+                role = "user" if msg["role"] in ["user", "human"] else "model"
+                gem_contents.append({"role": role, "parts": [{"text": msg["content"]}]})
+            
+            body = {"contents": gem_contents}
+            if system_instruction:
+                body["systemInstruction"] = {"parts": [{"text": system_instruction}]}
+
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                for mod_name in candidates:
+                    try:
+                        url = f"https://generativelanguage.googleapis.com/v1beta/models/{mod_name}:generateContent"
+                        res = await client.post(url, headers=headers, json=body)
+                        if res.status_code == 200:
+                            data = res.json()
+                            candidate = data.get("candidates", [{}])[0]
+                            parts = candidate.get("content", {}).get("parts", [{}])
+                            reply = parts[0].get("text", "")
+                            if reply and reply.strip():
+                                return reply.strip()
+                    except Exception:
+                        continue
         except Exception as e:
             print(f"[Gemini Chat Error] {e}")
 

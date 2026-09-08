@@ -212,13 +212,16 @@ export default function AdminPanel({ keys, onSaveKeys, onOpenAuth }) {
       const res = await axios.post(`${API_BASE}/ai/test-key`, {
         provider: provider,
         key: keyVal.trim()
-      });
+      }, { timeout: 10000 });
       setTestResults(prev => ({
         ...prev,
         [provider]: res.data
       }));
     } catch (err) {
-      const errMsg = err.response?.data?.detail || err.response?.data?.message || err.message;
+      let errMsg = err.response?.data?.detail || err.response?.data?.message || err.message;
+      if (err.code === 'ECONNABORTED' || (err.message && err.message.includes('timeout'))) {
+        errMsg = 'Quá thời gian kết nối (Timeout). Vui lòng thử lại.';
+      }
       setTestResults(prev => ({
         ...prev,
         [provider]: { status: 'error', message: errMsg }
