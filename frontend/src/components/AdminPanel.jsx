@@ -4,7 +4,9 @@ import {
   Download, Lock, Unlock, KeyRound, TrendingUp, FileSpreadsheet, Filter,
   Search, RotateCcw, AlertTriangle, Calendar,
   Info, FileText, Zap, Mic, BookOpen, Plus, Trash2, Edit, Sparkles, Check, Globe,
-  Copy, MessageSquare
+  Copy, MessageSquare, Send,
+  Laptop, ShieldAlert, Monitor, LogOut, CheckCircle2, Shield,
+  Eye, EyeOff, ExternalLink, Brain, Bot, CheckCircle, XCircle, Flame, Sliders, Save
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -136,11 +138,133 @@ function ConfirmDialog({ message, onConfirm, onCancel }) {
 }
 
 // ─── Main Component
-export default function AdminPanel({ keys, onSaveKeys }) {
+export default function AdminPanel({ keys, onSaveKeys, onOpenAuth }) {
   const [adminTab, setAdminTab] = useState('dashboard');
 
   // ── Data states
   const [students, setStudents] = useState([]);
+
+  // ── Bảo Mật & Quản Lý Thiết Bị Đăng Nhập ──────────────────────────
+  const [sessions, setSessions] = useState([]);
+  const [loadingSessions, setLoadingSessions] = useState(false);
+  const [sessionActionLoading, setSessionActionLoading] = useState(false);
+  const [kickingSessionId, setKickingSessionId] = useState(null);
+  const [securityMessage, setSecurityMessage] = useState(null);
+  const [currentSessionId, setCurrentSessionId] = useState(null);
+  const [primarySessionId, setPrimarySessionId] = useState(null);
+  const [currentIp, setCurrentIp] = useState('');
+  const [currentDeviceName, setCurrentDeviceName] = useState('');
+
+  // ── Cấu hình Siêu Mô Hình AI (Frontier AI Models Hub) ──────────
+  const [aiKeysForm, setAiKeysForm] = useState({
+    gemini: keys?.gemini || localStorage.getItem('api_gemini') || '',
+    openai: keys?.openai || localStorage.getItem('api_openai') || '',
+    claude: keys?.claude || localStorage.getItem('api_claude') || '',
+    deepseek: keys?.deepseek || localStorage.getItem('api_deepseek') || '',
+    openrouter: keys?.openrouter || localStorage.getItem('api_openrouter') || '',
+    groq: keys?.groq || localStorage.getItem('api_groq') || '',
+    azure: keys?.azure || localStorage.getItem('api_azure') || ''
+  });
+
+  const [aiKeyVisibility, setAiKeyVisibility] = useState({});
+  const [testingModel, setTestingModel] = useState(null);
+  const [testResults, setTestResults] = useState({});
+  const [defaultBrain, setDefaultBrain] = useState(() => localStorage.getItem('default_ai_engine') || 'auto');
+  const [saveAiStatus, setSaveAiStatus] = useState(null);
+  const [isSavingAi, setIsSavingAi] = useState(false);
+
+  useEffect(() => {
+    if (keys) {
+      setAiKeysForm(prev => ({
+        ...prev,
+        gemini: keys.gemini || prev.gemini,
+        openai: keys.openai || prev.openai,
+        claude: keys.claude || prev.claude,
+        deepseek: keys.deepseek || prev.deepseek,
+        openrouter: keys.openrouter || prev.openrouter,
+        groq: keys.groq || prev.groq,
+        azure: keys.azure || prev.azure
+      }));
+    }
+  }, [keys]);
+
+  const toggleKeyVisibility = (provider) => {
+    setAiKeyVisibility(prev => ({ ...prev, [provider]: !prev[provider] }));
+  };
+
+  const handleTestAiKey = async (provider) => {
+    let keyVal = aiKeysForm[provider];
+    if (!keyVal || !keyVal.trim()) {
+      if (provider === 'azure') {
+        keyVal = 'embedded';
+      } else {
+        setTestResults(prev => ({
+          ...prev,
+          [provider]: { status: 'error', message: 'Chưa có khóa API. Vui lòng nhập key để kiểm tra.' }
+        }));
+        return;
+      }
+    }
+
+    setTestingModel(provider);
+    setTestResults(prev => ({ ...prev, [provider]: { status: 'loading' } }));
+    try {
+      const res = await axios.post(`${API_BASE}/ai/test-key`, {
+        provider: provider,
+        key: keyVal.trim()
+      });
+      setTestResults(prev => ({
+        ...prev,
+        [provider]: res.data
+      }));
+    } catch (err) {
+      const errMsg = err.response?.data?.detail || err.response?.data?.message || err.message;
+      setTestResults(prev => ({
+        ...prev,
+        [provider]: { status: 'error', message: errMsg }
+      }));
+    } finally {
+      setTestingModel(null);
+    }
+  };
+
+  const handleSaveAllAiConfig = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    setIsSavingAi(true);
+    setSaveAiStatus(null);
+    try {
+      localStorage.setItem('api_gemini', aiKeysForm.gemini || '');
+      localStorage.setItem('api_openai', aiKeysForm.openai || '');
+      localStorage.setItem('api_claude', aiKeysForm.claude || '');
+      localStorage.setItem('api_deepseek', aiKeysForm.deepseek || '');
+      localStorage.setItem('api_openrouter', aiKeysForm.openrouter || '');
+      localStorage.setItem('api_groq', aiKeysForm.groq || '');
+      localStorage.setItem('api_azure', aiKeysForm.azure || '');
+      localStorage.setItem('default_ai_engine', defaultBrain);
+
+      if (onSaveKeys) {
+        await onSaveKeys({ ...aiKeysForm, default_engine: defaultBrain });
+      } else {
+        await axios.post(`${API_BASE}/save-keys`, {
+          ...aiKeysForm,
+          default_engine: defaultBrain
+        });
+      }
+
+      setSaveAiStatus({
+        type: 'success',
+        message: 'Đã lưu toàn bộ cấu hình API Keys & Mô hình AI thành công vào trình duyệt và đồng bộ lên máy chủ VPS!'
+      });
+    } catch (err) {
+      setSaveAiStatus({
+        type: 'error',
+        message: `Lỗi lưu cấu hình: ${err.message}`
+      });
+    } finally {
+      setIsSavingAi(false);
+      setTimeout(() => setSaveAiStatus(null), 5000);
+    }
+  };
   
   // ── Quản lý & Sinh mã Key cho Giáo Viên ──────────────────────────────
   const [teacherKeys, setTeacherKeys] = useState(() => {
@@ -161,9 +285,20 @@ export default function AdminPanel({ keys, onSaveKeys }) {
   const [newKeySubject, setNewKeySubject] = useState('Tiếng Anh THPT (Lớp 10, 11, 12)');
   const [newKeyCustomCode, setNewKeyCustomCode] = useState('');
   const [newKeyNote, setNewKeyNote] = useState('');
+  const [newKeyDuration, setNewKeyDuration] = useState('12th'); // '1th' | '3th' | '6th' | '12th' | 'lifetime'
   const [teacherKeySearch, setTeacherKeySearch] = useState('');
   const [copiedKeyId, setCopiedKeyId] = useState(null);
   const [copiedZaloMsg, setCopiedZaloMsg] = useState(false);
+
+  // Danh sách các Thầy/Cô gửi form đăng ký xin cấp mã key
+  const [teacherRequests, setTeacherRequests] = useState(() => {
+    try {
+      const saved = localStorage.getItem('admin_teacher_registration_requests');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
 
   // Lưu danh sách key vào localStorage mỗi khi thay đổi
   useEffect(() => {
@@ -171,6 +306,12 @@ export default function AdminPanel({ keys, onSaveKeys }) {
       localStorage.setItem('admin_teacher_license_keys', JSON.stringify(teacherKeys));
     } catch (e) {}
   }, [teacherKeys]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('admin_teacher_registration_requests', JSON.stringify(teacherRequests));
+    } catch (e) {}
+  }, [teacherRequests]);
 
   // Hàm tự động sinh mã ngẫu nhiên cho giáo viên
   const handleAutoGenerateCode = () => {
@@ -181,6 +322,34 @@ export default function AdminPanel({ keys, onSaveKeys }) {
     }
     const randomNum = Math.floor(1000 + Math.random() * 9000);
     setNewKeyCustomCode(`${prefix}-${randomNum}`);
+  };
+
+  // Phê duyệt yêu cầu đăng ký của giáo viên
+  const handleApproveTeacherRequest = (req) => {
+    setNewKeyTeacherName(req.teacherName);
+    setNewKeySchool(req.school || '');
+    setNewKeyPhone(req.phone || '');
+    setNewKeyNote(`Duyệt yêu cầu từ form (${req.phone})`);
+    
+    let prefix = 'GV';
+    if (req.teacherName) {
+      const cleanName = req.teacherName.trim().split(' ').pop().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[^A-Z]/g, '');
+      if (cleanName) prefix = `GV-${cleanName}`;
+    }
+    const randomNum = Math.floor(1000 + Math.random() * 9000);
+    setNewKeyCustomCode(`${prefix}-${randomNum}`);
+
+    setTeacherRequests(prev => prev.map(r => r.id === req.id ? { ...r, status: 'approved' } : r));
+    alert(`✓ Đã điền thông tin Thầy/Cô ${req.teacherName} vào Form bên dưới. Bạn kiểm tra lại và bấm nút 'Xác Nhận Thêm & Kích Hoạt Key Này' để hoàn tất!`);
+  };
+
+  const handleDeleteTeacherRequest = async (reqId) => {
+    const ok = window.appConfirm
+      ? await window.appConfirm("Xóa yêu cầu đăng ký này khỏi danh sách?", "Xóa Yêu Cầu Đăng Ký", { type: 'warning', confirmText: 'Xóa Yêu Cầu' })
+      : window.confirm("Xóa yêu cầu đăng ký này khỏi danh sách?");
+    if (ok) {
+      setTeacherRequests(prev => prev.filter(r => r.id !== reqId));
+    }
   };
 
   // Hàm thêm key mới
@@ -194,6 +363,22 @@ export default function AdminPanel({ keys, onSaveKeys }) {
       return;
     }
 
+    let expiryDate = 'lifetime';
+    const now = new Date();
+    if (newKeyDuration === '1th') {
+      now.setDate(now.getDate() + 30);
+      expiryDate = now.toISOString().split('T')[0];
+    } else if (newKeyDuration === '3th') {
+      now.setDate(now.getDate() + 90);
+      expiryDate = now.toISOString().split('T')[0];
+    } else if (newKeyDuration === '6th') {
+      now.setDate(now.getDate() + 180);
+      expiryDate = now.toISOString().split('T')[0];
+    } else if (newKeyDuration === '12th') {
+      now.setDate(now.getDate() + 365);
+      expiryDate = now.toISOString().split('T')[0];
+    }
+
     const newKeyObj = {
       id: `k-${Date.now()}`,
       key: finalCode,
@@ -202,6 +387,8 @@ export default function AdminPanel({ keys, onSaveKeys }) {
       phone: newKeyPhone.trim() || 'Chưa cập nhật',
       subject: newKeySubject,
       date: new Date().toISOString().split('T')[0],
+      duration: newKeyDuration,
+      expiryDate: expiryDate,
       status: 'active',
       note: newKeyNote.trim() || 'Cấp bởi Admin'
     };
@@ -212,12 +399,15 @@ export default function AdminPanel({ keys, onSaveKeys }) {
     setNewKeyPhone('');
     setNewKeyCustomCode('');
     setNewKeyNote('');
-    alert(`✓ Đã tạo và kích hoạt mã "${finalCode}" cho ${newKeyObj.teacherName} thành công!`);
+    alert(`✓ Đã tạo và kích hoạt mã "${finalCode}" cho ${newKeyObj.teacherName} thành công (Thời hạn: ${newKeyDuration === 'lifetime' ? 'Trọn đời' : newKeyDuration})!`);
   };
 
   // Hàm xóa key
-  const handleDeleteTeacherKey = (keyId) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa mã Key này không? Giáo viên dùng mã này sẽ bị thu hồi quyền truy cập.")) {
+  const handleDeleteTeacherKey = async (keyId) => {
+    const ok = window.appConfirm
+      ? await window.appConfirm("Bạn có chắc chắn muốn xóa mã Key này không? Giáo viên dùng mã này sẽ bị thu hồi quyền truy cập.", "Thu Hồi Mã Key", { type: 'error', confirmText: 'Xóa & Thu Hồi' })
+      : window.confirm("Bạn có chắc chắn muốn xóa mã Key này không? Giáo viên dùng mã này sẽ bị thu hồi quyền truy cập.");
+    if (ok) {
       setTeacherKeys(prev => prev.filter(k => k.id !== keyId));
     }
   };
@@ -234,7 +424,11 @@ export default function AdminPanel({ keys, onSaveKeys }) {
 
   // Hàm copy lời nhắn Zalo chuẩn để gửi cho giáo viên
   const handleCopyZaloMessage = (keyObj) => {
-    const msg = `Dạ em gửi Thầy/Cô ${keyObj.teacherName} (${keyObj.school}) Mã Kích Hoạt Quyền Giáo Viên trên hệ thống:\n\n🔑 MÃ KÍCH HOẠT: ${keyObj.key}\n🌐 ĐỊA CHỈ TRUY CẬP: https://tuananhstudio.top\n\nThầy/Cô vào mục 'Cổng Giáo Viên' dán mã trên để mở khóa toàn bộ không gian quản lý lớp học, xáo đề thi 101-104 và giao bài tập cho học sinh nhé ạ!`;
+    const durationLabel = keyObj.expiryDate === 'lifetime' || !keyObj.expiryDate
+      ? 'Trọn Đời (Vô hạn)'
+      : `Hạn Sử Dụng đến ${keyObj.expiryDate} (Dùng thử)`;
+      
+    const msg = `Dạ em gửi Thầy/Cô ${keyObj.teacherName} (${keyObj.school}) Mã Kích Hoạt Quyền Giáo Viên trên hệ thống:\n\n🔑 MÃ KÍCH HOẠT: ${keyObj.key}\n⏳ THỜI HẠN SỬ DỤNG: ${durationLabel}\n🌐 ĐỊA CHỈ TRUY CẬP: https://examoraai.com\n\nThầy/Cô vào mục 'Cổng Giáo Viên' dán mã trên để mở khóa toàn bộ không gian quản lý lớp học, xáo đề thi và giao bài tập cho học sinh nhé ạ!`;
     navigator.clipboard.writeText(msg);
     setCopiedZaloMsg(true);
     setTimeout(() => setCopiedZaloMsg(false), 2500);
@@ -398,6 +592,43 @@ export default function AdminPanel({ keys, onSaveKeys }) {
     }
   };
 
+  const fetchSessions = async () => {
+    setLoadingSessions(true);
+    try {
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        setSecurityMessage({
+          type: 'error',
+          text: 'Phiên đăng nhập cũ đã hết hạn (do đã kích phiên trước đó). Vui lòng bấm "Đăng nhập lại" bên dưới.',
+          needLogin: true
+        });
+        return;
+      }
+      const res = await axios.get(`${API_BASE}/auth/sessions`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.data?.status === 'success') {
+        setSessions(res.data.sessions || []);
+        setCurrentSessionId(res.data.current_session_id);
+        setPrimarySessionId(res.data.primary_session_id);
+        setCurrentIp(res.data.current_ip || '');
+        setCurrentDeviceName(res.data.current_device || '');
+        setSecurityMessage(null);
+      }
+    } catch (err) {
+      console.warn('Lỗi fetch sessions:', err.message);
+      if (err.response?.status === 401) {
+        setSecurityMessage({
+          type: 'error',
+          text: 'Phiên đăng nhập đã hết hạn hoặc bị kích. Vui lòng bấm "Đăng nhập lại" để tiếp tục quản lý.',
+          needLogin: true
+        });
+      }
+    } finally {
+      setLoadingSessions(false);
+    }
+  };
+
   useEffect(() => {
     fetchStudents();
     fetchResearchReport();
@@ -405,7 +636,14 @@ export default function AdminPanel({ keys, onSaveKeys }) {
     fetchTopics();
     fetchIpaSounds();
     fetchSentences();
+    fetchSessions();
   }, [sentenceGradeFilter]);
+
+  useEffect(() => {
+    if (adminTab === 'security') {
+      fetchSessions();
+    }
+  }, [adminTab]);
 
   // Vocab CRUD Handlers
   const handleSaveTopic = async (e) => {
@@ -426,7 +664,10 @@ export default function AdminPanel({ keys, onSaveKeys }) {
   };
 
   const handleDeleteTopic = async (id) => {
-    if (!confirm('Bạn có chắc chắn muốn xóa chủ đề này? Tất cả các từ thuộc chủ đề này cũng sẽ bị xóa.')) return;
+    const ok = window.appConfirm
+      ? await window.appConfirm('Bạn có chắc chắn muốn xóa chủ đề này? Tất cả các từ thuộc chủ đề này cũng sẽ bị xóa.', 'Xóa Chủ Đề Từ Vựng', { type: 'error', confirmText: 'Xóa Chủ Đề' })
+      : confirm('Bạn có chắc chắn muốn xóa chủ đề này? Tất cả các từ thuộc chủ đề này cũng sẽ bị xóa.');
+    if (!ok) return;
     try {
       await axios.delete(`${API_BASE}/content/vocab/topics/${id}`);
       alert('✅ Đã xóa chủ đề thành công.');
@@ -458,7 +699,10 @@ export default function AdminPanel({ keys, onSaveKeys }) {
   };
 
   const handleDeleteWord = async (id) => {
-    if (!confirm('Bạn có chắc chắn muốn xóa từ vựng này?')) return;
+    const ok = window.appConfirm
+      ? await window.appConfirm('Bạn có chắc chắn muốn xóa từ vựng này không?', 'Xóa Từ Vựng', { type: 'error', confirmText: 'Xóa Từ' })
+      : confirm('Bạn có chắc chắn muốn xóa từ vựng này?');
+    if (!ok) return;
     try {
       await axios.delete(`${API_BASE}/content/vocab/words/${id}`);
       alert('✅ Đã xóa từ vựng thành công.');
@@ -487,7 +731,10 @@ export default function AdminPanel({ keys, onSaveKeys }) {
   };
 
   const handleDeleteIpa = async (id) => {
-    if (!confirm('Bạn có chắc chắn muốn xóa âm IPA này?')) return;
+    const ok = window.appConfirm
+      ? await window.appConfirm('Bạn có chắc chắn muốn xóa âm IPA này không?', 'Xóa Âm IPA', { type: 'error', confirmText: 'Xóa Âm' })
+      : confirm('Bạn có chắc chắn muốn xóa âm IPA này?');
+    if (!ok) return;
     try {
       await axios.delete(`${API_BASE}/content/ipa/sounds/${id}`);
       alert('✅ Đã xóa âm IPA thành công.');
@@ -516,7 +763,10 @@ export default function AdminPanel({ keys, onSaveKeys }) {
   };
 
   const handleDeleteSentence = async (id) => {
-    if (!confirm('Bạn có chắc chắn muốn xóa câu phát âm này?')) return;
+    const ok = window.appConfirm
+      ? await window.appConfirm('Bạn có chắc chắn muốn xóa câu phát âm này không?', 'Xóa Câu Phát Âm', { type: 'error', confirmText: 'Xóa Câu' })
+      : confirm('Bạn có chắc chắn muốn xóa câu phát âm này?');
+    if (!ok) return;
     try {
       await axios.delete(`${API_BASE}/content/pronounce/sentences/${id}`);
       alert('✅ Đã xóa câu phát âm thành công.');
@@ -685,10 +935,108 @@ export default function AdminPanel({ keys, onSaveKeys }) {
     document.body.removeChild(link);
   };
 
+  // ── Thao tác Bảo mật Thiết bị & Phiên Đăng Nhập ───────────────────────────
+
+  const handleKickAllOthers = async () => {
+    const confirmMsg = "🚨 BẠN CÓ CHẮC CHẮN MUỐN KÍCH ĐĂNG XUẤT TẤT CẢ CÁC MÁY KHÁC?\n\n- Toàn bộ máy tính/thiết bị khác (kể cả máy tại điểm thi) sẽ bị đá văng ngay lập tức.\n- Chỉ duy nhất máy tính này của bạn được giữ lại là MÁY CHUẨN NHẤT.";
+    const ok = window.appConfirm 
+      ? await window.appConfirm(confirmMsg, "Kích Đăng Xuất Tất Cả Máy Khác", { type: 'error', confirmText: 'Kích Ngay Lập Tức' })
+      : window.confirm(confirmMsg);
+    if (!ok) return;
+
+    setSessionActionLoading(true);
+    try {
+      const token = localStorage.getItem('auth_token');
+      const res = await axios.post(`${API_BASE}/auth/sessions/kick-all-others`, {}, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+      if (res.data?.status === 'success') {
+        if (res.data.token) {
+          localStorage.setItem('auth_token', res.data.token);
+          axios.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
+        }
+        setSecurityMessage({
+          type: 'success',
+          text: res.data.message || 'Đã kích đăng xuất thành công tất cả máy khác! Máy này đã được cài là máy chuẩn nhất.'
+        });
+        fetchSessions();
+      }
+    } catch (err) {
+      setSecurityMessage({
+        type: 'error',
+        text: err.response?.data?.detail || 'Lỗi khi thực hiện kích thiết bị khác.'
+      });
+    } finally {
+      setSessionActionLoading(false);
+    }
+  };
+
+  const handleKickSingleSession = async (sessionId, deviceName) => {
+    const confirmMsg = `Xác nhận kích đăng xuất thiết bị "${deviceName}" ra khỏi tài khoản ngay lập tức?`;
+    const ok = window.appConfirm
+      ? await window.appConfirm(confirmMsg, "Kích Thiết Bị Ra Khỏi Tài Khoản", { type: 'warning', confirmText: 'Kích Thiết Bị' })
+      : window.confirm(confirmMsg);
+    if (!ok) return;
+
+    setKickingSessionId(sessionId);
+    try {
+      const token = localStorage.getItem('auth_token');
+      const res = await axios.post(`${API_BASE}/auth/sessions/${sessionId}/kick`, {}, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+      if (res.data?.status === 'success') {
+        setSecurityMessage({
+          type: 'success',
+          text: res.data.message
+        });
+        fetchSessions();
+      }
+    } catch (err) {
+      setSecurityMessage({
+        type: 'error',
+        text: err.response?.data?.detail || 'Lỗi khi kích thiết bị.'
+      });
+    } finally {
+      setKickingSessionId(null);
+    }
+  };
+
+  const handleSetPrimaryDevice = async () => {
+    setSessionActionLoading(true);
+    try {
+      const token = localStorage.getItem('auth_token');
+      const res = await axios.post(`${API_BASE}/auth/sessions/set-primary`, {}, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+      if (res.data?.status === 'success') {
+        if (res.data.token) {
+          localStorage.setItem('auth_token', res.data.token);
+          axios.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
+        }
+        setSecurityMessage({
+          type: 'success',
+          text: res.data.message || 'Đã cài máy này làm thiết bị chuẩn nhất của tài khoản!'
+        });
+        fetchSessions();
+      }
+    } catch (err) {
+      setSecurityMessage({
+        type: 'error',
+        text: err.response?.data?.detail || 'Lỗi khi thiết lập thiết bị chuẩn.'
+      });
+    } finally {
+      setSessionActionLoading(false);
+    }
+  };
+
+  const otherSessions = useMemo(() => sessions.filter(s => !s.is_current), [sessions]);
+  const otherActiveCount = useMemo(() => sessions.filter(s => !s.is_current && s.is_active).length, [sessions]);
+
   // ── Tab definitions ───────────────────────────────────────────────────────
 
   const tabs = [
     { id: 'dashboard', icon: TrendingUp, label: 'Tổng quan & Tiến trình (θ)' },
+    { id: 'security',  icon: ShieldAlert, label: `Bảo Mật & Thiết Bị${otherActiveCount > 0 ? ` (⚠️ ${otherActiveCount} máy lạ)` : ''}` },
     { id: 'users',     icon: Users,     label: `Quản lý Học sinh (${students.length})` },
     { id: 'teacher-keys', icon: KeyRound, label: `Quản Lý & Sinh Key Giáo Viên (${teacherKeys.length})` },
     { id: 'content',   icon: BookOpen,  label: 'Quản lý Học liệu (CMS)' },
@@ -732,6 +1080,42 @@ export default function AdminPanel({ keys, onSaveKeys }) {
           </button>
         </div>
       </div>
+
+      {/* ── CẢNH BÁO AN NINH NẾU CÓ MÁY KHÁC ĐANG MỞ ── */}
+      {otherActiveCount > 0 && (
+        <div className="p-5 rounded-3xl bg-gradient-to-r from-rose-950/90 via-red-900/80 to-rose-950/90 border-2 border-rose-500/60 shadow-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 animate-pulse">
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 rounded-2xl bg-rose-500/30 text-rose-300 border border-rose-400/40 flex items-center justify-center shrink-0">
+              <ShieldAlert className="w-7 h-7" />
+            </div>
+            <div>
+              <h4 className="text-base font-black text-white flex items-center gap-2">
+                <span>CẢNH BÁO: Phát hiện {otherActiveCount} máy tính khác đang mở tài khoản Admin!</span>
+                <span className="text-[10px] bg-rose-500 text-white px-2 py-0.5 rounded-md uppercase font-black">Nguy cấp</span>
+              </h4>
+              <p className="text-xs text-rose-200/90 mt-0.5">
+                Có thể là máy tính tại điểm thi chưa thoát được. Hãy bấm kích ngay để bảo vệ an toàn toàn bộ hệ thống!
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 w-full md:w-auto shrink-0">
+            <button
+              onClick={handleKickAllOthers}
+              disabled={sessionActionLoading}
+              className="flex-1 md:flex-none px-5 py-3 rounded-2xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-black text-xs shadow-xl shadow-rose-600/40 transition cursor-pointer flex items-center justify-center gap-2 border border-rose-400/40"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>🚨 KÍCH ĐĂNG XUẤT TẤT CẢ MÁY KHÁC NGAY</span>
+            </button>
+            <button
+              onClick={() => setAdminTab('security')}
+              className="px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-extrabold text-xs transition cursor-pointer flex items-center gap-1.5"
+            >
+              <span>Xem thiết bị</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ── TAB BAR ── */}
       <div className="flex items-center bg-[#070b18] border border-white/10 p-1.5 rounded-2xl gap-1.5 overflow-x-auto">
@@ -861,7 +1245,233 @@ export default function AdminPanel({ keys, onSaveKeys }) {
       )}
 
       {/* ══════════════════════════════════════════════════════════════
-          TAB 2: QUẢN LÝ TÀI KHOẢN HỌC SINH
+          TAB 2: BẢO MẬT & QUẢN LÝ THIẾT BỊ ĐĂNG NHẬP (KÍCH MÁY KHÁC)
+      ══════════════════════════════════════════════════════════════ */}
+      {adminTab === 'security' && (
+        <div className="space-y-6">
+
+          {/* Banner Thông báo & Thao tác khẩn cấp */}
+          <div className="glass-card rounded-3xl p-6 md:p-8 border border-rose-500/40 bg-gradient-to-r from-rose-950/40 via-red-950/30 to-indigo-950/40 space-y-5 relative overflow-hidden shadow-2xl">
+            <div className="absolute top-0 right-0 w-80 h-80 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-5 relative z-10">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-rose-400 shadow-xl shadow-rose-500/20 shrink-0">
+                  <ShieldAlert className="w-8 h-8" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h2 className="text-xl md:text-2xl font-black text-white font-outfit">Bảo Mật &amp; Quản Lý Thiết Bị Đăng Nhập</h2>
+                    <span className="text-[10px] bg-rose-500/20 text-rose-300 border border-rose-500/30 px-2.5 py-0.5 rounded-full font-extrabold uppercase tracking-wider">
+                      Chống rò rỉ quyền Admin
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-300 mt-1 max-w-2xl leading-relaxed">
+                    Bạn vừa đi thi về hoặc quên chưa đăng xuất trên máy tính tại phòng thi / máy lạ?
+                    Bấm nút kích bên dưới để <strong className="text-rose-300">lập tức đá văng tất cả các máy khác</strong> ra khỏi tài khoản của bạn và xác nhận máy tính này là <strong className="text-emerald-300">thiết bị chính chủ (chuẩn nhất)</strong>!
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto shrink-0">
+                <button
+                  onClick={handleKickAllOthers}
+                  disabled={sessionActionLoading}
+                  className="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-gradient-to-r from-rose-600 via-red-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-black text-xs shadow-xl shadow-rose-600/30 transition transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer flex items-center justify-center gap-2.5 border border-rose-400/40"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>🚨 KÍCH ĐĂNG XUẤT TẤT CẢ MÁY KHÁC</span>
+                </button>
+                <button
+                  onClick={fetchSessions}
+                  disabled={loadingSessions}
+                  className="px-4 py-3.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 hover:text-white font-bold text-xs transition cursor-pointer flex items-center justify-center gap-2"
+                >
+                  <RefreshCw className={`w-4 h-4 ${loadingSessions ? 'animate-spin' : ''}`} />
+                  <span>Làm mới</span>
+                </button>
+              </div>
+            </div>
+
+            {securityMessage && (
+              <div className={`p-4 rounded-2xl text-xs font-bold border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-fade-in ${
+                securityMessage.type === 'success' ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300' : 'bg-rose-500/15 border-rose-500/30 text-rose-300'
+              }`}>
+                <div className="flex items-center gap-2">
+                  <span>{securityMessage.text}</span>
+                </div>
+                <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
+                  {securityMessage.needLogin && (
+                    <button
+                      onClick={() => onOpenAuth ? onOpenAuth() : window.location.reload()}
+                      className="px-4 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-black text-xs shadow-md transition cursor-pointer flex items-center gap-1.5 shrink-0 border border-rose-400/40"
+                    >
+                      <Key className="w-3.5 h-3.5" />
+                      <span>Đăng nhập lại Admin</span>
+                    </button>
+                  )}
+                  <button onClick={() => setSecurityMessage(null)} className="text-gray-400 hover:text-white font-black text-sm px-2 cursor-pointer">✕</button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* PHẦN 1: MÁY TÍNH HIỆN TẠI (MÁY CHUẨN NHẤT) */}
+          <div className="glass-card rounded-3xl p-6 md:p-8 border border-emerald-500/40 bg-gradient-to-r from-emerald-950/20 via-slate-900/40 to-indigo-950/20 space-y-5 relative">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shadow-lg shadow-emerald-500/20">
+                  <Laptop className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-black text-white font-outfit">Thiết Bị Của Bạn (Máy Này)</h3>
+                    <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-2.5 py-0.5 rounded-full font-black flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping inline-block" />
+                      ĐANG TRUY CẬP
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-400 mt-0.5">Máy tính bạn đang trực tiếp điều hành hệ thống Examora AI</p>
+                </div>
+              </div>
+
+              <button
+                onClick={handleSetPrimaryDevice}
+                disabled={sessionActionLoading}
+                className="px-4 py-2.5 rounded-xl bg-emerald-600/30 hover:bg-emerald-600/50 border border-emerald-500/40 text-emerald-300 font-extrabold text-xs transition flex items-center gap-2 cursor-pointer shadow-md"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>⭐ Cài máy này là máy chuẩn nhất</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/10 space-y-1">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Tên thiết bị</span>
+                <div className="text-sm font-black text-white">{currentDeviceName || 'Máy tính hiện tại'}</div>
+                <p className="text-[10px] text-emerald-400 font-semibold">Thiết bị tin cậy số 1</p>
+              </div>
+              <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/10 space-y-1">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Địa chỉ IP kết nối</span>
+                <div className="text-sm font-black text-indigo-300 font-mono">{currentIp || '127.0.0.1'}</div>
+                <p className="text-[10px] text-gray-400">Đã định tuyến an toàn</p>
+              </div>
+              <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/10 space-y-1">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Trạng thái định danh</span>
+                <div className="text-sm font-black text-emerald-300 flex items-center gap-1.5">
+                  <Check className="w-4 h-4 text-emerald-400" />
+                  <span>Máy Chuẩn Nhất</span>
+                </div>
+                <p className="text-[10px] text-gray-400">Không bao giờ bị kích nhầm</p>
+              </div>
+              <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/10 space-y-1">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Quyền hạn hệ thống</span>
+                <div className="text-sm font-black text-rose-400">ADMINISTRATOR</div>
+                <p className="text-[10px] text-gray-400">Toàn quyền điều hành</p>
+              </div>
+            </div>
+          </div>
+
+          {/* PHẦN 2: CÁC MÁY KHÁC (MÁY ĐIỂM THI / MÁY LẠ) */}
+          <div className="glass-card rounded-3xl p-6 md:p-8 border border-white/10 space-y-5">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-lg font-black text-white font-outfit">Danh Sách Máy Khác / Máy Tại Điểm Thi</h3>
+                  <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-extrabold ${
+                    otherActiveCount > 0 ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'bg-white/10 text-gray-400'
+                  }`}>
+                    {otherActiveCount} máy đang mở
+                  </span>
+                </div>
+                <p className="text-xs text-gray-400 mt-0.5">Tất cả các máy tính khác từng đăng nhập tài khoản của bạn</p>
+              </div>
+            </div>
+
+            {loadingSessions ? (
+              <div className="py-12 flex flex-col items-center justify-center gap-3 text-gray-400 text-xs">
+                <RefreshCw className="w-6 h-6 animate-spin text-indigo-400" />
+                <span>Đang kiểm tra trạng thái các thiết bị...</span>
+              </div>
+            ) : otherSessions.length === 0 ? (
+              <div className="py-10 text-center space-y-2 border border-dashed border-white/10 rounded-2xl bg-white/[0.01]">
+                <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto" />
+                <h4 className="text-sm font-black text-white">An toàn tuyệt đối! Không phát hiện máy tính nào khác</h4>
+                <p className="text-xs text-gray-400 max-w-md mx-auto">
+                  Chỉ có duy nhất máy tính này của bạn đang truy cập tài khoản. Toàn bộ các máy khác (kể cả máy tại phòng thi) đã bị loại bỏ an toàn.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {otherSessions.map(sess => (
+                  <div
+                    key={sess.session_id}
+                    className={`p-4 md:p-5 rounded-2xl border transition flex flex-col md:flex-row items-start md:items-center justify-between gap-4 ${
+                      sess.is_active
+                        ? 'bg-rose-950/20 border-rose-500/40 hover:border-rose-500/60'
+                        : 'bg-white/[0.01] border-white/5 opacity-60'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3.5">
+                      <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${
+                        sess.is_active
+                          ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                          : 'bg-gray-800 text-gray-500 border border-white/5'
+                      }`}>
+                        <Monitor className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h4 className="font-extrabold text-sm text-white">{sess.device_name}</h4>
+                          {sess.is_active ? (
+                            <span className="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-md font-bold">
+                              ⚠️ Đang mở trên máy này (Chưa thoát)
+                            </span>
+                          ) : (
+                            <span className="text-[10px] bg-gray-700/50 text-gray-400 border border-white/10 px-2 py-0.5 rounded-md font-bold">
+                              ✓ Đã kích đăng xuất
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-gray-400 mt-1 flex-wrap">
+                          <span>IP: <strong className="text-gray-300 font-mono">{sess.ip_address || 'Không rõ'}</strong></span>
+                          <span>•</span>
+                          <span>Hệ điều hành: <strong className="text-gray-300">{sess.os_name}</strong></span>
+                          <span>•</span>
+                          <span>Trình duyệt: <strong className="text-gray-300">{sess.browser}</strong></span>
+                          {sess.created_at && (
+                            <>
+                              <span>•</span>
+                              <span>Đăng nhập lúc: <strong className="text-gray-300">{sess.created_at.slice(0, 16).replace('T', ' ')}</strong></span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {sess.is_active ? (
+                      <button
+                        onClick={() => handleKickSingleSession(sess.session_id, sess.device_name)}
+                        disabled={kickingSessionId === sess.session_id}
+                        className="w-full md:w-auto px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs transition shadow-md shadow-rose-600/20 cursor-pointer flex items-center justify-center gap-2 shrink-0 border border-rose-400/30"
+                      >
+                        <LogOut className="w-3.5 h-3.5" />
+                        <span>{kickingSessionId === sess.session_id ? 'Đang kích...' : 'Kích máy này ra ngay'}</span>
+                      </button>
+                    ) : (
+                      <span className="text-xs text-gray-500 font-bold px-3 py-1 bg-white/5 rounded-lg border border-white/5 shrink-0">
+                        Phiên đã vô hiệu hóa
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════
+          TAB 3: QUẢN LÝ TÀI KHOẢN HỌC SINH
       ══════════════════════════════════════════════════════════════ */}
       {adminTab === 'users' && (
         <div className="glass-card rounded-3xl p-6 md:p-8 border border-white/10 space-y-5">
@@ -944,7 +1554,7 @@ export default function AdminPanel({ keys, onSaveKeys }) {
                             </div>
                             <div>
                               <span className="font-bold text-white block">{u.fullname}</span>
-                              <span className="text-[10px] text-gray-500">Mục tiêu: {u.target_score} điểm</span>
+                              <span className="text-[10px] text-gray-500">{u.role === 'admin' ? 'Quản trị viên' : 'Học sinh'}</span>
                             </div>
                           </div>
                         </td>
@@ -1059,6 +1669,86 @@ export default function AdminPanel({ keys, onSaveKeys }) {
             </div>
           </div>
 
+          {/* Danh Sách Yêu Cầu Đăng Ký Chờ Phê Duyệt */}
+          {teacherRequests.length > 0 && (
+            <div className="glass-card rounded-3xl p-6 border border-cyan-500/40 bg-gradient-to-b from-[#09152a] to-[#0a0f24] space-y-4 shadow-2xl animate-fade-in">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold">
+                    <Send className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-extrabold text-base text-white">Yêu Cầu Đăng Ký Cấp Quyền Giáo Viên Mới</h3>
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+                        {teacherRequests.filter(r => r.status === 'pending').length} Chờ Duyệt
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-300">Các Thầy/Cô đã gửi thông tin qua form trên Cổng Giáo Viên.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[360px] overflow-y-auto pr-1">
+                {teacherRequests.map((req) => (
+                  <div
+                    key={req.id}
+                    className={`p-4 rounded-2xl border transition space-y-3 ${
+                      req.status === 'approved'
+                        ? 'bg-emerald-500/5 border-emerald-500/20 opacity-80'
+                        : 'bg-black/40 border-cyan-500/30 hover:border-cyan-500/60 shadow-lg'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <h4 className="font-extrabold text-sm text-white flex items-center gap-1.5">
+                          <span>{req.teacherName}</span>
+                          {req.status === 'approved' && (
+                            <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Đã Duyệt</span>
+                          )}
+                        </h4>
+                        <div className="text-xs text-cyan-300 font-mono mt-0.5">{req.school || 'Trường THPT'}</div>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteTeacherRequest(req.id)}
+                        className="text-gray-500 hover:text-rose-400 p-1 cursor-pointer"
+                        title="Xóa yêu cầu này"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
+                    <div className="text-xs text-slate-300 space-y-1 bg-white/5 p-2.5 rounded-xl">
+                      <div>📞 SĐT / Zalo: <strong className="text-white font-mono">{req.phone}</strong></div>
+                      {req.note && <div>💬 Lời nhắn: <span className="text-slate-300 italic">{req.note}</span></div>}
+                      <div className="text-[10px] text-gray-400">⏱ Gửi lúc: {req.timestamp}</div>
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-1">
+                      <button
+                        onClick={() => handleApproveTeacherRequest(req)}
+                        className="flex-1 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 shadow transition cursor-pointer"
+                      >
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>Duyệt &amp; Cấp Key</span>
+                      </button>
+                      <a
+                        href={`https://zalo.me/${req.phone.replace(/[^0-9]/g, '')}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-3 py-2 rounded-xl bg-[#0068FF]/20 hover:bg-[#0068FF]/30 text-blue-300 border border-[#0068FF]/40 text-xs font-bold flex items-center justify-center gap-1 transition"
+                        title="Nhắn tin Zalo"
+                      >
+                        <MessageSquare className="w-3.5 h-3.5 text-[#0068FF]" />
+                        <span>Zalo</span>
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             
             {/* Cột 1: Form Sinh Key Mới (Generator) */}
@@ -1147,6 +1837,23 @@ export default function AdminPanel({ keys, onSaveKeys }) {
 
                   <div>
                     <label className="text-[11px] text-gray-300 font-bold block mb-1">
+                      Thời Hạn Sử Dụng Của Key: *
+                    </label>
+                    <select
+                      value={newKeyDuration}
+                      onChange={(e) => setNewKeyDuration(e.target.value)}
+                      className="w-full bg-black/50 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-amber-400 cursor-pointer"
+                    >
+                      <option value="1th">1 Tháng (Dùng thử)</option>
+                      <option value="3th">3 Tháng</option>
+                      <option value="6th">6 Tháng</option>
+                      <option value="12th">1 Năm (Thông dụng)</option>
+                      <option value="lifetime">Trọn Đời (VIP)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] text-gray-300 font-bold block mb-1">
                       Ghi Chú / Phân Quyền:
                     </label>
                     <input
@@ -1224,6 +1931,8 @@ export default function AdminPanel({ keys, onSaveKeys }) {
                             <span>SĐT/Zalo: <strong className="text-slate-200">{k.phone}</strong></span>
                             <span>•</span>
                             <span>Ngày cấp: <strong className="text-slate-200">{k.date}</strong></span>
+                            <span>•</span>
+                            <span>Hạn dùng: <strong className="text-amber-400">{k.expiryDate === 'lifetime' || !k.expiryDate ? 'Trọn đời' : k.expiryDate}</strong></span>
                             <span>•</span>
                             <span className="italic text-gray-400">{k.note}</span>
                           </div>
@@ -1878,9 +2587,17 @@ export default function AdminPanel({ keys, onSaveKeys }) {
               <p className="text-xs text-gray-400 leading-relaxed">
                 Xuất toàn bộ session log với header được định dạng, màu sắc phân biệt, cột tự động điều chỉnh độ rộng. Phù hợp cho báo cáo và trình bày trước giám khảo.
               </p>
-              <div className="p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/15 text-[10px] text-emerald-400/80">
-                <strong className="block mb-1">Cột dữ liệu:</strong>
-                student_id · fullname · grade · experiment_group · repetition_engine · question_id · skill · correct · theta_before · theta_after · timestamp
+              <div className="p-3.5 rounded-2xl bg-emerald-950/40 border border-emerald-500/20 text-xs text-emerald-300">
+                <strong className="block mb-2 text-white font-bold text-xs flex items-center gap-1.5">
+                  <Check className="w-3.5 h-3.5 text-emerald-400" /> Các trường dữ liệu chuẩn hóa:
+                </strong>
+                <div className="flex flex-wrap gap-1.5">
+                  {['student_id', 'fullname', 'grade', 'experiment_group', 'repetition_engine', 'question_id', 'skill', 'correct', 'theta_before', 'theta_after', 'timestamp_iso'].map(col => (
+                    <span key={col} className="px-2 py-0.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 font-mono text-[11px] text-emerald-300 font-semibold">
+                      {col}
+                    </span>
+                  ))}
+                </div>
               </div>
               <button
                 onClick={() => handleExport('xlsx')}
@@ -1905,9 +2622,18 @@ export default function AdminPanel({ keys, onSaveKeys }) {
               <p className="text-xs text-gray-400 leading-relaxed">
                 Xuất dữ liệu thô dạng CSV mã hóa UTF-8 có BOM — tương thích hoàn toàn với SPSS, R (read.csv), Python (pandas), Stata để phân tích T-test, ANOVA, hồi quy.
               </p>
-              <div className="p-3 rounded-xl bg-indigo-950/40 border border-indigo-500/15 text-[10px] text-indigo-400/80">
-                <strong className="block mb-1">Dùng trong SPSS:</strong>
-                File → Import Data → CSV · Encoding: UTF-8 · Separator: comma · Decimal: period
+              <div className="p-3.5 rounded-2xl bg-indigo-950/40 border border-indigo-500/20 text-xs text-indigo-300">
+                <strong className="block mb-2 text-white font-bold text-xs flex items-center gap-1.5">
+                  <FileText className="w-3.5 h-3.5 text-indigo-400" /> Hướng dẫn nhập dữ liệu SPSS:
+                </strong>
+                <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+                  <span className="px-2 py-0.5 rounded-lg bg-indigo-500/20 text-indigo-200 font-bold">File</span>
+                  <span className="text-slate-500">→</span>
+                  <span className="px-2 py-0.5 rounded-lg bg-indigo-500/20 text-indigo-200 font-bold">Import Data</span>
+                  <span className="text-slate-500">→</span>
+                  <span className="px-2 py-0.5 rounded-lg bg-indigo-500/20 text-indigo-200 font-bold">CSV Data</span>
+                  <span className="text-slate-400 font-medium ml-1">· Encoding: <strong className="text-white">UTF-8</strong> · Separator: <strong className="text-white">Comma</strong></span>
+                </div>
               </div>
               <button
                 onClick={() => handleExport('csv')}
@@ -1920,11 +2646,15 @@ export default function AdminPanel({ keys, onSaveKeys }) {
           </div>
 
           {/* Info note */}
-          <div className="p-5 rounded-2xl bg-amber-950/20 border border-amber-500/20 flex gap-3">
-            <Info className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-            <div className="text-xs text-gray-300 leading-relaxed space-y-1">
-              <p><strong className="text-amber-300">Lưu ý nghiên cứu:</strong> Dữ liệu xuất phản ánh chính xác log thực nghiệm từ file <code className="bg-white/5 px-1 rounded">research_experiment_logs.jsonl</code>. Thông tin fullname và grade được map từ SQLite database tại thời điểm xuất.</p>
-              <p>Biến <code className="bg-white/5 px-1 rounded">experiment_group</code> nhận giá trị <strong className="text-indigo-300">ADAPTIVE</strong> (nhóm thực nghiệm dùng hệ thống AI thích ứng) hoặc <strong className="text-rose-300">CONTROL</strong> (nhóm đối chứng). Dùng biến này làm nhân tố phân nhóm trong T-test độc lập.</p>
+          <div className="p-5 rounded-2xl bg-amber-950/25 border border-amber-500/30 flex gap-3 shadow-lg">
+            <Info className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+            <div className="text-xs text-slate-200 leading-relaxed space-y-1.5">
+              <p>
+                <strong className="text-amber-300 font-bold">Lưu ý nghiên cứu khoa học:</strong> Dữ liệu xuất phản ánh chính xác 100% nhật ký thực nghiệm từ hệ thống. Thông tin họ tên và khối lớp được đồng bộ tự động từ cơ sở dữ liệu học sinh.
+              </p>
+              <p>
+                Biến phân nhóm <span className="px-2 py-0.5 rounded bg-white/10 font-mono text-amber-200 text-[11px] font-bold">experiment_group</span> nhận 2 giá trị chính thức: <span className="px-2 py-0.5 rounded bg-indigo-500/25 border border-indigo-500/30 text-indigo-300 font-bold text-[11px]">ADAPTIVE</span> (Nhóm thực nghiệm dùng AI thích ứng) hoặc <span className="px-2 py-0.5 rounded bg-rose-500/25 border border-rose-500/30 text-rose-300 font-bold text-[11px]">CONTROL</span> (Nhóm đối chứng). Dùng biến này làm nhân tố độc lập trong phân tích Independent Samples T-Test và ANOVA.
+              </p>
             </div>
           </div>
         </div>
@@ -1934,41 +2664,378 @@ export default function AdminPanel({ keys, onSaveKeys }) {
           TAB 4: API KEYS & SYSTEM
       ══════════════════════════════════════════════════════════════ */}
       {adminTab === 'system' && (
-        <div className="glass-card rounded-3xl p-6 md:p-8 border border-white/10 space-y-6">
-          <div className="flex items-center gap-3 border-b border-white/10 pb-5">
-            <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
-              <Key className="w-6 h-6" />
-            </div>
-            <div>
-              <h2 className="font-extrabold text-2xl text-white font-outfit">Trạng thái API Keys &amp; Hệ thống</h2>
-              <p className="text-xs text-gray-400 mt-0.5">Kiểm tra kết nối các mô hình AI đang hoạt động</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {[
-              { label: 'Google Gemini AI', sub: 'Gemini 1.5 Flash / 2.0', key: keys?.gemini, icon: Zap, color: 'amber' },
-              { label: 'Groq Cloud Whisper', sub: 'Whisper Large v3 Turbo', key: keys?.groq, icon: Cpu, color: 'blue' },
-              { label: 'Azure Cognitive', sub: 'Speech & Pronunciation', key: keys?.azure, icon: Mic, color: 'purple' },
-            ].map(({ label, sub, key: hasKey, icon: Icon, color }) => (
-              <div key={label} className="p-5 rounded-2xl bg-white/[0.02] border border-white/10 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="text-xs font-bold text-gray-400 uppercase block">{label}</span>
-                    <span className="text-sm font-bold text-white mt-0.5">{sub}</span>
-                  </div>
-                  <span className={`text-[10px] font-bold px-2.5 py-1 rounded-lg ${hasKey ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'}`}>
-                    {hasKey ? '✓ CẤU HÌNH' : '✗ CHƯA NHẬP'}
-                  </span>
+        <div className="space-y-6 animate-fade-in">
+          {/* ── HEADER BANNER ── */}
+          <div className="glass-card rounded-3xl p-6 md:p-8 border border-white/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 bg-gradient-to-br from-[#0c1228] via-[#080d1e] to-[#050814]">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-600 p-0.5 shadow-lg shadow-indigo-500/20 shrink-0">
+                <div className="w-full h-full bg-[#080d1e] rounded-[14px] flex items-center justify-center text-indigo-400">
+                  <Brain className="w-7 h-7 animate-pulse text-indigo-300" />
                 </div>
               </div>
-            ))}
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="font-extrabold text-2xl text-white font-outfit">Trung Tâm Quản Trị Siêu Trí Tuệ AI</h2>
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                    Frontier AI Hub • 7 Providers
+                  </span>
+                </div>
+                <p className="text-xs text-gray-400 mt-1 max-w-2xl leading-relaxed">
+                  Tích hợp &amp; điều phối toàn diện các mô hình AI mạnh nhất thế giới: <strong>OpenAI (GPT-4o/o1)</strong>, <strong>Claude 3.7 Sonnet</strong>, <strong>DeepSeek R1</strong>, <strong>Google Gemini 2.0</strong>, <strong>Groq LPU</strong> &amp; <strong>OpenRouter 200+ Models</strong>.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 w-full md:w-auto shrink-0">
+              <button
+                type="button"
+                onClick={handleSaveAllAiConfig}
+                disabled={isSavingAi}
+                className="w-full md:w-auto px-5 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 text-white font-extrabold text-xs shadow-xl shadow-indigo-600/30 flex items-center justify-center gap-2 transition cursor-pointer disabled:opacity-50"
+              >
+                {isSavingAi ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                <span>{isSavingAi ? 'Đang lưu...' : 'Lưu toàn bộ cấu hình AI'}</span>
+              </button>
+            </div>
           </div>
 
-          <div className="p-5 rounded-2xl bg-indigo-950/20 border border-indigo-500/15 text-xs text-gray-300 leading-relaxed space-y-2">
-            <h4 className="font-extrabold text-indigo-400 uppercase text-[10px] tracking-wider">💡 Hướng dẫn cho nhà nghiên cứu KHKT</h4>
-            <p>Học sinh / Giáo viên nhập khóa API cá nhân thông qua tab <strong>Cấu hình</strong> ở menu chính. Khóa API được lưu trực tiếp trong trình duyệt (localStorage), <strong>không gửi lên server</strong> — đảm bảo bảo mật và riêng tư cao nhất.</p>
-            <p>Để hệ thống hoạt động đầy đủ: cần ít nhất <strong className="text-amber-300">Gemini API Key</strong> cho AI chat + adaptive questions, và <strong className="text-blue-300">Groq API Key</strong> cho Speech-to-Text.</p>
+          {/* ── SAVE STATUS ALERT BANNER ── */}
+          {saveAiStatus && (
+            <div className={`p-4 rounded-2xl border flex items-center gap-3 text-xs font-bold animate-fade-in ${
+              saveAiStatus.type === 'success' 
+                ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300 shadow-lg shadow-emerald-500/10' 
+                : 'bg-rose-500/15 border-rose-500/30 text-rose-300 shadow-lg shadow-rose-500/10'
+            }`}>
+              {saveAiStatus.type === 'success' ? <CheckCircle className="w-5 h-5 shrink-0 text-emerald-400" /> : <XCircle className="w-5 h-5 shrink-0 text-rose-400" />}
+              <span>{saveAiStatus.message}</span>
+            </div>
+          )}
+
+          {/* ── BỘ NÃO SUY LUẬN MẶC ĐỊNH (DEFAULT AI BRAIN SELECTOR) ── */}
+          <div className="glass-card rounded-3xl p-6 md:p-7 border border-white/10 space-y-4 bg-slate-950/40">
+            <div className="flex items-center justify-between flex-wrap gap-2 border-b border-white/10 pb-4">
+              <div className="flex items-center gap-2.5">
+                <Sliders className="w-5 h-5 text-indigo-400" />
+                <h3 className="font-extrabold text-sm text-white uppercase tracking-wider">
+                  Bộ Não AI Suy Luận Ưu Tiên Toàn Hệ Thống (Default AI Brain Engine)
+                </h3>
+              </div>
+              <span className="text-[11px] text-gray-400 font-medium">
+                Áp dụng cho Socrates AI Chat, Giải đề qua ảnh, Luyện viết câu &amp; Chấm luận
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {[
+                { id: 'auto', label: '⚡ Tự Động Thông Minh', sub: 'Tự chọn model mạnh nhất có sẵn (R1 → GPT-4o → Claude → Gemini)', color: 'border-indigo-500/40 bg-indigo-500/10 text-indigo-300' },
+                { id: 'reasoning', label: '🧠 DeepSeek R1 Reasoning', sub: 'Tư duy logic sâu, bóc tách cạm bẫy câu hỏi phân hóa điểm 9+', color: 'border-cyan-500/40 bg-cyan-500/10 text-cyan-300' },
+                { id: 'openai', label: '👑 OpenAI GPT-4o / o1', sub: 'Tiêu chuẩn vàng toàn cầu, độ chính xác ngữ pháp và đọc hiểu đỉnh cao', color: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300' },
+                { id: 'claude', label: '💎 Claude 3.7 Sonnet', sub: 'Văn phong bản xứ xuất sắc, viết luận và chấm bài 4 tiêu chí chuẩn IELTS', color: 'border-amber-500/40 bg-amber-500/10 text-amber-300' },
+                { id: 'openrouter', label: '🌐 OpenRouter Multi-Model', sub: 'Cổng đa mô hình mở rộng, linh hoạt kết nối 200+ AI quốc tế', color: 'border-purple-500/40 bg-purple-500/10 text-purple-300' },
+                { id: 'gemini', label: '✨ Google Gemini 2.0 Flash', sub: 'Đa phương thức thị giác cực mạnh, giải đề từ ảnh chụp, ngữ cảnh 2M tokens', color: 'border-blue-500/40 bg-blue-500/10 text-blue-300' },
+                { id: 'groq', label: '🚀 Groq LPU Siêu Tốc (500 w/s)', sub: 'Tốc độ phản xạ tức thì (<0.2s) kèm nhận diện âm thanh giọng nói Whisper', color: 'border-yellow-500/40 bg-yellow-500/10 text-yellow-300' },
+              ].map((engine) => (
+                <button
+                  key={engine.id}
+                  type="button"
+                  onClick={() => setDefaultBrain(engine.id)}
+                  className={`p-4 rounded-2xl border text-left transition duration-200 cursor-pointer flex flex-col justify-between gap-2 relative ${
+                    defaultBrain === engine.id
+                      ? `${engine.color} shadow-lg ring-1 ring-white/20`
+                      : 'border-white/5 bg-white/[0.02] hover:bg-white/[0.05] text-gray-400 hover:text-gray-200'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-extrabold text-xs text-white">{engine.label}</span>
+                    {defaultBrain === engine.id && (
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping shrink-0" />
+                    )}
+                  </div>
+                  <p className="text-[11px] leading-relaxed text-gray-400">{engine.sub}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* ── BẢNG HƯỚNG DẪN: TOP AI CHUYÊN TIẾNG ANH ĐÚNG MẠNH & 1-CHẠM GOOGLE ── */}
+          <div className="glass-card rounded-3xl p-5 md:p-6 border border-amber-500/30 bg-gradient-to-r from-amber-950/30 via-slate-950 to-indigo-950/30 space-y-3">
+            <div className="flex items-center gap-2 text-amber-300 font-extrabold text-sm uppercase tracking-wider">
+              <Flame className="w-5 h-5 text-amber-400" />
+              <span>Gợi ý: Bộ 3 Siêu AI Tiếng Anh Cực Mạnh — Đăng Ký 1-Chạm Google — Miễn Phí 100%</span>
+            </div>
+            <p className="text-xs text-gray-300 leading-relaxed">
+              Bạn <strong>hoàn toàn không cần phải vất vả đăng ký thẻ Visa quốc tế hay tài khoản Azure phức tạp</strong>. Dưới đây là 3 AI chuyên sâu tiếng Anh tốt nhất, đăng ký chỉ mất 10 giây qua Google:
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1 text-xs">
+              <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-1">
+                <span className="font-extrabold text-white flex items-center gap-1.5 text-xs">
+                  <Zap className="w-4 h-4 text-blue-400" /> Google Gemini 2.0 / 2.5
+                </span>
+                <p className="text-[11px] text-gray-400">
+                  <strong className="text-emerald-400">Miễn phí 100% vĩnh viễn</strong>. Đăng ký bằng Gmail trong 5 giây. Vô địch về giải bài, đọc ảnh chụp đề thi THPT, phân tích ngữ pháp &amp; bài đọc hiểu.
+                </p>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-1">
+                <span className="font-extrabold text-white flex items-center gap-1.5 text-xs">
+                  <Cpu className="w-4 h-4 text-yellow-400" /> Groq Cloud Whisper
+                </span>
+                <p className="text-[11px] text-gray-400">
+                  <strong className="text-emerald-400">Miễn phí 100% vĩnh viễn</strong>. Đăng nhập 1-chạm Google. Nhận diện giọng đọc tiếng Anh siêu nhạy, tốc độ phản xạ 500 từ/giây.
+                </p>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-1">
+                <span className="font-extrabold text-white flex items-center gap-1.5 text-xs">
+                  <Globe className="w-4 h-4 text-purple-400" /> OpenRouter (Claude 3.7)
+                </span>
+                <p className="text-[11px] text-gray-400">
+                  Đăng nhập 1-chạm Google. Mở khóa <strong>Claude 3.7 Sonnet</strong> (vua viết luận tiếng Anh thế giới). Có sẵn model miễn phí, hoặc nạp tiền cực dễ không bị chặn thẻ.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* ── GRID 7 NHÀ CUNG CẤP AI (AI PROVIDERS CARDS) ── */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            {[
+              {
+                id: 'gemini',
+                name: 'Google Gemini AI',
+                models: 'Gemini 2.0 Flash • Gemini 2.5 • Flash Latest',
+                badge: '🌟 VUA GIẢI ĐỀ & NGỮ PHÁP • MIỄN PHÍ 100%',
+                badgeColor: 'bg-blue-500/10 text-blue-300 border-blue-500/30',
+                description: 'Đăng ký 1-chạm bằng Google (không cần thẻ). Vô địch về nhận diện ảnh chụp đề thi THPT, phân tích đề viết tay, giải thích ngữ pháp và sinh bài đọc thích ứng IRT.',
+                placeholder: 'AIzaSy... hoặc AQ.Ab8...',
+                docUrl: 'https://aistudio.google.com/app/apikey',
+                docLabel: 'Google AI Studio (Miễn phí 100%)'
+              },
+              {
+                id: 'groq',
+                name: 'Groq Cloud LPU & Whisper',
+                models: 'Llama 3.3 70B • Whisper Large v3 Turbo',
+                badge: '⚡ NHẬN DIỆN GIỌNG NÓI & PHẢN XẠ 500 W/S',
+                badgeColor: 'bg-yellow-500/10 text-yellow-300 border-yellow-500/30',
+                description: 'Đăng ký 1-chạm bằng Google (không cần thẻ). Nhận diện phát âm tiếng Anh siêu chuẩn và tốc độ sinh văn bản tức thì (<0.2s) phục vụ đàm thoại giao tiếp.',
+                placeholder: 'gsk_...',
+                docUrl: 'https://console.groq.com/keys',
+                docLabel: 'Groq Console (Miễn phí 100%)'
+              },
+              {
+                id: 'openrouter',
+                name: 'OpenRouter AI Hub',
+                models: 'Claude 3.7 Sonnet • GPT-4o • DeepSeek R1 (200+ AI)',
+                badge: '🌐 MỞ KHÓA CLAUDE 3.7 & DỄ NẠP TIỀN',
+                badgeColor: 'bg-purple-500/10 text-purple-300 border-purple-500/30',
+                description: 'Đăng ký 1-chạm bằng Google. Gọi được Claude 3.7 Sonnet (vua viết luận tiếng Anh thế giới) và hàng trăm AI khác. Hỗ trợ nạp tiền cực dễ hoặc dùng model free.',
+                placeholder: 'sk-or-v1-...',
+                docUrl: 'https://openrouter.ai/keys',
+                docLabel: 'OpenRouter Console'
+              },
+              {
+                id: 'azure',
+                name: 'Microsoft Jenny & Gemini Audio',
+                models: 'Microsoft Jenny/Guy Neural Voice • Gemini Audio IPA',
+                badge: '🎉 TÍCH HỢP SẴN • 100% MIỄN PHÍ KHÔNG CẦN THẺ',
+                badgeColor: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30',
+                description: 'Thay thế hoàn toàn Azure! Hệ thống đã tích hợp sẵn công nghệ giọng đọc bản ngữ Microsoft Jenny/Guy Neural và chấm điểm phát âm IPA bằng Gemini Multimodal. Hoàn toàn miễn phí, không cần đăng ký tài khoản Azure hay thẻ tín dụng rườm rà.',
+                placeholder: 'Đã tích hợp sẵn tự động (Hoặc nhập Azure Key riêng nếu muốn)',
+                docUrl: 'https://portal.azure.com/',
+                docLabel: 'Azure Portal (Không bắt buộc)',
+                isBuiltIn: true
+              },
+              {
+                id: 'claude',
+                name: 'Anthropic Claude',
+                models: 'Claude 3.7 Sonnet • Claude 3.5 Sonnet / Haiku',
+                badge: '💎 BẬC THẦY VIẾT LUẬN & NGÔN NGỮ',
+                badgeColor: 'bg-amber-500/10 text-amber-300 border-amber-500/30',
+                description: 'Mô hình AI viết văn bản tiếng Anh tự nhiên nhất thế giới, phân tích cấu trúc bài luận 4 tiêu chí và diễn đạt bản xứ không đối thủ.',
+                placeholder: 'sk-ant-api03-...',
+                docUrl: 'https://console.anthropic.com/settings/keys',
+                docLabel: 'Anthropic Console'
+              },
+              {
+                id: 'openai',
+                name: 'OpenAI (ChatGPT)',
+                models: 'GPT-4o • o1 • o3-mini • GPT-4 Turbo',
+                badge: '👑 MÔ HÌNH TOÀN NĂNG HÀNG ĐẦU',
+                badgeColor: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30',
+                description: 'Tiêu chuẩn vàng của trí tuệ nhân tạo toàn cầu. Giải quyết đề thi THPT, tư duy logic câu khó và đọc hiểu học thuật cực kỳ chuẩn xác.',
+                placeholder: 'sk-proj-... hoặc sk-...',
+                docUrl: 'https://platform.openai.com/api-keys',
+                docLabel: 'OpenAI Platform'
+              },
+              {
+                id: 'deepseek',
+                name: 'DeepSeek AI',
+                models: 'DeepSeek-R1 (Full Reasoning) • DeepSeek-V3',
+                badge: '🧠 SIÊU TƯ DUY SUY LUẬN BẪY ĐỀ THI',
+                badgeColor: 'bg-cyan-500/10 text-cyan-300 border-cyan-500/30',
+                description: 'Mô hình tư duy sâu Reasoning R1 ngang ngửa OpenAI o1, bóc tách cặn kẽ mọi cạm bẫy đề thi phân hóa điểm 9+ với chuỗi suy luận từng bước (nạp $1-$2 để dùng).',
+                placeholder: 'sk-... (Platform DeepSeek)',
+                docUrl: 'https://platform.deepseek.com/api_keys',
+                docLabel: 'DeepSeek Platform'
+              }
+            ].map((prov) => {
+              const currentVal = aiKeysForm[prov.id] || '';
+              const isBuiltIn = Boolean(prov.isBuiltIn);
+              const isConfigured = isBuiltIn || Boolean(currentVal.trim());
+              const isVisible = Boolean(aiKeyVisibility[prov.id]);
+              const testInfo = testResults[prov.id];
+              const isTesting = testingModel === prov.id;
+
+              return (
+                <div
+                  key={prov.id}
+                  className="glass-card rounded-3xl p-6 border border-white/10 flex flex-col justify-between gap-4 bg-[#0a0f24]/70 hover:border-white/20 transition duration-200 shadow-xl"
+                >
+                  <div className="space-y-3">
+                    {/* Header Card */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h4 className="font-extrabold text-base text-white font-outfit">{prov.name}</h4>
+                          <span className={`text-[9px] font-black px-2 py-0.5 rounded-full border ${prov.badgeColor}`}>
+                            {prov.badge}
+                          </span>
+                        </div>
+                        <p className="text-[11px] font-semibold text-indigo-300 mt-0.5">{prov.models}</p>
+                      </div>
+
+                      <span className={`text-[10px] font-black px-2.5 py-1 rounded-xl whitespace-nowrap ${
+                        isConfigured
+                          ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 shadow-sm shadow-emerald-500/10'
+                          : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                      }`}>
+                        {isBuiltIn && !currentVal.trim() ? '✓ TÍCH HỢP SẴN (FREE)' : (isConfigured ? '✓ ĐÃ CẤU HÌNH' : '✗ CHƯA NHẬP')}
+                      </span>
+                    </div>
+
+                    <p className="text-xs text-gray-400 leading-relaxed">{prov.description}</p>
+
+                    {/* Input Field */}
+                    <div className="space-y-1.5 pt-1">
+                      <div className="relative">
+                        <input
+                          type={isVisible ? 'text' : 'password'}
+                          value={currentVal}
+                          onChange={(e) => setAiKeysForm({ ...aiKeysForm, [prov.id]: e.target.value })}
+                          placeholder={prov.placeholder}
+                          className="w-full bg-[#050814] border border-white/10 focus:border-indigo-500 rounded-xl px-3.5 py-2.5 pr-10 text-xs text-white placeholder-gray-600 outline-none transition font-mono"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => toggleKeyVisibility(prov.id)}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 p-1 cursor-pointer"
+                          title={isVisible ? 'Ẩn khóa' : 'Hiện khóa'}
+                        >
+                          {isVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Live Test Feedback Area */}
+                    {testInfo && (
+                      <div className={`p-3 rounded-xl border text-[11px] font-medium animate-fade-in ${
+                        testInfo.status === 'loading'
+                          ? 'bg-indigo-500/10 border-indigo-500/20 text-indigo-300'
+                          : testInfo.status === 'success'
+                          ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+                          : 'bg-rose-500/10 border-rose-500/30 text-rose-300'
+                      }`}>
+                        {testInfo.status === 'loading' && (
+                          <div className="flex items-center gap-2">
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin text-indigo-400" />
+                            <span>Đang gửi tín hiệu ping thử kết nối tới {prov.name}...</span>
+                          </div>
+                        )}
+                        {testInfo.status === 'success' && (
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-1.5 font-bold">
+                              <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
+                              <span>Kết nối thành công ({testInfo.latency_ms}ms) • Model: {testInfo.model}</span>
+                            </div>
+                            {testInfo.reply && (
+                              <p className="text-[10px] text-emerald-400/80 italic pl-5">
+                                Phản hồi: "{testInfo.reply}"
+                              </p>
+                            )}
+                          </div>
+                        )}
+                        {testInfo.status === 'error' && (
+                          <div className="flex items-start gap-1.5">
+                            <XCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                            <span>{testInfo.message}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Card Action Footer */}
+                  <div className="flex items-center justify-between gap-2 pt-2 border-t border-white/5">
+                    <a
+                      href={prov.docUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[11px] font-bold text-indigo-400 hover:text-indigo-300 flex items-center gap-1 transition"
+                    >
+                      <span>Lấy key tại {prov.docLabel}</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+
+                    <button
+                      type="button"
+                      onClick={() => handleTestAiKey(prov.id)}
+                      disabled={isTesting}
+                      className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 hover:text-white font-bold text-[11px] flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50"
+                    >
+                      {isTesting ? (
+                        <>
+                          <RefreshCw className="w-3 h-3 animate-spin text-indigo-400" />
+                          <span>Đang test...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Zap className="w-3 h-3 text-amber-400" />
+                          <span>Test kết nối</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* ── HỘP HƯỚNG DẪN KHOA HỌC & KIẾN TRÚC KHKT ── */}
+          <div className="glass-card rounded-3xl p-6 md:p-7 border border-indigo-500/20 bg-gradient-to-br from-indigo-950/30 to-purple-950/20 text-xs text-gray-300 leading-relaxed space-y-3 shadow-2xl">
+            <div className="flex items-center gap-2 text-indigo-400 font-extrabold uppercase text-xs tracking-wider">
+              <Sparkles className="w-4 h-4 text-amber-400" />
+              <span>Ý nghĩa Khoa học &amp; Kiến trúc Đa Mô Hình (Ensemble Multi-LLM) đối với Đề tài KHKT</span>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-300">
+              <div className="space-y-1.5">
+                <h5 className="font-bold text-white text-xs">1. Phục vụ Nghiên cứu Thực nghiệm So sánh Mô hình</h5>
+                <p className="text-[11px] text-gray-400 leading-relaxed">
+                  Nhà nghiên cứu có thể phân tích đối chứng năng lực nhận thức của học sinh khi học với mô hình <strong>Reasoning chuyên sâu (DeepSeek R1 / o1)</strong> so với mô hình sinh ngữ chuẩn (GPT-4o / Claude) và mô hình đa phương thức (Gemini).
+                </p>
+              </div>
+
+              <div className="space-y-1.5">
+                <h5 className="font-bold text-white text-xs">2. Kiến trúc Độ Sẵn Sàng Cao (High Availability &amp; Fallback)</h5>
+                <p className="text-[11px] text-gray-400 leading-relaxed">
+                  Nếu một nhà cung cấp API bị nghẽn ngạch hoặc hết hạn ngạch, bộ điều phối <strong>Examora Smart Fallback</strong> sẽ tự động chuyển hướng truy vấn sang mô hình kế tiếp mà không làm gián đoạn trải nghiệm học tập của học sinh.
+                </p>
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-white/10 flex items-center justify-between flex-wrap gap-2 text-[11px] text-gray-400">
+              <span>Khóa API được mã hóa lưu trữ kép: Trình duyệt máy khách (localStorage) &amp; Môi trường độc lập máy chủ VPS (.env).</span>
+              <span className="text-indigo-300 font-bold">Examora AI • THPT AI &amp; Luyện Thi ĐGNL 2027</span>
+            </div>
           </div>
         </div>
       )}

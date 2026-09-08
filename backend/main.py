@@ -22,7 +22,8 @@ from ai_services import (
     chat_with_gemini, text_to_speech, speech_to_text, assess_pronunciation, 
     generate_adaptive_question_with_gemini, generate_pronunciation_sentence_with_gemini,
     generate_adaptive_reading, generate_adaptive_listening, calculate_predicted_exam_scores, evaluate_writing_with_gemini,
-    generate_writing_sample_with_gemini, solve_exam_by_image, execute_writing_ai_prompt, clean_api_key
+    generate_writing_sample_with_gemini, solve_exam_by_image, execute_writing_ai_prompt, clean_api_key,
+    test_api_connection
 )
 from adaptive_learning import (
     IRTEngine, IRTQuestion, SpacedRepetitionEngine, ItemBank, KnowledgeGraph, 
@@ -112,7 +113,12 @@ async def health_check():
 class SaveKeysRequest(BaseModel):
     gemini: Optional[str] = ""
     groq: Optional[str] = ""
+    deepseek: Optional[str] = ""
+    openrouter: Optional[str] = ""
+    openai: Optional[str] = ""
+    claude: Optional[str] = ""
     azure: Optional[str] = ""
+    default_engine: Optional[str] = "auto"
 
 @app.post("/api/save-keys")
 async def save_keys_endpoint(request: SaveKeysRequest):
@@ -125,33 +131,67 @@ async def save_keys_endpoint(request: SaveKeysRequest):
         os.environ["GEMINI_API_KEY"] = request.gemini.strip()
     if request.groq and request.groq.strip():
         os.environ["GROQ_API_KEY"] = request.groq.strip()
+    if request.deepseek and request.deepseek.strip():
+        os.environ["DEEPSEEK_API_KEY"] = request.deepseek.strip()
+    if request.openrouter and request.openrouter.strip():
+        os.environ["OPENROUTER_API_KEY"] = request.openrouter.strip()
+    if request.openai and request.openai.strip():
+        os.environ["OPENAI_API_KEY"] = request.openai.strip()
+    if request.claude and request.claude.strip():
+        os.environ["CLAUDE_API_KEY"] = request.claude.strip()
     if request.azure and request.azure.strip():
         os.environ["AZURE_SPEECH_KEY"] = request.azure.strip()
+    if request.default_engine and request.default_engine.strip():
+        os.environ["DEFAULT_AI_ENGINE"] = request.default_engine.strip()
         
     try:
         lines = [
             f"GEMINI_API_KEY={os.environ.get('GEMINI_API_KEY', '')}\n",
             f"GROQ_API_KEY={os.environ.get('GROQ_API_KEY', '')}\n",
+            f"DEEPSEEK_API_KEY={os.environ.get('DEEPSEEK_API_KEY', '')}\n",
+            f"OPENROUTER_API_KEY={os.environ.get('OPENROUTER_API_KEY', '')}\n",
+            f"OPENAI_API_KEY={os.environ.get('OPENAI_API_KEY', '')}\n",
+            f"CLAUDE_API_KEY={os.environ.get('CLAUDE_API_KEY', '')}\n",
             f"AZURE_SPEECH_KEY={os.environ.get('AZURE_SPEECH_KEY', '')}\n",
-            f"AZURE_SPEECH_REGION={os.environ.get('AZURE_SPEECH_REGION', 'southeastasia')}\n"
+            f"AZURE_SPEECH_REGION={os.environ.get('AZURE_SPEECH_REGION', 'southeastasia')}\n",
+            f"DEFAULT_AI_ENGINE={os.environ.get('DEFAULT_AI_ENGINE', 'auto')}\n"
         ]
         with open(env_path, "w", encoding="utf-8") as f:
             f.writelines(lines)
             
-        return {"status": "success", "message": "Đã lưu API Keys lên máy chủ thành công!"}
+        return {"status": "success", "message": "Đã lưu toàn bộ cấu hình API Keys lên máy chủ thành công!"}
     except Exception as e:
         return {"status": "partial", "message": f"Đã nạp vào bộ nhớ (lỗi ghi file: {e})"}
 
+
+class TestKeyRequest(BaseModel):
+    provider: str
+    key: str
+
+@app.post("/api/ai/test-key")
+async def test_key_endpoint(request: TestKeyRequest):
+    """
+    Kiểm tra trực tiếp độ trễ và tính hợp lệ của API Key từ Admin Panel.
+    """
+    if request.provider.lower() not in ["azure", "speech", "tts"] and (not request.key or not request.key.strip()):
+        raise HTTPException(status_code=400, detail="Vui lòng nhập API Key để kiểm tra")
+    result = await test_api_connection(request.provider, (request.key or "").strip())
+    return result
 
 
 @app.post("/api/chat")
 async def chat_endpoint(
     request: ChatRequest,
     x_gemini_key: Optional[str] = Header(None),
-    x_groq_key: Optional[str] = Header(None)
+    x_groq_key: Optional[str] = Header(None),
+    x_deepseek_key: Optional[str] = Header(None),
+    x_openrouter_key: Optional[str] = Header(None),
+    x_openai_key: Optional[str] = Header(None),
+    x_claude_key: Optional[str] = Header(None),
+    x_engine_mode: Optional[str] = Header(None)
 ):
     """
-    Endpoint nhận cuộc hội thoại và trả về phản hồi từ Socrates AI (Gemini + Groq + Socratic Knowledge Engine).
+    Endpoint nhận cuộc hội thoại và trả về phản hồi từ Socrates AI (OpenAI + Claude + DeepSeek + Gemini + Groq + OpenRouter).
     """
     messages_dict = [{"role": msg.role, "content": msg.content} for msg in request.messages]
     
@@ -160,7 +200,12 @@ async def chat_endpoint(
             messages_dict,
             system_instruction=request.system_instruction,
             custom_key=x_gemini_key,
-            custom_groq_key=x_groq_key
+            custom_groq_key=x_groq_key,
+            custom_deepseek_key=x_deepseek_key,
+            custom_openrouter_key=x_openrouter_key,
+            custom_openai_key=x_openai_key,
+            custom_claude_key=x_claude_key,
+            engine_mode=x_engine_mode or os.environ.get("DEFAULT_AI_ENGINE", "auto")
         )
         return {"reply": reply}
     except Exception as e:
@@ -766,9 +811,9 @@ async def export_research_data(
             except ImportError:
                 raise HTTPException(status_code=500, detail="openpyxl chưa được cài đặt. Chạy: pip install openpyxl")
 
-        # ── XUẤT CSV (mặc định, UTF-8 BOM) ────────────────────────────
+        # ── XUẤT CSV (mặc định, UTF-8 BOM chuẩn cho SPSS, R, Excel không lỗi font) ──
         output = io.StringIO()
-        writer = csv.writer(output)
+        writer = csv.writer(output, lineterminator='\r\n')
         writer.writerow(headers)
         for row in rows:
             writer.writerow(row)
@@ -778,7 +823,7 @@ async def export_research_data(
         filename = f"research_export_{now_str}.csv"
         return Response(
             content=response_content,
-            media_type="text/csv",
+            media_type="text/csv; charset=utf-8",
             headers={
                 "Content-Disposition": f'attachment; filename="{filename}"',
                 "Cache-Control": "no-cache"
