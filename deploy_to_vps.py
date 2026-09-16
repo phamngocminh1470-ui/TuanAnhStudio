@@ -37,13 +37,20 @@ def run_deploy():
         print(f">> {cmd}")
         client.exec_command(cmd, timeout=30)
 
-    # 2. Upload truc tiep dist.zip moi nhat qua SFTP
-    print(">> [SFTP] Dang tai truc tiep dist.zip (ban build moi nhat) len VPS...")
+    # 2. Upload truc tiep dist.zip moi nhat qua SFTP va backend files
+    print(">> [SFTP] Dang tai dist.zip va backend code len VPS...")
     sftp = client.open_sftp()
     local_zip = "frontend/dist.zip"
     remote_zip = "/var/www/tuananhstudio/dist.zip"
     sftp.put(local_zip, remote_zip)
-    print(f">> [SFTP] Da upload xong {os.path.getsize(local_zip)} bytes len VPS!")
+    print(f">> [SFTP] Da upload xong {os.path.getsize(local_zip)} bytes frontend len VPS!")
+
+    # Upload backend files
+    for b_file in ["ai_services.py", "main.py", "database.py"]:
+        local_b = os.path.join("backend", b_file)
+        if os.path.exists(local_b):
+            sftp.put(local_b, f"/var/www/tuananhstudio/backend/{b_file}")
+            print(f">> [SFTP] Da upload backend/{b_file} len VPS!")
     sftp.close()
 
     # 3. Giai nen va restart services

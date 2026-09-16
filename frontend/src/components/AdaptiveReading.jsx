@@ -1,8 +1,92 @@
 import React, { useState } from 'react';
-import { BookOpen, Sparkles, RefreshCw, CheckCircle2, XCircle, ArrowRight, HelpCircle, Volume2, PenTool, Award, AlertCircle } from 'lucide-react';
+import { 
+  BookOpen, Sparkles, RefreshCw, CheckCircle2, XCircle, ArrowRight, HelpCircle, 
+  Volume2, PenTool, Award, AlertCircle, Bookmark, BookmarkCheck, X, Lightbulb, Check 
+} from 'lucide-react';
 import axios from 'axios';
 
 const API_BASE = '/api';
+
+// TỪ ĐIỂN THUẬT NGỮ THPT CHUYÊN BIỆT CHO BÀI ĐỌC HIỂU (SEnglish Standard)
+const THPT_DICTIONARY = {
+  'biodiversity': { ipa: '/ˌbaɪ.əʊ.daɪˈvɜː.sɪ.ti/', pos: 'Danh từ (n.)', meaning: 'Đa dạng sinh học trong hệ sinh thái tự nhiên' },
+  'preserve': { ipa: '/prɪˈzɜːv/', pos: 'Động từ (v.)', meaning: 'Bảo tồn, giữ gìn, bảo quản' },
+  'preservation': { ipa: '/ˌprez.əˈveɪ.ʃən/', pos: 'Danh từ (n.)', meaning: 'Sự bảo tồn, sự giữ gìn nguyên trạng' },
+  'sustainability': { ipa: '/səˌsteɪ.nəˈbɪl.ə.ti/', pos: 'Danh từ (n.)', meaning: 'Sự phát triển bền vững, tính lâu dài' },
+  'sustainable': { ipa: '/səˈsteɪ.nə.bəl/', pos: 'Tính từ (adj.)', meaning: 'Bền vững, thân thiện với môi trường' },
+  'integration': { ipa: '/ˌɪn.tɪˈɡreɪ.ʃən/', pos: 'Danh từ (n.)', meaning: 'Sự tích hợp, sự hòa nhập quốc tế' },
+  'integrate': { ipa: '/ˈɪn.tɪ.ɡreɪt/', pos: 'Động từ (v.)', meaning: 'Tích hợp, hòa nhập, kết hợp' },
+  'pedagogy': { ipa: '/ˈped.ə.ɡɒ.dʒi/', pos: 'Danh từ (n.)', meaning: 'Phương pháp sư phạm, nghệ thuật giảng dạy' },
+  'pedagogical': { ipa: '/ˌped.əˈɡɒdʒ.ɪ.kəl/', pos: 'Tính từ (adj.)', meaning: 'Thuộc về sư phạm, giáo dục' },
+  'precision': { ipa: '/prɪˈsɪʒ.ən/', pos: 'Danh từ (n.)', meaning: 'Độ chính xác cao, sự tỉ mỉ' },
+  'controversy': { ipa: '/ˈkɒn.trə.vɜː.si/', pos: 'Danh từ (n.)', meaning: 'Sự tranh cãi, cuộc thảo luận gay gắt' },
+  'controversial': { ipa: '/ˌkɒn.trəˈvɜː.ʃəl/', pos: 'Tính từ (adj.)', meaning: 'Gây tranh cãi, có nhiều ý kiến trái chiều' },
+  'equaliser': { ipa: '/ˈiː.kwə.laɪ.zər/', pos: 'Danh từ (n.)', meaning: 'Nhân tố tạo nên sự bình đẳng' },
+  'equality': { ipa: '/iˈkwɒl.ə.ti/', pos: 'Danh từ (n.)', meaning: 'Sự bình đẳng, công bằng xã hội' },
+  'inequality': { ipa: '/ˌɪn.ɪˈkwɒl.ə.ti/', pos: 'Danh từ (n.)', meaning: 'Sự bất bình đẳng, chênh lệch giàu nghèo' },
+  'innovation': { ipa: '/ˌɪn.əˈveɪ.ʃən/', pos: 'Danh từ (n.)', meaning: 'Sự đổi mới, sáng kiến cải tiến' },
+  'innovative': { ipa: '/ˈɪn.ə.və.tɪv/', pos: 'Tính từ (adj.)', meaning: 'Mang tính đổi mới, sáng tạo đột phá' },
+  'infrastructure': { ipa: '/ˈɪn.frəˌstrʌk.tʃər/', pos: 'Danh từ (n.)', meaning: 'Cơ sở hạ tầng (giao thông, mạng lưới, trường học)' },
+  'consequence': { ipa: '/ˈkɒn.sɪ.kwəns/', pos: 'Danh từ (n.)', meaning: 'Hậu quả, hệ quả tất yếu' },
+  'consequently': { ipa: '/ˈkɒn.sɪ.kwənt.li/', pos: 'Phó từ (adv.)', meaning: 'Do đó, vì vậy, kết quả là' },
+  'significant': { ipa: '/sɪɡˈnɪf.ɪ.kənt/', pos: 'Tính từ (adj.)', meaning: 'Đáng kể, có ý nghĩa quan trọng' },
+  'significance': { ipa: '/sɪɡˈnɪf.ɪ.kəns/', pos: 'Danh từ (n.)', meaning: 'Tầm quan trọng, ý nghĩa lớn' },
+  'potential': { ipa: '/pəˈten.ʃəl/', pos: 'Danh từ / Tính từ', meaning: 'Tiềm năng, khả năng phát triển trong tương lai' },
+  'vulnerable': { ipa: '/ˈvʌl.nər.ə.bəl/', pos: 'Tính từ (adj.)', meaning: 'Dễ bị tổn thương, dễ bị ảnh hưởng xấu' },
+  'beneficial': { ipa: '/ˌben.ɪˈfɪʃ.əl/', pos: 'Tính từ (adj.)', meaning: 'Có lợi, mang lại nhiều ích lợi' },
+  'crucial': { ipa: '/ˈkruː.ʃəl/', pos: 'Tính từ (adj.)', meaning: 'Cốt yếu, mang tính quyết định sống còn' },
+  'essential': { ipa: '/ɪˈsen.ʃəl/', pos: 'Tính từ (adj.)', meaning: 'Thiết yếu, vô cùng cần thiết' },
+  'inevitable': { ipa: '/ɪnˈev.ɪ.tə.bəl/', pos: 'Tính từ (adj.)', meaning: 'Không thể tránh khỏi, chắc chắn sẽ xảy ra' },
+  'mitigate': { ipa: '/ˈmɪt.ɪ.ɡeɪt/', pos: 'Động từ (v.)', meaning: 'Giảm thiểu nhẹ bớt (tác hại, rủi ro)' },
+  'foster': { ipa: '/ˈfɒs.tər/', pos: 'Động từ (v.)', meaning: 'Thúc đẩy, nuôi dưỡng, khuyến khích phát triển' },
+  'cultivate': { ipa: '/ˈkʌl.tɪ.veɪt/', pos: 'Động từ (v.)', meaning: 'Trau dồi (kỹ năng), vun đắp (mối quan hệ)' },
+  'harness': { ipa: '/ˈhɑː.nəs/', pos: 'Động từ (v.)', meaning: 'Khai thác, tận dụng nguồn năng lượng/tiềm năng' },
+  'pivotal': { ipa: '/ˈpɪv.ə.təl/', pos: 'Tính từ (adj.)', meaning: 'Nòng cốt, then chốt, có vai trò trung tâm' },
+  'resilient': { ipa: '/rɪˈzɪl.jənt/', pos: 'Tính từ (adj.)', meaning: 'Kiên cường, có khả năng phục hồi nhanh' },
+  'ubiquitous': { ipa: '/juːˈbɪk.wɪ.təs/', pos: 'Tính từ (adj.)', meaning: 'Phổ biến khắp nơi, có mặt ở mọi nơi' },
+  'perspective': { ipa: '/pəˈspek.tɪv/', pos: 'Danh từ (n.)', meaning: 'Góc nhìn, quan điểm, tầm nhìn' },
+  'phenomenon': { ipa: '/fəˈnɒm.ɪ.nən/', pos: 'Danh từ (n.)', meaning: 'Hiện tượng (tự nhiên hoặc xã hội)' },
+  'phenomena': { ipa: '/fəˈnɒm.ɪ.nə/', pos: 'Danh từ số nhiều', meaning: 'Các hiện tượng' },
+  'consumption': { ipa: '/kənˈsʌmp.ʃən/', pos: 'Danh từ (n.)', meaning: 'Sự tiêu thụ, mức độ tiêu dùng' },
+  'fundamental': { ipa: '/ˌfʌn.dəˈmen.təl/', pos: 'Tính từ (adj.)', meaning: 'Cơ bản, nền tảng, cốt lõi' },
+  'contribute': { ipa: '/kənˈtrɪb.juːt/', pos: 'Động từ (v.)', meaning: 'Đóng góp, góp phần vào' },
+  'contribution': { ipa: '/ˌkɒn.trɪˈbjuː.ʃən/', pos: 'Danh từ (n.)', meaning: 'Sự đóng góp, cống hiến' },
+  'evaluate': { ipa: '/ɪˈvæl.ju.eɪt/', pos: 'Động từ (v.)', meaning: 'Đánh giá, định giá mức độ' },
+  'evaluation': { ipa: '/ɪˌvæl.juˈeɪ.ʃən/', pos: 'Danh từ (n.)', meaning: 'Sự đánh giá, bản nhận xét' },
+  'illustrate': { ipa: '/ˈɪl.ə.streɪt/', pos: 'Động từ (v.)', meaning: 'Minh họa, làm rõ luận điểm' },
+  'demonstrate': { ipa: '/ˈdem.ən.streɪt/', pos: 'Động từ (v.)', meaning: 'Chứng minh, thể hiện rõ ràng' },
+  'transform': { ipa: '/trænsˈfɔːm/', pos: 'Động từ (v.)', meaning: 'Chuyển đổi hoàn toàn, biến đổi diện mạo' },
+  'transformation': { ipa: '/ˌtræns.fəˈmeɪ.ʃən/', pos: 'Danh từ (n.)', meaning: 'Sự biến đổi sâu sắc' },
+  'promote': { ipa: '/prəˈməʊt/', pos: 'Động từ (v.)', meaning: 'Thúc đẩy, quảng bá, đề bạt' },
+  'promotion': { ipa: '/prəˈməʊ.ʃən/', pos: 'Danh từ (n.)', meaning: 'Sự thăng tiến, sự khuyến khích' },
+  'accessible': { ipa: '/əkˈses.ə.bəl/', pos: 'Tính từ (adj.)', meaning: 'Dễ tiếp cận, có thể sử dụng được' },
+  'widespread': { ipa: '/ˈwaɪd.spred/', pos: 'Tính từ (adj.)', meaning: 'Lan rộng, phổ biến trên diện rộng' },
+  'adequate': { ipa: '/ˈæd.ə.kwət/', pos: 'Tính từ (adj.)', meaning: 'Đầy đủ, đáp ứng vừa vặn yêu cầu' },
+  'inadequate': { ipa: '/ɪnˈæd.ə.kwət/', pos: 'Tính từ (adj.)', meaning: 'Thiếu thốn, không thỏa đáng' },
+  'comprehensive': { ipa: '/ˌkɒm.prɪˈhen.sɪv/', pos: 'Tính từ (adj.)', meaning: 'Toàn diện, bao quát mọi mặt' },
+  'dynamic': { ipa: '/daɪˈnæm.ɪk/', pos: 'Tính từ (adj.)', meaning: 'Năng động, linh hoạt, biến chuyển liên tục' },
+  'facilitate': { ipa: '/fəˈsɪl.ɪ.teɪt/', pos: 'Động từ (v.)', meaning: 'Tạo điều kiện thuận lợi, làm cho dễ dàng hơn' },
+  'implement': { ipa: '/ˈɪm.plɪ.ment/', pos: 'Động từ (v.)', meaning: 'Thi hành, thực hiện, áp dụng chính sách' },
+  'implementation': { ipa: '/ˌɪm.plɪ.menˈteɪ.ʃən/', pos: 'Danh từ (n.)', meaning: 'Sự triển khai, quá trình thực thi' },
+  'justify': { ipa: '/ˈdʒʌs.tɪ.faɪ/', pos: 'Động từ (v.)', meaning: 'Biện minh, chứng minh là đúng đắn' },
+  'simulate': { ipa: '/ˈsɪm.jə.leɪt/', pos: 'Động từ (v.)', meaning: 'Mô phỏng, giả lập tình huống' },
+  'trigger': { ipa: '/ˈtrɪɡ.ər/', pos: 'Động từ (v.)', meaning: 'Kích hoạt, làm bùng phát một sự việc' },
+  'deteriorate': { ipa: '/dɪˈtɪə.ri.ə.reɪt/', pos: 'Động từ (v.)', meaning: 'Xuống cấp, suy thoái, trở nên tồi tệ hơn' },
+  'diminish': { ipa: '/dɪˈmɪn.ɪʃ/', pos: 'Động từ (v.)', meaning: 'Thu nhỏ, giảm bớt tầm quan trọng' },
+  'detrimental': { ipa: '/ˌdet.rɪˈmen.təl/', pos: 'Tính từ (adj.)', meaning: 'Có hại, gây tổn hại nghiêm trọng' },
+  'obsolete': { ipa: '/ˌɒb.səlˈiːt/', pos: 'Tính từ (adj.)', meaning: 'Lỗi thời, cổ lỗ sĩ, không còn được dùng' },
+  'pragmatic': { ipa: '/præɡˈmæt.ɪk/', pos: 'Tính từ (adj.)', meaning: 'Thực tế, thực dụng, dựa trên kết quả' },
+  'consensus': { ipa: '/kənˈsen.səs/', pos: 'Danh từ (n.)', meaning: 'Sự đồng thuận chung, nhất trí cao' },
+  'ambiguous': { ipa: '/æmˈbɪɡ.ju.əs/', pos: 'Tính từ (adj.)', meaning: 'Mơ hồ, nước đôi, nhiều cách hiểu' },
+  'rigorous': { ipa: '/ˈrɪɡ.ər.əs/', pos: 'Tính từ (adj.)', meaning: 'Nghiêm ngặt, khắt khe, chặt chẽ' },
+  'versatile': { ipa: '/ˈvɜː.sə.taɪl/', pos: 'Tính từ (adj.)', meaning: 'Đa năng, linh hoạt trong nhiều vai trò' },
+  'imperative': { ipa: '/ɪmˈper.ə.tɪv/', pos: 'Tính từ (adj.)', meaning: 'Cấp bách, bắt buộc phải làm ngay' },
+  'emission': { ipa: '/iˈmɪʃ.ən/', pos: 'Danh từ (n.)', meaning: 'Khí thải, sự tỏa ra chất ô nhiễm' },
+  'deforestation': { ipa: '/diːˌfɒr.ɪˈsteɪ.ʃən/', pos: 'Danh từ (n.)', meaning: 'Nạn phá rừng bừa bãi' },
+  'depletion': { ipa: '/dɪˈpliː.ʃən/', pos: 'Danh từ (n.)', meaning: 'Sự cạn kiệt nguồn tài nguyên' },
+  'renewable': { ipa: '/rɪˈnjuː.ə.bəl/', pos: 'Tính từ (adj.)', meaning: 'Có thể tái tạo (năng lượng xanh)' },
+  'non-renewable': { ipa: '/ˌnɒn.rɪˈnjuː.ə.bəl/', pos: 'Tính từ (adj.)', meaning: 'Không thể tái tạo (nhiên liệu hóa thạch)' }
+};
 
 export default function AdaptiveReading({ selectedGrade }) {
   const [subTab, setSubTab] = useState('reading'); // 'reading' or 'writing'
@@ -248,6 +332,99 @@ In conclusion, ${topic_val} represents one of the defining forces of the twenty-
     }
   };
 
+  // --- STATE FOR SEnglish INSTANT IN-TEXT LOOKUP ---
+  const [lookupWord, setLookupWord] = useState(null);
+  const [savedVocabIds, setSavedVocabIds] = useState(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('user_saved_vocab') || '[]');
+      return new Set(stored.map(item => item.word.toLowerCase()));
+    } catch {
+      return new Set();
+    }
+  });
+  const [saveSuccessMsg, setSaveSuccessMsg] = useState('');
+
+  // Xử lý khi học sinh bôi đen hoặc click đúp vào từ trong bài đọc
+  const handleTextSelection = () => {
+    const selection = window.getSelection();
+    if (!selection || selection.isCollapsed) return;
+    const rawWord = selection.toString().trim().replace(/^[^\w]+|[^\w]+$/g, '');
+    if (!rawWord || rawWord.length < 2 || rawWord.split(/\s+/).length > 3) return;
+
+    lookupTerm(rawWord, selection);
+  };
+
+  const lookupTerm = (term, selection = null) => {
+    const cleanWord = term.toLowerCase().trim();
+    
+    // 1. Tìm trong key_vocabulary của bài đọc hiện tại
+    let found = readingData?.key_vocabulary?.find(v => v.word.toLowerCase() === cleanWord);
+    
+    // 2. Tìm trong từ điển THPT tích hợp sẵn
+    if (!found) {
+      found = THPT_DICTIONARY[cleanWord];
+    }
+
+    const wordData = found ? {
+      word: term,
+      ipa: found.ipa || `/${cleanWord}/`,
+      meaning: found.meaning || `Thuật ngữ tiếng Anh THPT: ${cleanWord}`,
+      pos: found.pos || 'Từ vựng THPT'
+    } : {
+      word: term,
+      ipa: `/${cleanWord}/`,
+      meaning: `Từ vựng trong bài đọc hiểu (bấm nút loa để nghe phát âm)`,
+      pos: 'Từ vựng THPT'
+    };
+
+    let coords = { x: Math.min(window.innerWidth - 320, 24), y: 180 };
+    if (selection && selection.rangeCount > 0) {
+      try {
+        const range = selection.getRangeAt(0);
+        const rect = range.getBoundingClientRect();
+        coords = {
+          x: Math.max(16, Math.min(window.innerWidth - 320, rect.left + window.scrollX)),
+          y: Math.max(20, rect.bottom + window.scrollY + 8)
+        };
+      } catch (e) {
+        console.warn("Lỗi tính tọa độ:", e);
+      }
+    }
+
+    setLookupWord({
+      ...wordData,
+      coords
+    });
+  };
+
+  const handleSaveToFlashcards = (wordItem) => {
+    try {
+      const existing = JSON.parse(localStorage.getItem('user_saved_vocab') || '[]');
+      if (!existing.some(w => w.word.toLowerCase() === wordItem.word.toLowerCase())) {
+        const newItem = {
+          id: 'custom_' + Date.now(),
+          word: wordItem.word,
+          ipa: wordItem.ipa,
+          meaning: wordItem.meaning,
+          pos: wordItem.pos,
+          grade: selectedGrade || '12',
+          addedAt: new Date().toISOString()
+        };
+        existing.unshift(newItem);
+        localStorage.setItem('user_saved_vocab', JSON.stringify(existing));
+
+        const curCount = parseInt(localStorage.getItem('user_vocab_count') || '142', 10);
+        localStorage.setItem('user_vocab_count', String(curCount + 1));
+
+        setSavedVocabIds(prev => new Set([...prev, wordItem.word.toLowerCase()]));
+        setSaveSuccessMsg(`✓ Đã lưu "${wordItem.word}" vào Sổ Não Bộ SM-2!`);
+        setTimeout(() => setSaveSuccessMsg(''), 3500);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const speakWord = (word) => {
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
@@ -401,7 +578,31 @@ In conclusion, ${topic_val} represents one of the defining forces of the twenty-
                     {readingData.title}
                   </h2>
 
-                  <p className="text-gray-200 text-base md:text-lg leading-loose tracking-wide font-normal whitespace-pre-line text-justify">
+                  {/* Banner hướng dẫn tính năng SEnglish In-text Lookup */}
+                  <div className="p-3.5 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-between gap-3 text-xs text-cyan-200">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-xl bg-cyan-500/20 flex items-center justify-center text-cyan-300 shrink-0">
+                        <Lightbulb className="w-4 h-4" />
+                      </div>
+                      <p className="leading-relaxed">
+                        <strong className="text-white font-bold">Tra Từ Tức Thì (Chuẩn SEnglish):</strong> Click đúp hoặc bôi đen bất kỳ từ mới nào trong bài đọc để tra nhanh phiên âm IPA, nghĩa tiếng Việt &amp; 1-chạm lưu vào Sổ Não Bộ SM-2!
+                      </p>
+                    </div>
+                  </div>
+
+                  {saveSuccessMsg && (
+                    <div className="p-3 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold flex items-center gap-2 animate-bounce">
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>{saveSuccessMsg}</span>
+                    </div>
+                  )}
+
+                  <p 
+                    onMouseUp={handleTextSelection}
+                    onDoubleClick={handleTextSelection}
+                    onTouchEnd={handleTextSelection}
+                    className="text-gray-200 text-base md:text-lg leading-loose tracking-wide font-normal whitespace-pre-line text-justify cursor-text selection:bg-cyan-500/30 selection:text-white"
+                  >
                     {readingData.passage}
                   </p>
                 </div>
@@ -753,6 +954,83 @@ In conclusion, ${topic_val} represents one of the defining forces of the twenty-
               )}
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* SEnglish-style Instant In-Text Word Lookup Popover */}
+      {lookupWord && (
+        <div 
+          className="fixed z-50 animate-scale-in"
+          style={{
+            top: `${Math.min(window.innerHeight - 200, lookupWord.coords?.y || 150)}px`,
+            left: `${lookupWord.coords?.x || 20}px`,
+            maxWidth: '340px'
+          }}
+        >
+          <div className="p-4 rounded-2xl bg-[#090e24]/95 border border-cyan-500/50 shadow-2xl backdrop-blur-xl text-white space-y-3">
+            <div className="flex items-start justify-between gap-3 border-b border-white/10 pb-2.5">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-base font-black text-white font-outfit">{lookupWord.word}</span>
+                  <span className="px-2 py-0.5 rounded-md bg-cyan-500/20 text-cyan-300 text-[10px] font-extrabold border border-cyan-500/30">
+                    {lookupWord.pos}
+                  </span>
+                </div>
+                <div className="text-xs font-mono font-semibold text-amber-400 mt-0.5">
+                  {lookupWord.ipa}
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => speakWord(lookupWord.word)}
+                  className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-amber-400 transition cursor-pointer"
+                  title="Phát âm tiếng Anh chuẩn"
+                >
+                  <Volume2 className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLookupWord(null)}
+                  className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-gray-400 hover:text-white transition cursor-pointer"
+                  title="Đóng tra từ"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            <div className="text-xs text-slate-200 leading-relaxed font-normal bg-white/[0.04] p-2.5 rounded-xl border border-white/5">
+              <span className="text-cyan-300 font-bold">Nghĩa: </span>
+              {lookupWord.meaning}
+            </div>
+
+            <div className="pt-1 flex items-center justify-between gap-2">
+              <span className="text-[10px] text-slate-400">Chuẩn THPT 2025</span>
+              <button
+                type="button"
+                onClick={() => handleSaveToFlashcards(lookupWord)}
+                disabled={savedVocabIds.has(lookupWord.word.toLowerCase())}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow ${
+                  savedVocabIds.has(lookupWord.word.toLowerCase())
+                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                    : 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-extrabold'
+                }`}
+              >
+                {savedVocabIds.has(lookupWord.word.toLowerCase()) ? (
+                  <>
+                    <BookmarkCheck className="w-3.5 h-3.5" />
+                    <span>✓ Đã Lưu Sổ SM-2</span>
+                  </>
+                ) : (
+                  <>
+                    <Bookmark className="w-3.5 h-3.5" />
+                    <span>+ Lưu Sổ Não Bộ SM-2</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

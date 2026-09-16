@@ -150,7 +150,7 @@ def generate_master_docx():
     p_info.alignment = WD_ALIGN_PARAGRAPH.CENTER
     p_info.add_run("• Lĩnh vực nghiên cứu: Phần mềm hệ thống & Hệ thống thông minh\n").font.size = Pt(13)
     p_info.add_run("• Tác giả: Nhóm học sinh THPT | Người hướng dẫn: Giáo viên bộ môn\n").font.size = Pt(13)
-    p_info.add_run("• Nền tảng ứng dụng trực tuyến: https://tuananhstudio.top\n").font.size = Pt(13)
+    p_info.add_run("• Nền tảng ứng dụng trực tuyến: https://examoraai.com\n").font.size = Pt(13)
     p_info.add_run("• Thời gian thực hiện: Tháng 09/2025 - Tháng 03/2026").font.size = Pt(13)
 
     doc.add_page_break()
@@ -180,7 +180,7 @@ def generate_master_docx():
     add_h2(doc, "3. Tính thực tiễn (Giải quyết đúng khó khăn ngoài đời)")
     add_bullet(doc, " Giải quyết đúng 3 khó khăn lớn nhất của học sinh THPT: (1) Quá tải bài tập không vừa sức; (2) Học thuộc lòng danh sách từ vựng rồi quên sạch sau 1 tuần; (3) E ngại phát âm sai âm đuôi vì không có ai kèm 1-1.", "Giải quyết trúng 3 khó khăn thực tế: ")
     add_bullet(doc, " Kết quả thực tế trên 120 bạn học sinh trong 8 tuần: Nhóm dùng hệ thống tăng trung bình gần 2.5 điểm (gấp 3.3 lần nhóm học bình thường), nhớ từ vựng sau 14 ngày đạt 84.5% (tăng gấp đôi), và tiết kiệm hơn 23 phút làm bài kiểm tra.", "Kết quả chứng minh rõ ràng: ")
-    add_bullet(doc, " Hệ thống đã được đưa lên internet chạy thực tế 100% tại https://tuananhstudio.top với tốc độ mở trang cực nhanh dưới 0.5 giây.", "Sản phẩm thực tế có sẵn: ")
+    add_bullet(doc, " Hệ thống đã được đưa lên internet chạy thực tế 100% tại https://examoraai.com với tốc độ mở trang cực nhanh dưới 0.5 giây.", "Sản phẩm thực tế có sẵn: ")
 
     add_h2(doc, "4. Tính cộng đồng và nhân văn (Ý nghĩa cho xã hội)")
     add_bullet(doc, " Cung cấp giải pháp học tập miễn phí 100% cho mọi học sinh, giúp các bạn gia đình khó khăn không có điều kiện đi học thêm vẫn có gia sư AI xịn kèm riêng.", "Bình đẳng cơ hội học tập: ")
@@ -279,14 +279,14 @@ def generate_master_docx():
     add_p(doc, "2. Cơ sở khoa học & Công nghệ (Phút 1:00 - 2:30):", bold_prefix="Bước 2: ")
     add_quote(doc, '"Thưa thầy cô, điểm mấu chốt của đề tài nằm ở 3 nền tảng khoa học: (1) Mô hình toán IRT đo lường chính xác năng lực học sinh và tự động chọn câu hỏi vừa sức; (2) Thuật toán SM-2 nhắc nhở từ vựng đúng thời điểm vàng trước khi quên; (3) Gia sư Socrates AI dẫn dắt tư duy và tính năng bấm nghe từng từ phát âm sai để sửa tức thì..."')
 
-    add_p(doc, "3. Thao tác Demo trực tiếp trên website tuananhstudio.top (Phút 2:30 - 4:30):", bold_prefix="Bước 3: ")
+    add_p(doc, "3. Thao tác Demo trực tiếp trên website examoraai.com (Phút 2:30 - 4:30):", bold_prefix="Bước 3: ")
     add_quote(doc, '"(1) Demo bài kiểm tra thích ứng tự động nâng giảm độ khó; (2) Demo Flashcards SM-2 xếp lịch ôn tập thông minh; (3) Demo Chấm phát âm IPA: khi đọc sai âm đuôi, bấm vào từ đỏ để nghe đọc chậm từng âm..."')
 
     add_p(doc, "4. Báo cáo kết quả thực nghiệm 120 học sinh (Phút 4:30 - 5:30):", bold_prefix="Bước 4: ")
     add_quote(doc, '"Thực nghiệm trên 120 học sinh trong 8 tuần chứng minh: Nhóm thực nghiệm tăng trung bình +2.45 điểm (gấp 3.3 lần nhóm đối chứng, p < 0.0001, Cohen\'s d = 1.79), nhớ từ vựng sau 14 ngày đạt 84.5% và tiết kiệm 52.4% thời gian kiểm tra..."')
 
     add_p(doc, "5. Ý nghĩa thực tiễn & Lời cảm ơn (Phút 5:30 - 6:00):", bold_prefix="Bước 5: ")
-    add_quote(doc, '"Sản phẩm đã chạy thực tế miễn phí tại tuananhstudio.top, chi phí 0 đồng, sẵn sàng nhân rộng cho mọi trường THPT. Chúng em xin trân trọng cảm ơn quý thầy cô đã lắng nghe ạ!"')
+    add_quote(doc, '"Sản phẩm đã chạy thực tế miễn phí tại examoraai.com, chi phí 0 đồng, sẵn sàng nhân rộng cho mọi trường THPT. Chúng em xin trân trọng cảm ơn quý thầy cô đã lắng nghe ạ!"')
 
     doc.add_page_break()
 
@@ -445,7 +445,7 @@ def generate_master_pdf():
   <div class="cover-info">
     <p><strong>Lĩnh vực dự thi:</strong> Phần mềm hệ thống &amp; Hệ thống thông minh</p>
     <p><strong>Nhóm tác giả:</strong> Học sinh THPT | <strong>Người hướng dẫn:</strong> Giáo viên bộ môn</p>
-    <p><strong>Website chạy trực tuyến:</strong> <a href="https://tuananhstudio.top">https://tuananhstudio.top</a></p>
+    <p><strong>Website chạy trực tuyến:</strong> <a href="https://examoraai.com">https://examoraai.com</a></p>
     <p><strong>Thời gian thực hiện:</strong> Tháng 09/2025 – Tháng 03/2026</p>
   </div>
 </div>
@@ -471,7 +471,7 @@ def generate_master_pdf():
 <ul>
   <li><strong>Giải quyết trúng 3 khó khăn thực tế:</strong> Giải quyết đúng 3 khó khăn lớn nhất của học sinh THPT: (1) Quá tải bài tập không vừa sức; (2) Học thuộc lòng danh sách từ vựng rồi quên sạch sau 1 tuần; (3) E ngại phát âm sai âm đuôi vì không có ai kèm 1-1.</li>
   <li><strong>Kết quả chứng minh rõ ràng:</strong> Kết quả thực tế trên 120 bạn học sinh trong 8 tuần: Nhóm dùng hệ thống tăng trung bình gần 2.5 điểm (gấp 3.3 lần nhóm học bình thường), nhớ từ vựng sau 14 ngày đạt 84.5% (tăng gấp đôi), và tiết kiệm hơn 23 phút làm bài kiểm tra.</li>
-  <li><strong>Sản phẩm thực tế có sẵn:</strong> Hệ thống đã được đưa lên internet chạy thực tế 100% tại <code>https://tuananhstudio.top</code> với tốc độ mở trang cực nhanh dưới 0.5 giây.</li>
+  <li><strong>Sản phẩm thực tế có sẵn:</strong> Hệ thống đã được đưa lên internet chạy thực tế 100% tại <code>https://examoraai.com</code> với tốc độ mở trang cực nhanh dưới 0.5 giây.</li>
 </ul>
 
 <h2>4. Tính cộng đồng và nhân văn (Ý nghĩa cho xã hội)</h2>
@@ -595,14 +595,14 @@ def generate_master_pdf():
 <p><strong>2. Cơ sở khoa học &amp; Công nghệ (Phút 1:00 - 2:30):</strong></p>
 <blockquote>"Thưa thầy cô, điểm mấu chốt của đề tài nằm ở 3 nền tảng khoa học: (1) Mô hình đo lường tự động chọn câu hỏi vừa sức; (2) Thuật toán nhắc nhở từ vựng đúng thời điểm vàng trước khi quên; (3) Gia sư AI dẫn dắt tư duy và tính năng bấm nghe từng từ phát âm sai để sửa tức thì..."</blockquote>
 
-<p><strong>3. Demo trực tiếp trên website tuananhstudio.top (Phút 2:30 - 4:30):</strong></p>
+<p><strong>3. Demo trực tiếp trên website examoraai.com (Phút 2:30 - 4:30):</strong></p>
 <blockquote>"(1) Demo bài kiểm tra thích ứng tự động nâng giảm độ khó; (2) Demo Flashcards xếp lịch ôn tập thông minh; (3) Demo Chấm phát âm: khi đọc sai âm đuôi, bấm vào từ đỏ để nghe đọc chậm từng âm..."</blockquote>
 
 <p><strong>4. Báo cáo kết quả thực nghiệm 120 học sinh (Phút 4:30 - 5:30):</strong></p>
 <blockquote>"Thực nghiệm trên 120 học sinh trong 8 tuần chứng minh: Nhóm thực nghiệm tăng trung bình +2.45 điểm (gấp 3.3 lần nhóm đối chứng), nhớ từ vựng sau 14 ngày đạt 84.5% và tiết kiệm 52.4% thời gian kiểm tra..."</blockquote>
 
 <p><strong>5. Ý nghĩa thực tiễn &amp; Lời cảm ơn (Phút 5:30 - 6:00):</strong></p>
-<blockquote>"Sản phẩm đã chạy thực tế miễn phí tại tuananhstudio.top, chi phí 0 đồng, sẵn sàng nhân rộng cho mọi trường THPT. Chúng em xin trân trọng cảm ơn quý thầy cô đã lắng nghe ạ!"</blockquote>
+<blockquote>"Sản phẩm đã chạy thực tế miễn phí tại examoraai.com, chi phí 0 đồng, sẵn sàng nhân rộng cho mọi trường THPT. Chúng em xin trân trọng cảm ơn quý thầy cô đã lắng nghe ạ!"</blockquote>
 
 <div class="page-break"></div>
 

@@ -35,7 +35,7 @@ from auth_api import router as auth_router
 from user_progress_api import router as user_progress_router
 from content_api import router as content_router
 from sqlmodel import Session, select
-from database import create_db_and_tables, get_session, User, engine, VocabularyWord
+from database import create_db_and_tables, get_session, User, engine, VocabularyWord, TeacherRequest, CanvaRequest, _now_iso
 
 app = FastAPI(
     title="AI English Mentor API",
@@ -1376,6 +1376,226 @@ Return strictly a valid JSON object with keys:
             "example_vi": f"Hãy luyện tập sử dụng từ '{raw_query}' thường xuyên để mở rộng vốn từ vựng."
         }
     }
+
+
+# ─── CỔNG GIÁO VIÊN & QUẢN TRỊ: ĐĂNG KÝ & DUYỆT YÊU CẦU ──────────────────────────
+
+class TeacherRequestCreate(BaseModel):
+    teacher_name: str
+    phone: str
+    school: Optional[str] = ""
+    role_title: Optional[str] = "Giáo viên"
+    note: Optional[str] = ""
+
+class TeacherRequestStatusUpdate(BaseModel):
+    status: str  # "approved", "pending", "rejected"
+
+
+@app.post("/api/teacher-requests")
+async def create_teacher_request(req: TeacherRequestCreate, db: Session = Depends(get_session)):
+    """
+    Tiếp nhận thông tin đăng ký cấp quyền Giáo viên / Quản trị viên từ form đăng ký.
+    Lưu vào CSDL để Admin duyệt và kết nối Zalo trực tiếp.
+    """
+    if not req.teacher_name.strip():
+        raise HTTPException(status_code=400, detail="Vui lòng nhập họ và tên Thầy/Cô.")
+    if not req.phone.strip():
+        raise HTTPException(status_code=400, detail="Vui lòng nhập số điện thoại hoặc Zalo liên hệ.")
+    
+    new_req = TeacherRequest(
+        teacher_name=req.teacher_name.strip(),
+        phone=req.phone.strip(),
+        school=(req.school or "").strip(),
+        role_title=(req.role_title or "Giáo viên").strip(),
+        note=(req.note or "").strip(),
+        status="pending",
+        created_at=_now_iso()
+    )
+    db.add(new_req)
+    db.commit()
+    db.refresh(new_req)
+    return {
+        "status": "success",
+        "message": "Đã gửi yêu cầu đăng ký giáo viên thành công!",
+        "data": {
+            "id": new_req.id,
+            "teacherName": new_req.teacher_name,
+            "phone": new_req.phone,
+            "school": new_req.school,
+            "roleTitle": new_req.role_title,
+            "note": new_req.note,
+            "status": new_req.status,
+            "timestamp": new_req.created_at
+        }
+    }
+
+
+@app.get("/api/teacher-requests")
+async def get_teacher_requests(db: Session = Depends(get_session)):
+    """
+    Lấy danh sách toàn bộ các yêu cầu đăng ký Giáo viên / Quản trị viên.
+    """
+    requests = db.exec(select(TeacherRequest).order_by(TeacherRequest.id.desc())).all()
+    return {
+        "status": "success",
+        "total": len(requests),
+        "data": [
+            {
+                "id": str(r.id),
+                "teacherName": r.teacher_name,
+                "phone": r.phone,
+                "school": r.school,
+                "roleTitle": r.role_title,
+                "note": r.note,
+                "status": r.status,
+                "timestamp": r.created_at
+            }
+            for r in requests
+        ]
+    }
+
+
+@app.patch("/api/teacher-requests/{req_id}/status")
+async def update_teacher_request_status(req_id: int, body: TeacherRequestStatusUpdate, db: Session = Depends(get_session)):
+    """
+    Cập nhật trạng thái yêu cầu của Giáo viên (approved / pending / rejected).
+    """
+    req = db.get(TeacherRequest, req_id)
+    if not req:
+        raise HTTPException(status_code=404, detail="Không tìm thấy yêu cầu này.")
+    req.status = body.status
+    db.add(req)
+    db.commit()
+    return {"status": "success", "message": f"Đã cập nhật trạng thái thành '{body.status}'."}
+
+
+@app.delete("/api/teacher-requests/{req_id}")
+async def delete_teacher_request(req_id: int, db: Session = Depends(get_session)):
+    """
+    Xóa một yêu cầu đăng ký.
+    """
+    req = db.get(TeacherRequest, req_id)
+    if not req:
+        raise HTTPException(status_code=404, detail="Không tìm thấy yêu cầu này.")
+    db.delete(req)
+    db.commit()
+    return {"status": "success", "message": "Đã xóa yêu cầu thành công."}
+
+
+# ─── CANVA PRO / EDU REGISTRATION & INVITE LINK ENDPOINTS ───────────────────
+CANVA_CONFIG_PATH = os.path.join(os.path.dirname(__file__), "canva_config.json")
+
+class CanvaRequestCreate(BaseModel):
+    email: str
+    fullname: Optional[str] = ""
+    role_type: Optional[str] = "student"
+    school: Optional[str] = ""
+
+class CanvaConfigUpdate(BaseModel):
+    invite_link: str
+
+@app.post("/api/canva/request")
+async def submit_canva_request(req: CanvaRequestCreate, db: Session = Depends(get_session)):
+    """
+    Tiếp nhận email học sinh / giáo viên yêu cầu nhận Canva Pro / Edu.
+    """
+    if not req.email or "@" not in req.email:
+        raise HTTPException(status_code=400, detail="Vui lòng nhập địa chỉ email hợp lệ.")
+    
+    # Kiểm tra xem email này đã gửi chưa
+    existing = db.exec(select(CanvaRequest).where(CanvaRequest.email == req.email.strip().lower())).first()
+    if existing:
+        return {
+            "status": "success",
+            "message": "Email này đã được ghi nhận trước đó. Admin Tuấn Anh sẽ duyệt và thêm bạn vào Canva sớm nhất!",
+            "data": {"id": existing.id, "email": existing.email, "status": existing.status}
+        }
+    
+    new_req = CanvaRequest(
+        email=req.email.strip().lower(),
+        fullname=(req.fullname or "").strip(),
+        role_type=(req.role_type or "student").strip(),
+        school=(req.school or "").strip(),
+        status="pending",
+        created_at=_now_iso()
+    )
+    db.add(new_req)
+    db.commit()
+    db.refresh(new_req)
+    return {
+        "status": "success",
+        "message": "Đã gửi email thành công! Admin Tuấn Anh sẽ duyệt và thêm bạn vào nhóm Canva Pro/Edu trong ngày.",
+        "data": {
+            "id": new_req.id,
+            "email": new_req.email,
+            "roleType": new_req.role_type,
+            "status": new_req.status,
+            "createdAt": new_req.created_at
+        }
+    }
+
+@app.get("/api/canva/requests")
+async def get_canva_requests(db: Session = Depends(get_session)):
+    """
+    Lấy danh sách các email yêu cầu nhận Canva Pro / Edu (Dành cho Admin Tuấn Anh).
+    """
+    records = db.exec(select(CanvaRequest).order_by(CanvaRequest.id.desc())).all()
+    return {
+        "status": "success",
+        "total": len(records),
+        "data": [
+            {
+                "id": r.id,
+                "email": r.email,
+                "fullname": r.fullname,
+                "roleType": r.role_type,
+                "school": r.school,
+                "status": r.status,
+                "createdAt": r.created_at
+            }
+            for r in records
+        ]
+    }
+
+@app.patch("/api/canva/requests/{req_id}/status")
+async def update_canva_status(req_id: int, status: str = Form(...), db: Session = Depends(get_session)):
+    """
+    Đánh dấu đã thêm email vào Canva (status: added / pending).
+    """
+    r = db.get(CanvaRequest, req_id)
+    if not r:
+        raise HTTPException(status_code=404, detail="Không tìm thấy yêu cầu.")
+    r.status = status
+    db.add(r)
+    db.commit()
+    return {"status": "success", "message": f"Đã cập nhật trạng thái thành '{status}'."}
+
+@app.get("/api/canva/config")
+async def get_canva_config():
+    """
+    Lấy link mời tham gia lớp học Canva Pro trực tiếp của Admin.
+    """
+    invite_link = ""
+    if os.path.exists(CANVA_CONFIG_PATH):
+        try:
+            with open(CANVA_CONFIG_PATH, "r", encoding="utf-8") as f:
+                cfg = json.load(f)
+                invite_link = cfg.get("invite_link", "")
+        except Exception:
+            pass
+    return {"status": "success", "invite_link": invite_link}
+
+@app.post("/api/canva/config")
+async def save_canva_config(body: CanvaConfigUpdate):
+    """
+    Admin Tuấn Anh cập nhật link mời tham gia lớp Canva Pro trực tiếp.
+    """
+    try:
+        with open(CANVA_CONFIG_PATH, "w", encoding="utf-8") as f:
+            json.dump({"invite_link": body.invite_link.strip()}, f, ensure_ascii=False, indent=2)
+        return {"status": "success", "message": "Đã lưu link mời Canva Pro thành công!"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Lỗi lưu file config: {str(e)}")
 
 
 if __name__ == "__main__":

@@ -1,18 +1,181 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Headphones, Play, Pause, RotateCcw, Volume2, Sparkles, CheckCircle2, XCircle, 
   HelpCircle, Eye, EyeOff, BookOpen, VolumeX, FastForward, Award, ArrowRight, Loader2,
-  ListFilter, Target, Globe, BookOpenCheck
+  ListFilter, Target, Globe, BookOpenCheck, PenTool, Check, AlertTriangle, Lightbulb,
+  RefreshCw, ChevronLeft, ChevronRight, Star
 } from 'lucide-react';
 import axios from 'axios';
 
 const API_BASE = '/api';
 
+// ════════════════════════════════════════════════════════════════════════════════
+// KHO BÀI NGHE CHÉP CHÍNH TẢ TỪNG CÂU THPT (SEnglish Sentence Dictation Standard)
+// TẬP TRUNG VÀO BẪY PHÁT ÂM: ĐUÔI -ED, ĐUÔI -S/-ES, MẠO TỪ, GIỚI TỪ SGK 10-11-12
+// ════════════════════════════════════════════════════════════════════════════════
+const THPT_DICTATION_BANK = [
+  {
+    id: 'dict_1',
+    grade: '10',
+    unit: 'Unit 1: Family Life & Chores',
+    targetSentence: 'All family members share the household chores equally to create a harmonious atmosphere.',
+    translation: 'Tất cả các thành viên trong gia đình chia sẻ việc nhà đồng đều để tạo ra bầu không khí hòa thuận.',
+    traps: 'Bẫy âm đuôi: "chores" đuôi /z/, "members" đuôi /z/. Chú ý mạo từ "the" và trạng từ "equally".'
+  },
+  {
+    id: 'dict_2',
+    grade: '10',
+    unit: 'Unit 2: Humans and Environment',
+    targetSentence: 'Using renewable energy reduces greenhouse gas emissions and protects our vulnerable planet.',
+    translation: 'Sử dụng năng lượng tái tạo làm giảm lượng phát thải khí nhà kính và bảo vệ hành tinh dễ bị tổn thương của chúng ta.',
+    traps: 'Bẫy phát âm: "reduces" đuôi /ɪz/, "emissions" đuôi /ʃənz/, "protects" đuôi /ts/.'
+  },
+  {
+    id: 'dict_3',
+    grade: '10',
+    unit: 'Unit 3: Music & Arts',
+    targetSentence: 'The young artist performed passionately and received enthusiastic applause from the audience.',
+    translation: 'Người nghệ sĩ trẻ biểu diễn đầy nhiệt huyết và nhận được tràng pháo tay nồng nhiệt từ khán giả.',
+    traps: 'Bẫy đuôi -ed: "performed" phát âm /d/, "received" phát âm /d/. Chú ý từ "applause" đuôi /z/.'
+  },
+  {
+    id: 'dict_4',
+    grade: '10',
+    unit: 'Unit 4: Community Service',
+    targetSentence: 'Volunteers gathered yesterday to help disadvantaged children in the mountainous district.',
+    translation: 'Các tình nguyện viên đã tập hợp lại ngày hôm qua để giúp đỡ trẻ em có hoàn cảnh khó khăn ở huyện vùng núi.',
+    traps: 'Bẫy đuôi -ed: "gathered" phát âm /d/, "disadvantaged" phát âm /ɪd/. Chú ý "children" danh từ số nhiều bất quy tắc.'
+  },
+  {
+    id: 'dict_5',
+    grade: '11',
+    unit: 'Unit 1: Healthy Lifestyle',
+    targetSentence: 'Regular physical exercise and balanced nutrition boost the human immune system remarkably.',
+    translation: 'Tập thể dục đều đặn và dinh dưỡng cân bằng tăng cường hệ miễn dịch của con người một cách đáng kể.',
+    traps: 'Bẫy âm đuôi: "balanced" đuôi /t/, "boost" đuôi /s/, tính từ "remarkable" chuyển thành trạng từ "remarkably".'
+  },
+  {
+    id: 'dict_6',
+    grade: '11',
+    unit: 'Unit 2: The Generation Gap',
+    targetSentence: 'Parents and teenagers should communicate openly to bridge the widening generational gap.',
+    translation: 'Cha mẹ và thanh thiếu niên nên giao tiếp cởi mở để thu hẹp khoảng cách thế hệ ngày càng nới rộng.',
+    traps: 'Bẫy phát âm: "parents" đuôi /ts/, "teenagers" đuôi /dʒəz/. Chú ý động từ "communicate" và trạng từ "openly".'
+  },
+  {
+    id: 'dict_7',
+    grade: '11',
+    unit: 'Unit 3: Cities of the Future',
+    targetSentence: 'Modern smart cities will utilize solar power to minimize carbon footprints effectively.',
+    translation: 'Các thành phố thông minh hiện đại sẽ tận dụng năng lượng mặt trời để giảm thiểu lượng khí thải carbon một cách hiệu quả.',
+    traps: 'Bẫy phát âm: "cities" đuôi /z/, "utilize" đuôi /z/, "footprints" đuôi /ts/.'
+  },
+  {
+    id: 'dict_8',
+    grade: '11',
+    unit: 'Unit 5: Global Warming',
+    targetSentence: 'Deforestation causes severe soil erosion and threatens the natural habitats of wildlife.',
+    translation: 'Nạn phá rừng gây ra xói mòn đất nghiêm trọng và đe dọa môi trường sống tự nhiên của động vật hoang dã.',
+    traps: 'Bẫy âm đuôi: "causes" đuôi /ɪz/, "threatens" đuôi /z/, "habitats" đuôi /ts/.'
+  },
+  {
+    id: 'dict_9',
+    grade: '12',
+    unit: 'Unit 1: Life Stories',
+    targetSentence: 'He overcame immense hardships through determination and inspired millions of students worldwide.',
+    translation: 'Ông đã vượt qua muôn vàn gian khó bằng lòng quyết tâm và truyền cảm hứng cho hàng triệu học sinh trên toàn thế giới.',
+    traps: 'Bẫy đuôi -ed & thì quá khứ: "overcame" (bất quy tắc), "hardships" đuôi /s/, "inspired" đuôi /d/.'
+  },
+  {
+    id: 'dict_10',
+    grade: '12',
+    unit: 'Unit 2: Cultural Diversity',
+    targetSentence: 'Preserving cultural identity while embracing international integration is a vital challenge.',
+    translation: 'Bảo tồn bản sắc văn hóa trong khi đón nhận hội nhập quốc tế là một thách thức sống còn.',
+    traps: 'Bẫy phát âm: "preserving", "embracing" đuôi /sɪŋ/, "vital" /vaɪ.təl/, "integration" /ˌɪn.tɪˈɡreɪ.ʃən/.'
+  },
+  {
+    id: 'dict_11',
+    grade: '12',
+    unit: 'Unit 3: Green Living',
+    targetSentence: 'Governments worldwide must enforce stricter regulations on industrial chemical waste disposal.',
+    translation: 'Các chính phủ trên khắp thế giới phải thực thi các quy định nghiêm ngặt hơn về xử lý chất thải hóa học công nghiệp.',
+    traps: 'Bẫy phát âm: "governments" đuôi /ts/, "regulations" đuôi /z/, "waste" /weɪst/.'
+  },
+  {
+    id: 'dict_12',
+    grade: '12',
+    unit: 'Unit 5: Lifelong Learning',
+    targetSentence: 'Continuous professional development enables employees to adapt to technological revolutions smoothly.',
+    translation: 'Sự phát triển chuyên môn liên tục giúp người lao động thích ứng với các cuộc cách mạng công nghệ một cách suôn sẻ.',
+    traps: 'Bẫy âm đuôi: "enables" đuôi /z/, "employees" đuôi /z/, "revolutions" đuôi /z/.'
+  }
+];
+
 export default function AdaptiveListening({ selectedGrade = '10', theta = 0.0 }) {
-  // Config States
-  const [listeningMode, setListeningMode] = useState('grade'); // 'grade' or 'exam'
+  // Tab chính: Dictation (Nghe chép chính tả SEnglish) hoặc Comprehension (Bài nghe hiểu trắc nghiệm)
+  const [learningTab, setLearningTab] = useState('dictation'); // 'dictation' | 'comprehension'
+
+  // --- STATE FOR SENTENCE DICTATION (SENGLISH STANDARD) ---
+  const [dictGrade, setDictGrade] = useState('all');
+  const [dictIndex, setDictIndex] = useState(0);
+  const [dictInput, setDictInput] = useState('');
+  const [dictSpeed, setDictSpeed] = useState(1.0);
+  const [dictPlayCount, setDictPlayCount] = useState(0);
+  const [dictResult, setDictResult] = useState(null);
+  const [showDictHint, setShowDictHint] = useState(false);
+
+  const filteredDictations = useMemo(() => {
+    if (dictGrade === 'all') return THPT_DICTATION_BANK;
+    return THPT_DICTATION_BANK.filter(d => d.grade === dictGrade);
+  }, [dictGrade]);
+
+  const currentDict = filteredDictations[dictIndex] || filteredDictations[0];
+
+  const playDictationAudio = (sentence, rate = 1.0) => {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(sentence);
+    utter.lang = 'en-US';
+    utter.rate = rate;
+    window.speechSynthesis.speak(utter);
+    setDictPlayCount(prev => prev + 1);
+  };
+
+  const handleCheckDictation = (e) => {
+    if (e) e.preventDefault();
+    if (!dictInput.trim() || !currentDict) return;
+
+    const cleanTargetWords = currentDict.targetSentence.trim().split(/\s+/);
+    const cleanStudentWords = dictInput.trim().split(/\s+/);
+
+    let correctCount = 0;
+    const analysis = cleanTargetWords.map((tWord, idx) => {
+      const rawT = tWord.replace(/[.,!?;:"'()]/g, '').toLowerCase();
+      const sWord = cleanStudentWords[idx] || '';
+      const rawS = sWord.replace(/[.,!?;:"'()]/g, '').toLowerCase();
+
+      if (!sWord) {
+        return { target: tWord, student: '', status: 'missing' };
+      } else if (rawT === rawS) {
+        correctCount++;
+        return { target: tWord, student: sWord, status: 'correct' };
+      } else {
+        return { target: tWord, student: sWord, status: 'incorrect' };
+      }
+    });
+
+    const accuracy = Math.round((correctCount / cleanTargetWords.length) * 100);
+    setDictResult({
+      analysis,
+      accuracy,
+      correctCount,
+      totalCount: cleanTargetWords.length
+    });
+  };
+
+  // Config States for Comprehension
   const [activeGrade, setActiveGrade] = useState(selectedGrade);
-  const [activeExam, setActiveExam] = useState('KET'); // 'KET', 'PET', 'IELTS'
 
   const [topicInput, setTopicInput] = useState('');
   const [activeTopic, setActiveTopic] = useState('Công nghệ & Trí tuệ nhân tạo (AI)');
@@ -74,14 +237,13 @@ export default function AdaptiveListening({ selectedGrade = '10', theta = 0.0 })
     }
   };
 
-  // Initial load
+  // Initial load for comprehension
   useEffect(() => {
-    const targetVal = listeningMode === 'grade' ? activeGrade : activeExam;
-    fetchListeningLesson(activeTopicVal, targetVal);
+    fetchListeningLesson(activeTopicVal, activeGrade);
     return () => {
       window.speechSynthesis?.cancel();
     };
-  }, [listeningMode, activeGrade, activeExam]);
+  }, [activeGrade]);
 
   const handleGenerateCustomTopic = (e) => {
     e.preventDefault();
@@ -169,6 +331,258 @@ export default function AdaptiveListening({ selectedGrade = '10', theta = 0.0 })
 
   return (
     <div className="space-y-8 max-w-[1600px] mx-auto pb-12">
+      {/* SEnglish inspired THPT Mode Switcher */}
+      <div className="flex p-1.5 rounded-2xl bg-slate-900/90 border border-white/10 shadow-xl max-w-2xl mx-auto">
+        <button
+          onClick={() => setLearningTab('dictation')}
+          className={`flex-1 py-3 px-4 rounded-xl text-xs font-black transition cursor-pointer flex items-center justify-center gap-2 ${
+            learningTab === 'dictation'
+              ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-black font-extrabold shadow-lg shadow-orange-500/25'
+              : 'text-gray-400 hover:text-white'
+          }`}
+        >
+          <PenTool className="w-4 h-4" />
+          <span>✍️ Nghe Chép Chính Tả THPT (Sentence Dictation)</span>
+        </button>
+        <button
+          onClick={() => setLearningTab('comprehension')}
+          className={`flex-1 py-3 px-4 rounded-xl text-xs font-bold transition cursor-pointer flex items-center justify-center gap-2 ${
+            learningTab === 'comprehension'
+              ? 'bg-indigo-600 text-white shadow-lg'
+              : 'text-gray-400 hover:text-white'
+          }`}
+        >
+          <Headphones className="w-4 h-4" />
+          <span>🎧 Bài Nghe Hiểu Thích Ứng (Comprehension)</span>
+        </button>
+      </div>
+
+      {/* ════════════════════════════════════════════════════════════════════════════════ */}
+      {/* TAB 1: SENGLISH SENTENCE DICTATION (CHÉP CHÍNH TẢ TỪNG CÂU CHUẨN THPT) */}
+      {/* ════════════════════════════════════════════════════════════════════════════════ */}
+      {learningTab === 'dictation' && currentDict && (
+        <div className="space-y-6 max-w-4xl mx-auto animate-fade-in">
+          {/* Grade Selector Pills */}
+          <div className="flex flex-wrap items-center justify-center gap-2 p-2 rounded-2xl bg-white/[0.02] border border-white/5">
+            {[
+              { id: 'all', label: 'Tất cả khối lớp THPT' },
+              { id: '10', label: 'Khối 10 (Global Success 10)' },
+              { id: '11', label: 'Khối 11 (Global Success 11)' },
+              { id: '12', label: 'Khối 12 & Ôn Thi Tốt Nghiệp' }
+            ].map(pill => (
+              <button
+                key={pill.id}
+                onClick={() => {
+                  setDictGrade(pill.id);
+                  setDictIndex(0);
+                  setDictInput('');
+                  setDictResult(null);
+                  setDictPlayCount(0);
+                }}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition cursor-pointer ${
+                  dictGrade === pill.id
+                    ? 'bg-amber-500 text-black shadow-md shadow-orange-500/20'
+                    : 'bg-white/5 text-gray-400 hover:text-white'
+                }`}
+              >
+                {pill.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Main Dictation Card */}
+          <div className="glass rounded-3xl p-6 md:p-9 border border-amber-500/30 shadow-2xl bg-[#080d24]/90 space-y-6">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-4">
+              <div className="flex items-center gap-2">
+                <span className="px-3 py-1 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-black uppercase">
+                  {currentDict.unit}
+                </span>
+                <span className="text-xs text-gray-400 font-bold">
+                  Câu {dictIndex + 1}/{filteredDictations.length}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2 text-xs">
+                <span className="text-gray-400 font-bold">Đã nghe:</span>
+                <span className="px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-300 font-black">
+                  {dictPlayCount} lần
+                </span>
+              </div>
+            </div>
+
+            {/* Audio Controls (SEnglish Style) */}
+            <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                <button
+                  onClick={() => playDictationAudio(currentDict.targetSentence, dictSpeed)}
+                  className="flex-1 sm:flex-none px-6 py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-extrabold text-xs shadow-lg shadow-orange-500/25 transition flex items-center justify-center gap-2 cursor-pointer"
+                  title="Bấm để nghe câu tiếng Anh"
+                >
+                  <Volume2 className="w-5 h-5" />
+                  <span>Phát Âm Thanh ({dictSpeed}x)</span>
+                </button>
+
+                <button
+                  onClick={() => playDictationAudio(currentDict.targetSentence, 0.75)}
+                  className="px-4 py-3.5 rounded-2xl bg-white/10 hover:bg-white/15 text-gray-200 font-bold text-xs transition cursor-pointer flex items-center gap-1.5"
+                  title="Nghe chậm 0.75x để nghe rõ từng âm đuôi -s, -ed"
+                >
+                  <span>🐢 0.75x (Chậm)</span>
+                </button>
+              </div>
+
+              {/* Hint button */}
+              <button
+                onClick={() => setShowDictHint(!showDictHint)}
+                className="text-xs text-cyan-400 hover:text-cyan-300 font-bold flex items-center gap-1.5 cursor-pointer"
+              >
+                <Lightbulb className="w-4 h-4" />
+                <span>{showDictHint ? 'Ẩn gợi ý chữ cái' : 'Hiện gợi ý chữ cái đầu'}</span>
+              </button>
+            </div>
+
+            {/* First letter hint if toggled */}
+            {showDictHint && (
+              <div className="p-3.5 rounded-xl bg-cyan-950/30 border border-cyan-500/30 text-xs font-mono text-cyan-200 animate-fade-in">
+                <span className="font-bold text-cyan-300">Gợi ý từ đầu: </span>
+                {currentDict.targetSentence.split(/\s+/).map(w => w.charAt(0) + '...').join(' ')}
+              </div>
+            )}
+
+            {/* Input Form */}
+            <form onSubmit={handleCheckDictation} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-300 uppercase tracking-wider block">
+                  Gõ lại nguyên văn những gì bạn nghe được:
+                </label>
+                <textarea
+                  rows={3}
+                  value={dictInput}
+                  onChange={(e) => setDictInput(e.target.value)}
+                  placeholder="Type the English sentence you heard here (chú ý âm đuôi -ed, -s, mạo từ)..."
+                  className="w-full bg-[#060a18] border border-white/10 focus:border-amber-500 outline-none rounded-2xl p-4 text-sm text-gray-200 placeholder-gray-600 font-sans leading-relaxed"
+                />
+              </div>
+
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-[11px] text-gray-400 hidden sm:inline">
+                  💡 Mẹo: Nhấn phím Enter hoặc nút bên cạnh để đối chiếu ngay.
+                </span>
+
+                <button
+                  type="submit"
+                  disabled={!dictInput.trim()}
+                  className="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-black font-extrabold text-xs shadow-lg shadow-emerald-500/20 transition cursor-pointer disabled:opacity-50 flex items-center gap-2"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>Kiểm Tra Chính Tả</span>
+                </button>
+              </div>
+            </form>
+
+            {/* Diff Result Analysis (SEnglish Standard) */}
+            {dictResult && (
+              <div className="space-y-4 p-5 rounded-2xl bg-white/[0.02] border border-white/10 animate-scale-in">
+                <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                  <div className="flex items-center gap-2">
+                    <strong className="text-sm font-black text-white font-outfit">
+                      Kết Quả Đối Chiếu Từng Từ
+                    </strong>
+                    <span className={`px-2.5 py-0.5 rounded-lg text-xs font-extrabold ${
+                      dictResult.accuracy >= 80 
+                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' 
+                        : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                    }`}>
+                      Độ chính xác: {dictResult.accuracy}% ({dictResult.correctCount}/{dictResult.totalCount} từ)
+                    </span>
+                  </div>
+                </div>
+
+                {/* Word Chips Diff Display */}
+                <div className="flex flex-wrap gap-2 p-3 bg-[#060a16] rounded-xl border border-white/5">
+                  {dictResult.analysis.map((item, idx) => (
+                    <div key={idx} className="flex flex-col items-center">
+                      {item.status === 'correct' && (
+                        <span className="px-2.5 py-1 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold">
+                          ✓ {item.target}
+                        </span>
+                      )}
+                      {item.status === 'incorrect' && (
+                        <span className="px-2.5 py-1 rounded-lg bg-rose-500/20 border border-rose-500/40 text-rose-300 text-xs font-bold line-through" title={`Đúng là: "${item.target}"`}>
+                          ✗ {item.student || '(sai)'}
+                        </span>
+                      )}
+                      {item.status === 'missing' && (
+                        <span className="px-2.5 py-1 rounded-lg bg-amber-500/20 border border-dashed border-amber-500/50 text-amber-300 text-xs font-bold" title="Từ này bị bạn nghe sót">
+                          ? [{item.target}]
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Target Sentence & Translation */}
+                <div className="space-y-1.5 p-3 rounded-xl bg-white/[0.03] text-xs">
+                  <div>
+                    <span className="text-gray-400 font-bold">Câu chuẩn: </span>
+                    <span className="text-white font-semibold">{currentDict.targetSentence}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-400 font-bold">Bản dịch tiếng Việt: </span>
+                    <span className="text-emerald-300 font-medium">{currentDict.translation}</span>
+                  </div>
+                </div>
+
+                {/* Phonetic & Grammar Traps */}
+                <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-200 flex items-start gap-2.5">
+                  <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                  <p className="leading-relaxed">
+                    <strong className="text-white">Bẫy đề thi THPT: </strong>
+                    {currentDict.traps}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Navigation */}
+            <div className="flex items-center justify-between pt-2 border-t border-white/10">
+              <button
+                onClick={() => {
+                  setDictIndex(prev => (prev - 1 + filteredDictations.length) % filteredDictations.length);
+                  setDictInput('');
+                  setDictResult(null);
+                  setDictPlayCount(0);
+                  setShowDictHint(false);
+                }}
+                className="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 font-bold text-xs transition cursor-pointer flex items-center gap-1.5"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                <span>Câu trước</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setDictIndex(prev => (prev + 1) % filteredDictations.length);
+                  setDictInput('');
+                  setDictResult(null);
+                  setDictPlayCount(0);
+                  setShowDictHint(false);
+                }}
+                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-extrabold text-xs transition cursor-pointer flex items-center gap-1.5 shadow-lg shadow-orange-500/20"
+              >
+                <span>Câu tiếp theo</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════════════════════════════════════════════ */}
+      {/* TAB 2: BÀI NGHE HIỂU TRẮC NGHIỆM TRUYỀN THỐNG */}
+      {/* ════════════════════════════════════════════════════════════════════════════════ */}
+      {learningTab === 'comprehension' && (
+        <div className="space-y-8">
       
       {/* Header Panel */}
       <div className="glass-card rounded-3xl p-6 md:p-8 border border-slate-800 space-y-6">
@@ -480,6 +894,8 @@ export default function AdaptiveListening({ selectedGrade = '10', theta = 0.0 })
 
         </div>
       ) : null}
+        </div>
+      )}
     </div>
   );
 }

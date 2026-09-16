@@ -29,7 +29,7 @@ class PDF(FPDF):
         self.set_y(-15)
         self.set_font('Roboto', '', 8)
         self.set_text_color(150, 150, 150)
-        self.cell(0, 10, f'Trang {self.page_no()} / {{nb}} | AI English Mentor Project', 0, 0, 'C')
+        self.cell(0, 10, f'Trang {self.page_no()} / {{nb}} | Examora AI Project', 0, 0, 'C')
 
 pdf = PDF()
 pdf.alias_nb_pages()
@@ -47,7 +47,7 @@ pdf.cell(0, 12, "TÀI LIỆU CHI TIẾT & HƯỚNG DẪN SỬ DỤNG", new_x="LM
 
 pdf.set_font('Roboto', 'B', 18)
 pdf.set_text_color(79, 70, 229) # Indigo 600
-pdf.cell(0, 10, "DỰ ÁN HỆ THỐNG AI ENGLISH MENTOR", new_x="LMARGIN", new_y="NEXT", align='C')
+pdf.cell(0, 10, "DỰ ÁN HỆ THỐNG Examora AI", new_x="LMARGIN", new_y="NEXT", align='C')
 
 pdf.set_font('Roboto', '', 10)
 pdf.set_text_color(100, 100, 100)
@@ -62,7 +62,7 @@ pdf.set_font('Roboto', '', 9.5)
 pdf.set_text_color(71, 85, 105) # Slate 600
 
 intro_text = (
-    "AI English Mentor là một nền tảng học tập tiếng Anh cá nhân hóa tích hợp trí tuệ nhân tạo (AI) "
+    "Examora AI là một nền tảng học tập tiếng Anh cá nhân hóa tích hợp trí tuệ nhân tạo (AI) "
     "và các thuật toán đo lường giáo dục hiện đại. Mục tiêu chính của dự án là giúp học sinh từ lớp 6 đến "
     "lớp 12 luyện tập toàn diện các kỹ năng tiếng Anh (Đọc, Ngữ pháp, Từ vựng, Nghe, Phát âm, Viết) "
     "dựa trên mô hình thích ứng thông minh. Thay vì làm các đề thi cố định, hệ thống tự động điều chỉnh độ khó "
@@ -136,7 +136,7 @@ pdf.set_text_color(30, 41, 59)
 pdf.cell(0, 8, "4. Hướng dẫn sử dụng cho Học sinh (Student Guide)", new_x="LMARGIN", new_y="NEXT", align='L')
 
 student_steps = [
-    ("Bước 1:", "Truy cập https://tuananhstudio.top và nhấp nút 'Đăng nhập / Đăng ký'. Nhập thông tin đăng ký lớp học của bạn."),
+    ("Bước 1:", "Truy cập https://examoraai.com và nhấp nút 'Đăng nhập / Đăng ký'. Nhập thông tin đăng ký lớp học của bạn."),
     ("Bước 2:", "Tại 'Bảng điều khiển', xem mức Theta và các dự đoán điểm số hiện tại. Lần đầu sử dụng, Theta của bạn sẽ bằng 0.0."),
     ("Bước 3:", "Chọn phần 'Đánh giá Đọc & Ngữ pháp (IRT)' để làm bài kiểm tra thích ứng nhằm cập nhật chỉ số năng lực của bạn."),
     ("Bước 4:", "Sử dụng 'Học từ vựng thông minh (SM-2)' để học và chấm điểm ôn tập từ vựng mỗi ngày nhằm tích lũy Streak học tập."),

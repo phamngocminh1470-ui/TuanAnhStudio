@@ -6,6 +6,12 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['"Plus Jakarta Sans"', '"Be Vietnam Pro"', '"Inter"', 'sans-serif'],
+        heading: ['"Plus Jakarta Sans"', '"Be Vietnam Pro"', '"Inter"', 'sans-serif'],
+        outfit: ['"Plus Jakarta Sans"', '"Be Vietnam Pro"', '"Inter"', 'sans-serif'],
+        mono: ['"JetBrains Mono"', '"Fira Code"', 'monospace'],
+      },
       colors: {
         brand: {
           50: '#f5f7ff',

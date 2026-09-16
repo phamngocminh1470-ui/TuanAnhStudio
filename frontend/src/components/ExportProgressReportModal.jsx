@@ -68,7 +68,7 @@ export default function ExportProgressReportModal({ isOpen, onClose, selectedGra
               </div>
               <div>
                 <h1 className="text-xl md:text-2xl font-black text-indigo-400 print:text-indigo-900 font-outfit uppercase">
-                  HỆ THỐNG AI ENGLISH MENTOR
+                  HỆ THỐNG Examora AI
                 </h1>
                 <p className="text-xs font-bold text-slate-400 print:text-gray-600 uppercase tracking-widest">
                   BÁO CÁO KẾT QUẢ THỰC NGHIỆM HỌC TẬP THÍCH ỨNG

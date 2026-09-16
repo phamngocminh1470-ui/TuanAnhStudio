@@ -1,9 +1,289 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import axios from 'axios';
-import { Play, Mic, Square, Volume2, Award, RefreshCw, ChevronRight, ChevronLeft, HelpCircle, BookOpen, Sparkles, Plus, Wand2, Shuffle, AlertTriangle, CheckCircle2, AlertCircle } from 'lucide-react';
+import { 
+  Play, Mic, Square, Volume2, Award, RefreshCw, ChevronRight, ChevronLeft, 
+  HelpCircle, BookOpen, Sparkles, Plus, Wand2, Shuffle, AlertTriangle, CheckCircle2, 
+  AlertCircle, Target, Zap, Lightbulb, Star, RotateCcw, Check
+} from 'lucide-react';
 import { EXTENDED_PRONUNCIATION_SENTENCES } from '../data/pronunciationSentencesData';
 
 const API_BASE = '/api';
+
+// ════════════════════════════════════════════════════════════════════════════════
+// NGÂN HÀNG CHUYÊN ĐỀ TRỌNG ÂM & NGỮ ÂM THPT (4 CÂU ĐỀ THI TỐT NGHIỆP THPT BỘ GD&ĐT)
+// ════════════════════════════════════════════════════════════════════════════════
+const THPT_STRESS_BANK = [
+  // CHUYÊN ĐỀ 1: TRỌNG ÂM TỪ 2 ÂM TIẾT
+  {
+    id: 'thpt_s2_1',
+    word: 'decide',
+    ipa: '/dɪˈsaɪd/',
+    syllables: [
+      { text: 'de', isStressed: false, phonetic: 'dɪ' },
+      { text: 'CIDE', isStressed: true, phonetic: 'saɪd' }
+    ],
+    stressPosition: 2,
+    category: 'stress_2',
+    categoryLabel: 'Trọng âm 2 âm tiết',
+    rule: 'Đa số ĐỘNG TỪ 2 âm tiết nhấn trọng âm vào âm tiết thứ 2 (de-CIDE, a-TTRACT, pre-FER).',
+    trapNote: 'Tránh đọc ngang; âm tiết thứ 2 phải phát âm cao giọng và kéo dài hơn.',
+    example: 'Students must decide their future career paths.'
+  },
+  {
+    id: 'thpt_s2_2',
+    word: 'attract',
+    ipa: '/əˈtrækt/',
+    syllables: [
+      { text: 'at', isStressed: false, phonetic: 'ə' },
+      { text: 'TRACT', isStressed: true, phonetic: 'trækt' }
+    ],
+    stressPosition: 2,
+    category: 'stress_2',
+    categoryLabel: 'Trọng âm 2 âm tiết',
+    rule: 'Động từ có âm đầu là /ə/ không bao giờ nhận trọng âm, trọng âm LUÔN rơi vào âm 2.',
+    trapNote: 'Bẫy đề thi: âm /æ/ ở âm tiết thứ hai đọc dứt khoát.',
+    example: 'The festival attracts thousands of tourists every year.'
+  },
+  {
+    id: 'thpt_s2_3',
+    word: 'subject',
+    ipa: '/ˈsʌb.dʒɪkt/',
+    syllables: [
+      { text: 'SUB', isStressed: true, phonetic: 'sʌb' },
+      { text: 'ject', isStressed: false, phonetic: 'dʒɪkt' }
+    ],
+    stressPosition: 1,
+    category: 'stress_2',
+    categoryLabel: 'Trọng âm 2 âm tiết',
+    rule: 'Đa số DANH TỪ và TÍNH TỪ 2 âm tiết nhấn trọng âm vào âm tiết thứ 1 (SUB-ject, STU-dent).',
+    trapNote: 'Cực kỳ cẩn thận: Nếu là động từ "sub-JECT" (bắt phải chịu) thì lại nhấn âm 2!',
+    example: 'English is a compulsory subject in the national exam.'
+  },
+  {
+    id: 'thpt_s2_4',
+    word: 'record',
+    ipa: '/ˈrek.ɔːd/',
+    syllables: [
+      { text: 'RE', isStressed: true, phonetic: 'rek' },
+      { text: 'cord', isStressed: false, phonetic: 'ɔːd' }
+    ],
+    stressPosition: 1,
+    category: 'stress_2',
+    categoryLabel: 'Trọng âm 2 âm tiết',
+    rule: 'Danh từ nhấn âm 1 (/ˈrek.ɔːd/ - kỷ lục, hồ sơ), Động từ nhấn âm 2 (/rɪˈkɔːd/ - ghi âm, thu âm).',
+    trapNote: 'Từ bẫy kinh điển trong mọi đề thi thử tốt nghiệp THPT!',
+    example: 'She broke the national swimming record.'
+  },
+  {
+    id: 'thpt_s2_5',
+    word: 'present',
+    ipa: '/ˈprez.ənt/',
+    syllables: [
+      { text: 'PRE', isStressed: true, phonetic: 'prez' },
+      { text: 'sent', isStressed: false, phonetic: 'ənt' }
+    ],
+    stressPosition: 1,
+    category: 'stress_2',
+    categoryLabel: 'Trọng âm 2 âm tiết',
+    rule: 'Danh từ/Tính từ nhấn âm 1 (/ˈprez.ənt/ - món quà, hiện diện), Động từ nhấn âm 2 (/prɪˈzent/ - thuyết trình).',
+    trapNote: 'Học sinh hay nhầm trọng âm khi từ chuyển từ loại.',
+    example: 'He gave me an unexpected birthday present.'
+  },
+  {
+    id: 'thpt_s2_6',
+    word: 'pollute',
+    ipa: '/pəˈluːt/',
+    syllables: [
+      { text: 'pol', isStressed: false, phonetic: 'pə' },
+      { text: 'LUTE', isStressed: true, phonetic: 'luːt' }
+    ],
+    stressPosition: 2,
+    category: 'stress_2',
+    categoryLabel: 'Trọng âm 2 âm tiết',
+    rule: 'Động từ 2 âm tiết nhấn âm 2. Âm đầu là /pə/ đọc lướt nhanh.',
+    trapNote: 'Âm thứ hai /luːt/ chứa nguyên âm dài /uː/ có trọng âm chính.',
+    example: 'Industrial waste pollutes our drinking water.'
+  },
+
+  // CHUYÊN ĐỀ 2: TRỌNG ÂM TỪ 3-4 ÂM TIẾT
+  {
+    id: 'thpt_s3_1',
+    word: 'generation',
+    ipa: '/ˌdʒen.əˈreɪ.ʃən/',
+    syllables: [
+      { text: 'gen', isStressed: false, phonetic: 'dʒen' },
+      { text: 'er', isStressed: false, phonetic: 'ə' },
+      { text: 'A', isStressed: true, phonetic: 'reɪ' },
+      { text: 'tion', isStressed: false, phonetic: 'ʃən' }
+    ],
+    stressPosition: 3,
+    category: 'stress_3',
+    categoryLabel: 'Trọng âm 3-4 âm tiết',
+    rule: 'Quy tắc vàng: Từ kết thúc bằng đuôi -TION, -SION trọng âm LUÔN rơi vào âm tiết NGAY TRƯỚC NÓ.',
+    trapNote: 'Cứ thấy đuôi -tion hoặc -sion thì chọn ngay âm tiết đứng trước nó (gene-RA-tion, pollu-TION).',
+    example: 'The gap between generations is narrowing.'
+  },
+  {
+    id: 'thpt_s3_2',
+    word: 'economic',
+    ipa: '/ˌiː.kəˈnɒm.ɪk/',
+    syllables: [
+      { text: 'e', isStressed: false, phonetic: 'iː' },
+      { text: 'co', isStressed: false, phonetic: 'kə' },
+      { text: 'NOM', isStressed: true, phonetic: 'nɒm' },
+      { text: 'ic', isStressed: false, phonetic: 'ɪk' }
+    ],
+    stressPosition: 3,
+    category: 'stress_3',
+    categoryLabel: 'Trọng âm 3-4 âm tiết',
+    rule: 'Quy tắc vàng: Từ kết thúc bằng đuôi -IC, -ICAL trọng âm LUÔN rơi vào âm tiết LIỀN TRƯỚC NÓ (eco-NOM-ic, his-TOR-ic).',
+    trapNote: 'Bẫy đề thi: Danh từ e-CO-no-my (nhấn âm 2) nhưng tính từ eco-NOM-ic (nhấn âm 3)!',
+    example: 'Green technology promotes sustainable economic growth.'
+  },
+  {
+    id: 'thpt_s3_3',
+    word: 'biodiversity',
+    ipa: '/ˌbaɪ.əʊ.daɪˈvɜː.sɪ.ti/',
+    syllables: [
+      { text: 'bi', isStressed: false, phonetic: 'baɪ' },
+      { text: 'o', isStressed: false, phonetic: 'əʊ' },
+      { text: 'di', isStressed: false, phonetic: 'daɪ' },
+      { text: 'VER', isStressed: true, phonetic: 'vɜː' },
+      { text: 'si', isStressed: false, phonetic: 'sɪ' },
+      { text: 'ty', isStressed: false, phonetic: 'ti' }
+    ],
+    stressPosition: 4,
+    category: 'stress_3',
+    categoryLabel: 'Trọng âm 3-4 âm tiết',
+    rule: 'Quy tắc vàng: Từ kết thúc bằng -ITY, -ETY trọng âm rơi vào âm tiết THỨ 3 TỪ CUỐI ĐẾM LÊN.',
+    trapNote: 'bi-o-di-VER-si-ty, ac-TI-vi-ty, com-mu-NI-ty.',
+    example: 'Conserving biodiversity is crucial for our planet.'
+  },
+  {
+    id: 'thpt_s3_4',
+    word: 'volunteer',
+    ipa: '/ˌvɒl.ənˈtɪər/',
+    syllables: [
+      { text: 'vol', isStressed: false, phonetic: 'vɒl' },
+      { text: 'un', isStressed: false, phonetic: 'ən' },
+      { text: 'TEER', isStressed: true, phonetic: 'tɪər' }
+    ],
+    stressPosition: 3,
+    category: 'stress_3',
+    categoryLabel: 'Trọng âm 3-4 âm tiết',
+    rule: 'Hậu tố nhận chính trọng âm: Các từ có đuôi -EER, -EE, -ESE, -IQUE trọng âm RƠI VÀO CHÍNH NÓ (volun-TEER, engi-NEER, Vietna-MESE).',
+    trapNote: 'Trọng âm nằm ở chính âm tiết cuối cùng!',
+    example: 'Students volunteer to teach English in rural areas.'
+  },
+  {
+    id: 'thpt_s3_5',
+    word: 'photography',
+    ipa: '/fəˈtɒɡ.rə.fi/',
+    syllables: [
+      { text: 'pho', isStressed: false, phonetic: 'fə' },
+      { text: 'TOG', isStressed: true, phonetic: 'tɒɡ' },
+      { text: 'ra', isStressed: false, phonetic: 'rə' },
+      { text: 'phy', isStressed: false, phonetic: 'fi' }
+    ],
+    stressPosition: 2,
+    category: 'stress_3',
+    categoryLabel: 'Trọng âm 3-4 âm tiết',
+    rule: 'Từ kết thúc bằng -PHY, -GY trọng âm rơi vào âm tiết thứ 3 từ cuối đếm lên (pho-TOG-ra-phy, bi-OL-o-gy).',
+    trapNote: 'PHO-to (nhấn 1) nhưng pho-TOG-ra-phy (nhấn 2)!',
+    example: 'Landscape photography requires patience and skill.'
+  },
+
+  // CHUYÊN ĐỀ 3: PHÁT ÂM ĐUÔI -ED
+  {
+    id: 'thpt_ed_1',
+    word: 'decided',
+    ipa: '/dɪˈsaɪ.dɪd/',
+    syllables: [
+      { text: 'de', isStressed: false, phonetic: 'dɪ' },
+      { text: 'ci', isStressed: true, phonetic: 'saɪ' },
+      { text: 'DED (/ɪd/)', isStressed: false, phonetic: 'dɪd' }
+    ],
+    stressPosition: 2,
+    category: 'pron_ed',
+    categoryLabel: 'Quy tắc phát âm đuôi -ed',
+    rule: 'Quy tắc 1 (/ɪd/): Đuôi -ed phát âm là /ɪd/ khi động từ tận cùng bằng âm /t/ hoặc /d/ (wanted, decided, polluted).',
+    trapNote: 'Mẹo nhớ nhanh trong phòng thi: "Tiền Đô" (T và D).',
+    example: 'They decided to adopt eco-friendly habits.'
+  },
+  {
+    id: 'thpt_ed_2',
+    word: 'looked',
+    ipa: '/lʊkt/',
+    syllables: [
+      { text: 'looked (/t/)', isStressed: true, phonetic: 'lʊkt' }
+    ],
+    stressPosition: 1,
+    category: 'pron_ed',
+    categoryLabel: 'Quy tắc phát âm đuôi -ed',
+    rule: 'Quy tắc 2 (/t/): Đuôi -ed phát âm là /t/ khi tận cùng bằng âm vô thanh: /p/, /k/, /f/, /s/, /ʃ/ (sh), /tʃ/ (ch).',
+    trapNote: 'Mẹo nhớ: "Chính Phủ Phát Sách Không Thèm Share".',
+    example: 'He looked at the exam questions thoroughly.'
+  },
+  {
+    id: 'thpt_ed_3',
+    word: 'played',
+    ipa: '/pleɪd/',
+    syllables: [
+      { text: 'played (/d/)', isStressed: true, phonetic: 'pleɪd' }
+    ],
+    stressPosition: 1,
+    category: 'pron_ed',
+    categoryLabel: 'Quy tắc phát âm đuôi -ed',
+    rule: 'Quy tắc 3 (/d/): Đuôi -ed phát âm là /d/ với các trường hợp còn lại (nguyên âm & phụ âm hữu thanh).',
+    trapNote: 'Âm /d/ rung nhẹ dây thanh quản, đọc nhẹ ở cuối.',
+    example: 'Children played happily in the schoolyard.'
+  },
+
+  // CHUYÊN ĐỀ 4: PHÁT ÂM ĐUÔI -S/-ES
+  {
+    id: 'thpt_s_1',
+    word: 'books',
+    ipa: '/bʊks/',
+    syllables: [
+      { text: 'books (/s/)', isStressed: true, phonetic: 'bʊks' }
+    ],
+    stressPosition: 1,
+    category: 'pron_s',
+    categoryLabel: 'Quy tắc phát âm đuôi -s/-es',
+    rule: 'Đuôi -s phát âm là /s/ khi tận cùng bằng các âm vô thanh: /p/, /t/, /k/, /f/, /θ/.',
+    trapNote: 'Mẹo nhớ: "Thời Phong Kiến Phương Tây" (Th, P, K, Ph, T).',
+    example: 'Students read classic books for literature.'
+  },
+  {
+    id: 'thpt_s_2',
+    word: 'watches',
+    ipa: '/ˈwɒtʃ.ɪz/',
+    syllables: [
+      { text: 'watch', isStressed: true, phonetic: 'wɒtʃ' },
+      { text: 'ES (/ɪz/)', isStressed: false, phonetic: 'ɪz' }
+    ],
+    stressPosition: 1,
+    category: 'pron_s',
+    categoryLabel: 'Quy tắc phát âm đuôi -s/-es',
+    rule: 'Đuôi -es phát âm là /ɪz/ khi tận cùng bằng âm gió: /s/, /z/, /ʃ/, /tʃ/, /dʒ/.',
+    trapNote: 'Mẹo nhớ: "Sáu Chạy Xe Sh Giỏi Zữ".',
+    example: 'He watches science documentaries on weekends.'
+  },
+  {
+    id: 'thpt_s_3',
+    word: 'pens',
+    ipa: '/penz/',
+    syllables: [
+      { text: 'pens (/z/)', isStressed: true, phonetic: 'penz' }
+    ],
+    stressPosition: 1,
+    category: 'pron_s',
+    categoryLabel: 'Quy tắc phát âm đuôi -s/-es',
+    rule: 'Đuôi -s/-es phát âm là /z/ với các trường hợp còn lại (nguyên âm và phụ âm hữu thanh).',
+    trapNote: 'Âm /z/ cần rung nhẹ thanh quản, không được đọc thành /s/.',
+    example: 'Bring two black pens to the exam room.'
+  }
+];
 
 // Ngân hàng câu hỏi chấm phát âm Tiếng Anh mở rộng (285+ câu hỏi offline chuẩn SGK Global Success & CEFR)
 // Được gán kèm thông số độ khó IRT difficulty (b) từ -2.5 (dễ) đến +3.4 (rất khó)
@@ -27,8 +307,87 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
   const [dynamicSentences, setDynamicSentences] = useState([]);
   const [aiSentences, setAiSentences] = useState([]);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
-  const [isAutoAI, setIsAutoAI] = useState(true); // Bật chế độ tự động sinh câu AI liên tục bằng Gemini
-  const [selectedWordInfo, setSelectedWordInfo] = useState(null); // Từ được click để nghe lại & xem hướng dẫn sửa âm
+  // CHẾ ĐỘ SEnglish THPT: CHUYÊN ĐỀ TRỌNG ÂM & NGỮ ÂM (SHADOWING & IPA)
+  const [assessmentMode, setAssessmentMode] = useState('thpt_stress'); // 'thpt_stress' | 'general'
+  const [thptCategory, setThptCategory] = useState('all');
+  const [thptIndex, setThptIndex] = useState(0);
+  const [isShadowingListening, setIsShadowingListening] = useState(false);
+  const [shadowingResult, setShadowingResult] = useState(null);
+  const [speechSpeed, setSpeechSpeed] = useState(1.0);
+
+  const filteredThptWords = useMemo(() => {
+    if (thptCategory === 'all') return THPT_STRESS_BANK;
+    return THPT_STRESS_BANK.filter(w => w.category === thptCategory);
+  }, [thptCategory]);
+
+  const currentThptWord = filteredThptWords[thptIndex] || filteredThptWords[0];
+
+  const playThptSample = (word, rate = 1.0) => {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(word);
+    utter.lang = 'en-US';
+    utter.rate = rate;
+    window.speechSynthesis.speak(utter);
+  };
+
+  const startShadowingMic = (targetWord) => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Trình duyệt chưa hỗ trợ Web Speech Recognition trực tiếp. Bạn hãy thử trên Google Chrome hoặc Microsoft Edge.");
+      return;
+    }
+
+    setIsShadowingListening(true);
+    setShadowingResult(null);
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'en-US';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 3;
+
+      recognition.onresult = (event) => {
+        const spoken = (event.results[0][0].transcript || '').trim().toLowerCase();
+        const targetClean = targetWord.toLowerCase().trim();
+        const isMatch = spoken === targetClean || spoken.includes(targetClean) || targetClean.includes(spoken);
+
+        if (isMatch) {
+          setShadowingResult({
+            match: true,
+            spokenText: spoken,
+            score: 100,
+            message: 'Xuất sắc 100%! Bạn đã nhấn chuẩn xác trọng âm và ngữ điệu người bản xứ!'
+          });
+        } else {
+          setShadowingResult({
+            match: false,
+            spokenText: spoken,
+            score: 60,
+            message: `Hệ thống ghi nhận âm: "${spoken}". Hãy bấm nghe lại phát âm chậm 0.8x và đọc to rõ âm tiết nhấn nhé!`
+          });
+        }
+        setIsShadowingListening(false);
+      };
+
+      recognition.onerror = (event) => {
+        console.warn("Speech error:", event.error);
+        setIsShadowingListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsShadowingListening(false);
+      };
+
+      recognition.start();
+    } catch (e) {
+      console.error(e);
+      setIsShadowingListening(false);
+    }
+  };
+
+  const [isAutoAI, setIsAutoAI] = useState(true);
+  const [selectedWordInfo, setSelectedWordInfo] = useState(null);
 
   const playWordSample = (wordText) => {
     if (!wordText) return;
@@ -124,7 +483,7 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
   }, [dynamicSentences, selectedGrade]);
 
   const sentences = useMemo(() => [...aiSentences, ...basePool], [aiSentences, basePool]);
-  const currentSentence = sentences[currentSentenceIndex] || sentences[0] || { text: "Welcome to AI English Mentor.", level: "Default" };
+  const currentSentence = sentences[currentSentenceIndex] || sentences[0] || { text: "Welcome to Examora AI.", level: "Default" };
 
   // Tự động random câu hỏi khi vào trang hoặc đổi khối lớp
   useEffect(() => {
@@ -500,6 +859,248 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
 
   return (
     <div className="w-full py-2 px-1 space-y-6">
+      {/* SEnglish inspired THPT Mode Switcher */}
+      <div className="flex p-1.5 rounded-2xl bg-slate-900/90 border border-white/10 shadow-xl max-w-2xl mx-auto">
+        <button
+          onClick={() => {
+            setAssessmentMode('thpt_stress');
+            setShadowingResult(null);
+          }}
+          className={`flex-1 py-3 px-4 rounded-xl text-xs font-black transition cursor-pointer flex items-center justify-center gap-2 ${
+            assessmentMode === 'thpt_stress'
+              ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-black font-extrabold shadow-lg shadow-orange-500/25'
+              : 'text-gray-400 hover:text-white'
+          }`}
+        >
+          <Target className="w-4 h-4" />
+          <span>🎯 Chuyên Đề Trọng Âm &amp; Ngữ Âm THPT (Shadowing &amp; IPA)</span>
+        </button>
+        <button
+          onClick={() => setAssessmentMode('general')}
+          className={`flex-1 py-3 px-4 rounded-xl text-xs font-bold transition cursor-pointer flex items-center justify-center gap-2 ${
+            assessmentMode === 'general'
+              ? 'bg-indigo-600 text-white shadow-lg'
+              : 'text-gray-400 hover:text-white'
+          }`}
+        >
+          <Mic className="w-4 h-4" />
+          <span>🎙️ Chấm Phát Âm Câu Dài (AI IRT)</span>
+        </button>
+      </div>
+
+      {/* ════════════════════════════════════════════════════════════════════════════════ */}
+      {/* VIEW 1: CHUYÊN ĐỀ TRỌNG ÂM & NGỮ ÂM THPT (SHADOWING & PHIÊN ÂM IPA CHUẨN) */}
+      {/* ════════════════════════════════════════════════════════════════════════════════ */}
+      {assessmentMode === 'thpt_stress' && currentThptWord && (
+        <div className="space-y-6 max-w-4xl mx-auto animate-fade-in">
+          {/* Category Filter Pills */}
+          <div className="flex flex-wrap items-center justify-center gap-2 p-2 rounded-2xl bg-white/[0.02] border border-white/5">
+            {[
+              { id: 'all', label: 'Tất cả chuyên đề' },
+              { id: 'stress_2', label: 'Trọng âm 2 âm tiết' },
+              { id: 'stress_3', label: 'Trọng âm 3-4 âm tiết' },
+              { id: 'pron_ed', label: 'Quy tắc đuôi -ed' },
+              { id: 'pron_s', label: 'Quy tắc đuôi -s/-es' }
+            ].map(cat => (
+              <button
+                key={cat.id}
+                onClick={() => {
+                  setThptCategory(cat.id);
+                  setThptIndex(0);
+                  setShadowingResult(null);
+                }}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition cursor-pointer ${
+                  thptCategory === cat.id
+                    ? 'bg-cyan-500 text-black shadow-md shadow-cyan-500/20'
+                    : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Core Interactive Shadowing Card */}
+          <div className="glass rounded-3xl p-6 md:p-10 border border-amber-500/30 shadow-2xl bg-[#080d22]/90 space-y-6 relative overflow-hidden">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-4">
+              <div className="flex items-center gap-2">
+                <span className="px-3 py-1 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-black uppercase">
+                  {currentThptWord.categoryLabel}
+                </span>
+                <span className="text-xs text-gray-400 font-bold">
+                  Từ {thptIndex + 1}/{filteredThptWords.length}
+                </span>
+              </div>
+
+              {/* Speech speed selector */}
+              <div className="flex items-center gap-1.5 bg-white/5 p-1 rounded-xl border border-white/5">
+                <span className="text-[11px] text-gray-400 px-2 font-bold">Tốc độ audio:</span>
+                <button
+                  onClick={() => setSpeechSpeed(0.8)}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                    speechSpeed === 0.8 ? 'bg-amber-500 text-black font-extrabold' : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  0.8x (Chậm)
+                </button>
+                <button
+                  onClick={() => setSpeechSpeed(1.0)}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                    speechSpeed === 1.0 ? 'bg-amber-500 text-black font-extrabold' : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  1.0x (Chuẩn)
+                </button>
+              </div>
+            </div>
+
+            {/* Word Display & IPA Breakdown */}
+            <div className="text-center space-y-4 py-4">
+              <h2 className="text-4xl md:text-6xl font-black text-white font-outfit tracking-tight">
+                {currentThptWord.word}
+              </h2>
+
+              {/* Large High-visibility IPA */}
+              <div className="inline-flex items-center gap-2 px-5 py-2 rounded-2xl bg-white/[0.04] border border-white/10">
+                <span className="text-xl md:text-2xl font-mono font-bold text-amber-400 tracking-wider">
+                  {currentThptWord.ipa}
+                </span>
+              </div>
+
+              {/* Syllable Breakdown Chips */}
+              <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+                <span className="text-xs text-gray-400 block w-full mb-1">Cấu trúc phân tách âm tiết:</span>
+                {currentThptWord.syllables.map((syl, idx) => (
+                  <div
+                    key={idx}
+                    className={`px-4 py-2 rounded-2xl text-base font-extrabold tracking-wide transition flex flex-col items-center ${
+                      syl.isStressed
+                        ? 'bg-gradient-to-b from-amber-500 to-orange-500 text-black shadow-lg shadow-orange-500/30 scale-105 border border-amber-300'
+                        : 'bg-white/5 text-gray-300 border border-white/10'
+                    }`}
+                  >
+                    <span>{syl.text}</span>
+                    <span className="text-[10px] opacity-75 font-mono">/{syl.phonetic}/</span>
+                    {syl.isStressed && (
+                      <span className="text-[9px] font-black uppercase tracking-tighter mt-0.5">
+                        ⭐ Trọng âm
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Shadowing Action Zone */}
+            <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/10 flex flex-col sm:flex-row items-center justify-center gap-4">
+              {/* Step 1: Listen Audio */}
+              <button
+                onClick={() => playThptSample(currentThptWord.word, speechSpeed)}
+                className="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-cyan-600 hover:bg-cyan-500 text-white font-extrabold text-xs shadow-lg shadow-cyan-500/20 transition flex items-center justify-center gap-2.5 cursor-pointer"
+                title="Nghe phát âm chuẩn người bản xứ"
+              >
+                <Volume2 className="w-5 h-5" />
+                <span>1. Nghe Người Bản Xứ ({speechSpeed}x)</span>
+              </button>
+
+              {/* Step 2: Shadowing Mic */}
+              <button
+                onClick={() => startShadowingMic(currentThptWord.word)}
+                disabled={isShadowingListening}
+                className={`w-full sm:w-auto px-8 py-3.5 rounded-2xl font-black text-xs transition flex items-center justify-center gap-2.5 cursor-pointer shadow-xl ${
+                  isShadowingListening
+                    ? 'bg-rose-600 text-white animate-pulse'
+                    : 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-black shadow-emerald-500/25'
+                }`}
+              >
+                <Mic className="w-5 h-5" />
+                <span>
+                  {isShadowingListening ? 'Đang lắng nghe bạn đọc...' : '2. Bấm Mic Nói Nhại (Shadowing)'}
+                </span>
+              </button>
+            </div>
+
+            {/* Shadowing Result Feedback */}
+            {shadowingResult && (
+              <div 
+                className={`p-5 rounded-2xl border transition animate-scale-in flex items-start gap-4 ${
+                  shadowingResult.match
+                    ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-200'
+                    : 'bg-amber-500/15 border-amber-500/40 text-amber-200'
+                }`}
+              >
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                  shadowingResult.match ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'
+                }`}>
+                  {shadowingResult.match ? <Check className="w-6 h-6" /> : <Lightbulb className="w-6 h-6" />}
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <strong className="text-sm font-black text-white">
+                      {shadowingResult.match ? 'Chính Xác Hoàn Hảo!' : 'Cần Cải Thiện Thêm'}
+                    </strong>
+                    <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-white/10 text-white">
+                      Điểm: {shadowingResult.score}/100
+                    </span>
+                  </div>
+                  <p className="text-xs leading-relaxed">{shadowingResult.message}</p>
+                </div>
+              </div>
+            )}
+
+            {/* THPT Rule & Trap Explanation Box */}
+            <div className="p-5 rounded-2xl bg-indigo-950/40 border border-indigo-500/30 space-y-3">
+              <div className="flex items-center gap-2 text-indigo-300 text-xs font-black uppercase tracking-wider">
+                <BookOpen className="w-4 h-4 text-indigo-400" />
+                <span>Quy Tắc Làm Đề Thi Tốt Nghiệp THPT:</span>
+              </div>
+              <p className="text-xs text-slate-200 leading-relaxed font-medium">
+                {currentThptWord.rule}
+              </p>
+              <div className="p-3 rounded-xl bg-black/40 border border-white/5 text-[11px] text-amber-300 flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                <span>
+                  <strong className="text-white">Lưu ý bẫy đề thi:</strong> {currentThptWord.trapNote}
+                </span>
+              </div>
+              <div className="text-[11px] text-slate-400 italic">
+                Ví dụ: &ldquo;{currentThptWord.example}&rdquo;
+              </div>
+            </div>
+
+            {/* Navigation Buttons */}
+            <div className="flex items-center justify-between pt-2 border-t border-white/10">
+              <button
+                onClick={() => {
+                  setThptIndex(prev => (prev - 1 + filteredThptWords.length) % filteredThptWords.length);
+                  setShadowingResult(null);
+                }}
+                className="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 font-bold text-xs transition cursor-pointer flex items-center gap-1.5"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                <span>Từ trước</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setThptIndex(prev => (prev + 1) % filteredThptWords.length);
+                  setShadowingResult(null);
+                }}
+                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-extrabold text-xs transition cursor-pointer flex items-center gap-1.5 shadow-lg shadow-orange-500/20"
+              >
+                <span>Từ tiếp theo</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════════════════════════════════════════════ */}
+      {/* VIEW 2: CHẤM PHÁT ÂM CÂU DÀI THÍCH ỨNG AI (IRT ADAPTIVE) */}
+      {/* ════════════════════════════════════════════════════════════════════════════════ */}
+      {assessmentMode === 'general' && (
+      <div>
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between p-5 glass rounded-2xl mb-6 shadow-md border border-white/5 gap-4">
         <div className="flex items-center space-x-3">
@@ -645,7 +1246,7 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
             {isRecording ? (
               <button
                 onClick={stopRecording}
-                className="w-20 h-20 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center text-white transition shadow-lg shadow-red-500/20 pulse-record glow-btn-danger cursor-pointer"
+                className="w-20 h-20 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center text-white transition shadow-md animate-pulse cursor-pointer"
                 title="Dừng ghi âm và nhận diện"
               >
                 <Square className="w-8 h-8 fill-current" />
@@ -654,7 +1255,7 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
               <button
                 onClick={startRecording}
                 disabled={isPlayingSample || isLoading}
-                className="w-20 h-20 rounded-full bg-brand-500 hover:bg-brand-600 disabled:bg-gray-800 flex items-center justify-center text-white transition shadow-lg shadow-brand-500/20 glow-btn-brand cursor-pointer"
+                className="w-20 h-20 rounded-full bg-brand-500 hover:bg-brand-600 disabled:bg-gray-800 flex items-center justify-center text-white transition shadow-md cursor-pointer"
                 title="Bắt đầu nói"
               >
                 <Mic className="w-9 h-9" />
@@ -841,6 +1442,8 @@ export default function PronunciationAssessor({ selectedGrade, keys }) {
           </div>
         </div>
       </div>
+      </div>
+      )}
     </div>
   );
 }

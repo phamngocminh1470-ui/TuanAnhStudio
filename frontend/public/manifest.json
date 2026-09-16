@@ -1,0 +1,33 @@
+{
+  "name": "Examora AI - Gia Sư Khảo Thí Tiếng Anh Thích Ứng",
+  "short_name": "Examora AI",
+  "description": "Nền tảng Gia sư & Khảo thí Tiếng Anh thích ứng cá nhân hóa cho học sinh THPT dựa trên mô hình 2PL IRT và AI.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0c122c",
+  "theme_color": "#0c122c",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "681x617",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["education", "productivity"],
+  "lang": "vi"
+}

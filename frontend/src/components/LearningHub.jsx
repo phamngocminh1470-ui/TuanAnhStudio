@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import DaturaSkillsSection from './DaturaSkillsSection';
 import { 
   Sparkles, Zap, BookOpen, Headphones, Trophy, 
   ChevronRight, Clock, Award, Compass, 
   BrainCircuit, FileText, CheckCircle2, Flame, ArrowRight,
   Target, GraduationCap, Layers, Bot, Mic, PenLine, Database,
-  Download, Camera, Eye, Lock, RefreshCw, BarChart3, Star, Check, Shuffle
+  Download, Camera, Eye, Lock, RefreshCw, BarChart3, Star, Check, Shuffle,
+  TrendingUp, HelpCircle, Volume2, ShieldCheck, Sparkle
 } from 'lucide-react';
 
 export default function LearningHub({
@@ -16,561 +18,440 @@ export default function LearningHub({
   onOpenPhotoSolver
 }) {
   const isC3 = parseInt(selectedGrade) >= 10;
-  const [activeCategory, setActiveCategory] = useState(isC3 ? 'thpt' : 'thcs');
+  const [activeSkillCategory, setActiveSkillCategory] = useState('all');
 
-  // Categories & their curated cards
-  const categories = isC3 ? [
-    {
-      id: 'thpt',
-      name: '🎓 THPT Quốc Gia 2027',
-      desc: 'Bộ đề thi chuẩn cấu trúc Bộ GD&ĐT & Sách giáo khoa Lớp 10-11-12',
-      cards: [
-        {
-          id: 'official-exams',
-          title: 'Kho Đề Chuẩn Hóa Đa Tỉnh Thành',
-          desc: 'Bộ đề thi chính thức Hà Nội, TP.HCM, Nghệ An, Nam Định có lời giải chi tiết và mẹo tránh bẫy.',
-          badge: 'Đề Thi Thật',
-          badgeColor: 'text-blue-400 bg-blue-500/15 border-blue-500/30',
-          meta: '50 Câu / Đề • Có đáp án chi tiết',
-          action: () => onNavigate('official-exams'),
-          icon: FileText,
-          bgGradient: 'from-[#0e1a38] via-[#0b1328] to-[#070b18]',
-          borderColor: 'border-blue-500/30 hover:border-blue-400',
-          iconColor: 'text-blue-400 bg-blue-500/20 shadow-blue-500/20'
-        },
-        {
-          id: 'adaptive-reading',
-          title: 'Đọc Hiểu Thích Ứng Chủ Đề SGK Mới',
-          desc: 'Bài đọc AI phân tầng theo sở thích: Công nghệ, Môi trường, Văn hóa, Khoa học theo chương trình GDPT 2018.',
-          badge: 'AI Adaptive',
-          badgeColor: 'text-emerald-400 bg-emerald-500/15 border-emerald-500/30',
-          meta: '12 Units SGK • Tự động đổi độ khó',
-          action: () => onNavigate('reading'),
-          icon: BookOpen,
-          bgGradient: 'from-[#0a2326] via-[#09171c] to-[#060e12]',
-          borderColor: 'border-emerald-500/30 hover:border-emerald-400',
-          iconColor: 'text-emerald-400 bg-emerald-500/20 shadow-emerald-500/20'
-        },
-        {
-          id: 'adaptive-listening',
-          title: 'Luyện Nghe Thích Ứng & Ngữ Điệu Bản Xứ',
-          desc: 'Luyện nghe phân tầng độ khó, tự động sinh câu hỏi kiểm tra khả năng bắt từ khóa và phản xạ âm thanh.',
-          badge: 'Interactive Audio',
-          badgeColor: 'text-purple-400 bg-purple-500/15 border-purple-500/30',
-          meta: '36 Bài nghe • Tốc độ linh hoạt',
-          action: () => onNavigate('listening'),
-          icon: Headphones,
-          bgGradient: 'from-[#201036] via-[#140b24] to-[#0a0614]',
-          borderColor: 'border-purple-500/30 hover:border-purple-400',
-          iconColor: 'text-purple-400 bg-purple-500/20 shadow-purple-500/20'
-        },
-        {
-          id: 'sm2-vocab',
-          title: 'Siêu Trí Nhớ Từ Vựng Não Bộ (SM-2)',
-          desc: 'Thuật toán Spaced Repetition tính toán chính xác chu kỳ quên lãng để nhắc lại từ vựng đúng thời điểm vàng.',
-          badge: 'Khoa học Não bộ',
-          badgeColor: 'text-amber-400 bg-amber-500/15 border-amber-500/30',
-          meta: '1,500+ Từ vựng • 100% Nhớ sâu',
-          action: () => onNavigate('sm2-flashcards'),
-          icon: BrainCircuit,
-          bgGradient: 'from-[#281a0c] via-[#1c1208] to-[#0f0904]',
-          borderColor: 'border-amber-500/30 hover:border-amber-400',
-          iconColor: 'text-amber-400 bg-amber-500/20 shadow-amber-500/20'
-        }
-      ]
-    },
-    {
-      id: 'dgnl',
-      name: '🚀 ĐGNL & Tư Duy (HSA / TSA)',
-      desc: 'Luyện đề thi ĐHQG Hà Nội, ĐHQG-HCM, Bách Khoa, Sư phạm & Bộ Công an',
-      cards: [
-        {
-          id: 'dgnl-reading',
-          title: 'Đọc Hiểu Suy Luận & Phân Tích Lập Luận',
-          desc: 'Chuyên đề giải mã các câu hỏi suy luận ý tác giả, tìm thông tin ngầm định và phân tích phản đề học thuật.',
-          badge: 'HSA • TSA ĐHQG',
-          badgeColor: 'text-rose-400 bg-rose-500/15 border-rose-500/30',
-          meta: '24 Chuyên đề • Đạt 850+ Điểm',
-          action: () => onNavigate('reading'),
-          icon: Target,
-          bgGradient: 'from-[#280c14] via-[#1c080e] to-[#0f0408]',
-          borderColor: 'border-rose-500/30 hover:border-rose-400',
-          iconColor: 'text-rose-400 bg-rose-500/20 shadow-rose-500/20'
-        },
-        {
-          id: 'writing-academic',
-          title: 'Luyện Viết & Biến Đổi Cấu Trúc Câu',
-          desc: 'Viết luận và viết lại câu học thuật, AI chấm 4 tiêu chí và gợi ý nâng cấp từ vựng Band 8.0+ tức thì.',
-          badge: 'AI Chữa bài 4 tiêu chí',
-          badgeColor: 'text-cyan-400 bg-cyan-500/15 border-cyan-500/30',
-          meta: 'Sửa lỗi tức thì • Không giới hạn',
-          action: () => onNavigate('writing-practice'),
-          icon: PenLine,
-          bgGradient: 'from-[#092230] via-[#061722] to-[#030c12]',
-          borderColor: 'border-cyan-500/30 hover:border-cyan-400',
-          iconColor: 'text-cyan-400 bg-cyan-500/20 shadow-cyan-500/20'
-        },
-        {
-          id: 'socrates-mentor',
-          title: 'Socrates AI Mentor - Gia Sư Gợi Mở 1:1',
-          desc: 'Hướng dẫn giải chi tiết từng bước, gợi mở phương pháp suy luận thay vì đưa đáp án thô 24/7.',
-          badge: 'Socratic Method',
-          badgeColor: 'text-amber-400 bg-amber-500/15 border-amber-500/30',
-          meta: '24/7 Sẵn sàng • Chẩn đoán bẫy',
-          action: () => onNavigate('chat'),
-          icon: Bot,
-          bgGradient: 'from-[#261d08] via-[#1a1305] to-[#0d0902]',
-          borderColor: 'border-amber-500/30 hover:border-amber-400',
-          iconColor: 'text-amber-400 bg-amber-500/20 shadow-amber-500/20'
-        },
-        {
-          id: 'teacher-hub-card',
-          title: 'Cổng Giáo Viên • Xáo Đề 101-104 & Quản Lý Lớp',
-          desc: 'Tự động đảo câu hỏi và đáp án từ đề gốc thành 4-8 mã đề kèm bảng ma trận đáp án, quản lý nhóm lớp và thử thách từ vựng tuần.',
-          badge: 'Dành Cho Giáo Viên',
-          badgeColor: 'text-amber-400 bg-amber-500/15 border-amber-500/30',
-          meta: 'Xáo 2-8 Mã đề • Quản lý lớp',
-          action: () => onNavigate('teacher-portal'),
-          icon: Shuffle,
-          bgGradient: 'from-[#281a0c] via-[#1c1208] to-[#0f0904]',
-          borderColor: 'border-amber-500/30 hover:border-amber-400',
-          iconColor: 'text-amber-400 bg-amber-500/20 shadow-amber-500/20'
-        },
-        {
-          id: 'analytics-irt',
-          title: 'Báo Cáo Năng Lực & Dự Báo Điểm Thi',
-          desc: 'Bản đồ Radar phân tích điểm mạnh, điểm yếu theo 2PL IRT và xuất báo cáo học tập PDF hoàn chỉnh.',
-          badge: 'Báo cáo năng lực',
-          badgeColor: 'text-indigo-400 bg-indigo-500/15 border-indigo-500/30',
-          meta: 'Xuất PDF • Phân tích chuyên sâu',
-          action: () => onNavigate('analytics'),
-          icon: BarChart3,
-          bgGradient: 'from-[#141238] via-[#0d0c24] to-[#070614]',
-          borderColor: 'border-indigo-500/30 hover:border-indigo-400',
-          iconColor: 'text-indigo-400 bg-indigo-500/20 shadow-indigo-500/20'
-        }
-      ]
-    },
-    {
-      id: 'skills',
-      name: '🎯 4 Kỹ Năng Tiếng Anh THPT Chuẩn GDPT 2018',
-      desc: 'Nghe • Đọc • Viết • Nói bám sát cấu trúc thi Tốt nghiệp THPT & SGK Mới',
-      cards: [
-        {
-          id: 'pronounce-speech',
-          title: 'Chấm Điểm Phát Âm Chuẩn 44 Âm IPA',
-          desc: 'Azure Speech AI phân tích sóng âm nhận diện chính xác từng phụ âm cuối, nguyên âm đôi và trọng âm câu.',
-          badge: 'Azure Speech AI',
-          badgeColor: 'text-emerald-400 bg-emerald-500/15 border-emerald-500/30',
-          meta: '44 Âm IPA • Chấm điểm chi tiết',
-          action: () => onNavigate('pronounce'),
-          icon: Mic,
-          bgGradient: 'from-[#08261e] via-[#051a14] to-[#020d0a]',
-          borderColor: 'border-emerald-500/30 hover:border-emerald-400',
-          iconColor: 'text-emerald-400 bg-emerald-500/20 shadow-emerald-500/20'
-        },
-        {
-          id: 'vocab-sgk-library',
-          title: 'Kho Từ Vựng Toàn Diện Theo Sách SGK',
-          desc: 'Tra cứu và học từ vựng theo Unit SGK Global Success & Friends Global Lớp 10, 11, 12 kèm audio mẫu.',
-          badge: 'Học liệu SGK Mới',
-          badgeColor: 'text-cyan-400 bg-cyan-500/15 border-cyan-500/30',
-          meta: '1,500+ Từ • Kèm ví dụ & IPA',
-          action: () => onNavigate('vocab-library'),
-          icon: BookOpen,
-          bgGradient: 'from-[#092230] via-[#061722] to-[#030c12]',
-          borderColor: 'border-cyan-500/30 hover:border-cyan-400',
-          iconColor: 'text-cyan-400 bg-cyan-500/20 shadow-cyan-500/20'
-        },
-        {
-          id: 'irt-fast-sprint',
-          title: 'Sprint Luyện Đề Nhanh 10 Câu (IRT)',
-          desc: 'Bài test nhanh 10 phút tự động tính toán năng lực theta và xác định chính xác điểm số mục tiêu của bạn.',
-          badge: 'Đánh Giá Nhanh',
-          badgeColor: 'text-blue-400 bg-blue-500/15 border-blue-500/30',
-          meta: '~10 Phút • Nhận xét năng lực',
-          action: () => onNavigate('irt-test'),
-          icon: Zap,
-          bgGradient: 'from-[#0e1a38] via-[#0b1328] to-[#070b18]',
-          borderColor: 'border-blue-500/30 hover:border-blue-400',
-          iconColor: 'text-blue-400 bg-blue-500/20 shadow-blue-500/20'
-        },
-        {
-          id: 'chat-ai-companion',
-          title: 'Hội Thoại 1:1 Cùng Trợ Lý Tiếng Anh AI',
-          desc: 'Luyện tập giao tiếp, giải thích ngữ pháp sâu và đồng hành giải đáp mọi bài tập trên lớp 24/7.',
-          badge: 'Gemini 1.5 Flash',
-          badgeColor: 'text-purple-400 bg-purple-500/15 border-purple-500/30',
-          meta: 'Trò chuyện 24/7 • Không giới hạn',
-          action: () => onNavigate('chat'),
-          icon: Sparkles,
-          bgGradient: 'from-[#201036] via-[#140b24] to-[#0a0614]',
-          borderColor: 'border-purple-500/30 hover:border-purple-400',
-          iconColor: 'text-purple-400 bg-purple-500/20 shadow-purple-500/20'
-        }
-      ]
-    }
-  ] : [
-    {
-      id: 'thcs',
-      name: '🎯 Tuyển Sinh Vào Lớp 10',
-      desc: 'Lộ trình bứt phá điểm 9+ kỳ thi tuyển sinh THPT công lập',
-      cards: [
-        {
-          id: 'thcs-official-exams',
-          title: 'Kho Đề Tuyển Sinh Vào 10 Các Tỉnh',
-          desc: 'Bộ đề thi chính thức Hà Nội, TP.HCM, Đà Nẵng, Nghệ An có giải thích chi tiết và bảng từ vựng then chốt.',
-          badge: 'Đề 63 Tỉnh Thành',
-          badgeColor: 'text-blue-400 bg-blue-500/15 border-blue-500/30',
-          meta: 'Đầy đủ cấu trúc • Lời giải chi tiết',
-          action: () => onNavigate('official-exams'),
-          icon: FileText,
-          bgGradient: 'from-[#0e1a38] via-[#0b1328] to-[#070b18]',
-          borderColor: 'border-blue-500/30 hover:border-blue-400',
-          iconColor: 'text-blue-400 bg-blue-500/20 shadow-blue-500/20'
-        },
-        {
-          id: 'thcs-irt-test',
-          title: 'Thi Thử Vào 10 Thích Ứng AI',
-          desc: '40 câu trắc nghiệm chuẩn cấu trúc tuyển sinh THPT công lập, tự động điều chỉnh theo năng lực học sinh.',
-          badge: 'Chuẩn Cấu Trúc',
-          badgeColor: 'text-emerald-400 bg-emerald-500/15 border-emerald-500/30',
-          meta: '40 Câu / Đề • Dự báo điểm',
-          action: () => onNavigate('irt-test'),
-          icon: Zap,
-          bgGradient: 'from-[#0a2326] via-[#09171c] to-[#060e12]',
-          borderColor: 'border-emerald-500/30 hover:border-emerald-400',
-          iconColor: 'text-emerald-400 bg-emerald-500/20 shadow-emerald-500/20'
-        },
-        {
-          id: 'thcs-vocab-sm2',
-          title: 'Từ Vựng Não Bộ Tuyển Sinh Vào 10',
-          desc: '800 từ vựng cốt lõi thường xuất hiện trong đề thi vào 10, ghi nhớ sâu theo thuật toán SuperMemo-2.',
-          badge: 'Trí Nhớ Não Bộ',
-          badgeColor: 'text-amber-400 bg-amber-500/15 border-amber-500/30',
-          meta: '800 Từ • Ghi nhớ dài hạn',
-          action: () => onNavigate('sm2-flashcards'),
-          icon: BrainCircuit,
-          bgGradient: 'from-[#281a0c] via-[#1c1208] to-[#0f0904]',
-          borderColor: 'border-amber-500/30 hover:border-amber-400',
-          iconColor: 'text-amber-400 bg-amber-500/20 shadow-amber-500/20'
-        },
-        {
-          id: 'thcs-ipa-speech',
-          title: 'Luyện Phát Âm Chuẩn 44 Âm IPA Cấp 2',
-          desc: 'Azure Speech AI chấm điểm phát âm từng nguyên âm, phụ âm và câu giao tiếp cơ bản.',
-          badge: 'Azure Speech',
-          badgeColor: 'text-purple-400 bg-purple-500/15 border-purple-500/30',
-          meta: '44 Âm IPA • Tự tin phát âm',
-          action: () => onNavigate('pronounce'),
-          icon: Mic,
-          bgGradient: 'from-[#201036] via-[#140b24] to-[#0a0614]',
-          borderColor: 'border-purple-500/30 hover:border-purple-400',
-          iconColor: 'text-purple-400 bg-purple-500/20 shadow-purple-500/20'
-        }
-      ]
-    }
-  ];
-
-  const currentCategoryObj = categories.find(c => c.id === activeCategory) || categories[0];
+  // Tính toán số ngày đếm ngược chính xác
+  const countdownDays = useMemo(() => {
+    const targetDate = isC3 ? new Date('2027-06-25') : new Date('2027-06-05');
+    const today = new Date();
+    const diffTime = targetDate - today;
+    return Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+  }, [isC3]);
 
   return (
-    <div className="space-y-10 animate-fade-in pb-16 max-w-6xl mx-auto">
+    <div className="w-full space-y-10 sm:space-y-14 animate-fade-in pb-28 select-text">
       
-      {/* ─── 1. HERO BANNER WITH LUXURY GLASSMORPHISM & COUNTDOWN ─────── */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#101b38] via-[#0c142b] to-[#070c1a] border border-indigo-500/30 p-8 md:p-10 shadow-2xl">
-        {/* Subtle Ambient Glows */}
-        <div className="absolute top-0 right-1/4 w-96 h-96 bg-cyan-500/15 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute bottom-0 right-0 w-80 h-80 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none"></div>
+      {/* ══════════════════════════════════════════════════════════════════════
+          1. HERO BANNER: EXPANSIVE 3D SAPPHIRE HERO WITH RADIANT GLOW
+      ══════════════════════════════════════════════════════════════════════ */}
+      <div className="card-3d-sapphire p-6 sm:p-10 lg:p-12 relative overflow-hidden shadow-[0_16px_40px_rgba(3,7,26,0.7)] border border-cyan-500/20 text-slate-100">
+        
+        {/* Expansive Ambient Atmosphere - Êm dịu, lan tỏa tự nhiên, không chói */}
+        <div className="absolute -top-20 -left-20 w-[600px] h-[600px] bg-gradient-to-tr from-blue-600/12 via-cyan-500/10 to-transparent rounded-full blur-[140px] pointer-events-none -z-10" />
+        <div className="absolute -bottom-20 -right-20 w-[550px] h-[550px] bg-gradient-to-bl from-purple-600/10 via-indigo-500/08 to-transparent rounded-full blur-[140px] pointer-events-none -z-10" />
 
-        <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-8">
-          {/* Left Hero Text */}
-          <div className="space-y-4 max-w-2xl">
-            <div className="flex items-center gap-2.5">
-              <span className="text-[11px] font-black px-3.5 py-1 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/40 uppercase tracking-wider shadow-sm">
-                {isC3 ? 'KỲ THI THPT QG • 2027' : 'KỲ THI TUYỂN SINH VÀO LỚP 10 • THCS'}
+        <div className="relative z-10 flex flex-col xl:flex-row items-center justify-between gap-8 lg:gap-12">
+          {/* Left Column: Hero Typography & Actions */}
+          <div className="space-y-4 sm:space-y-5 text-left w-full xl:max-w-3xl">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
+              <span className="text-[11px] font-mono px-3.5 py-1 rounded-full bg-blue-950/70 text-cyan-300 border border-cyan-500/30 uppercase tracking-wider flex items-center gap-1.5">
+                <GraduationCap className="w-3.5 h-3.5 text-cyan-400" />
+                <span>{isC3 ? 'KỲ THI THPT QG • 2027' : 'KỲ THI TUYỂN SINH 10 • THCS'}</span>
               </span>
-              <span className="text-xs text-emerald-400 font-bold flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/30">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                100% Miễn Phí
+              <span className="text-[11px] font-mono text-emerald-300 flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 uppercase tracking-wider">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399]" />
+                100% MIỄN PHÍ
+              </span>
+              <span className="text-[11px] font-mono text-cyan-300/80 px-3 py-1 rounded-full bg-blue-950/60 border border-cyan-500/30 hidden sm:inline-flex">
+                IRT 2PL ADAPTIVE
               </span>
             </div>
 
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight font-outfit">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight font-outfit">
               {isC3 ? (
-                <>Chinh phục <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400">điểm 10</span> cùng AI Gia Sư riêng.</>
+                <>
+                  <span className="text-3d-hero block">Chinh phục điểm 9+ THPT</span>
+                  <span className="text-3d-cyan inline-block mt-1">cùng AI Gia Sư riêng 24/7</span>
+                </>
               ) : (
-                <>Bứt phá <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400">điểm 9+</span> vào lớp 10 cùng AI Gia Sư.</>
+                <>
+                  <span className="text-3d-hero block">Bứt phá điểm 9+ vào 10</span>
+                  <span className="text-3d-cyan inline-block mt-1">cùng AI Gia Sư</span>
+                </>
               )}
             </h1>
 
-            <p className="text-xs md:text-sm text-slate-300 font-normal leading-relaxed">
-              Chào <strong className="text-white font-bold">{currentUser?.fullname || currentUser?.username || 'Học sinh'}</strong>, AI Mentor đồng hành 24/7 — {isC3 ? 'chấm bài, giải đề, phân tích lỗi và dự đoán điểm thi THPT theo mô hình tâm trắc học IRT chuẩn mực.' : 'xây dựng nền tảng ngữ pháp, phát âm chuẩn 44 âm IPA và luyện đề thi thử vào lớp 10.'}
+            <p className="text-sm sm:text-base text-slate-300 font-normal leading-relaxed max-w-2xl">
+              Chào <span className="text-cyan-300 font-bold">{currentUser?.fullname || currentUser?.username || 'Học sinh'}</span>, AI Mentor đồng hành 24/7 theo phương pháp <span className="text-cyan-200 font-semibold">gợi mở Socrates</span> — không mớm đáp án, giúp em tự tư duy, phân tích bẫy đề thi và đo lường chính xác năng lực thực tế.
             </p>
 
-            <div className="flex flex-wrap items-center gap-3.5 pt-2">
+            {/* Action Buttons */}
+            <div className="flex flex-wrap items-center gap-3 sm:gap-4 pt-2 w-full">
               <button
                 onClick={() => onNavigate('chat')}
-                className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs md:text-sm font-black flex items-center gap-2 cursor-pointer shadow-xl shadow-blue-500/30 transition-all hover:scale-105"
+                className="btn-3d-primary px-6 py-3.5 sm:px-7 sm:py-4 rounded-2xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2.5 cursor-pointer shadow-md"
               >
-                <Bot className="w-4 h-4" />
-                <span>Hỏi AI Gia Sư ngay</span>
-                <ArrowRight className="w-4 h-4" />
+                <Bot className="w-4 h-4 text-cyan-200" />
+                <span>Hỏi AI Gia Sư Socratic 1:1</span>
+                <ArrowRight className="w-3.5 h-3.5" />
               </button>
 
               <button
                 onClick={onOpenPhotoSolver}
-                className="px-5 py-3.5 rounded-2xl bg-white/10 hover:bg-white/15 text-slate-100 text-xs md:text-sm font-bold flex items-center gap-2 border border-white/15 transition cursor-pointer shadow-lg hover:scale-105"
+                className="btn-3d-secondary px-5 py-3.5 sm:px-6 sm:py-4 rounded-2xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 cursor-pointer"
               >
-                <Sparkles className="w-4 h-4 text-amber-400" />
-                <span>📸 Chụp Ảnh Giải Đề AI</span>
+                <Camera className="w-4 h-4 text-cyan-400" />
+                <span>Chụp Ảnh Giải Đề AI</span>
+              </button>
+
+              <button
+                onClick={() => onNavigate('irt-test')}
+                className="px-5 py-3.5 sm:px-6 sm:py-4 rounded-2xl bg-gradient-to-b from-indigo-900/80 to-[#121a44] text-cyan-200 hover:text-white border border-cyan-500/30 text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition cursor-pointer shadow-md"
+              >
+                <Zap className="w-4 h-4 text-cyan-300" />
+                <span>Luyện Đề Thích Ứng (10 Câu)</span>
               </button>
             </div>
           </div>
 
-          {/* Right Hero: Circular Countdown Clock */}
-          <div className="shrink-0 flex flex-col items-center justify-center p-6 rounded-3xl bg-[#090e1c]/90 border border-indigo-500/30 shadow-2xl relative">
-            <div className="relative w-40 h-40 flex items-center justify-center">
-              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="42"
-                  stroke="currentColor"
-                  strokeWidth="6"
-                  className="text-white/5"
-                  fill="transparent"
-                />
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="42"
-                  stroke="url(#gradient-ring)"
-                  strokeWidth="6"
-                  strokeDasharray="264"
-                  strokeDashoffset={isC3 ? "75" : "90"}
-                  strokeLinecap="round"
-                  fill="transparent"
-                />
-                <defs>
-                  <linearGradient id="gradient-ring" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#06b6d4" />
-                    <stop offset="50%" stopColor="#3b82f6" />
-                    <stop offset="100%" stopColor="#a855f7" />
-                  </linearGradient>
-                </defs>
-              </svg>
+          {/* Right Column: Countdown HUD */}
+          <div className="shrink-0 w-full xl:w-auto flex flex-col sm:flex-row xl:flex-col items-center justify-center gap-4 p-6 sm:p-7 rounded-3xl bg-[#131d47] border border-cyan-500/25 shadow-lg relative text-slate-100">
+            {/* Circular Countdown Ring */}
+            <div className="flex items-center gap-5">
+              <div className="relative w-32 h-32 sm:w-36 sm:h-36 flex items-center justify-center shrink-0">
+                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="42"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                    className="text-blue-950/70"
+                    fill="transparent"
+                  />
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="42"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                    strokeDasharray="264"
+                    strokeDashoffset={isC3 ? "75" : "90"}
+                    strokeLinecap="round"
+                    className="text-cyan-400"
+                    fill="transparent"
+                  />
+                </svg>
 
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                <span className="text-3xl font-black text-white font-mono tracking-tight">{isC3 ? '312' : '284'}</span>
-                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">DAYS LEFT</span>
-                <span className="text-[9px] font-mono text-cyan-400 mt-0.5">{isC3 ? '25.06.2027' : '05.06.2027'}</span>
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                  <span className="text-3xl font-extrabold text-cyan-300 font-mono tracking-tight">{countdownDays}</span>
+                  <span className="text-[9px] font-mono text-slate-400 uppercase tracking-wider">NGÀY CÒN LẠI</span>
+                  <span className="text-[10px] font-mono text-cyan-300 mt-0.5">{isC3 ? '25.06.2027' : '05.06.2027'}</span>
+                </div>
+              </div>
+
+              {/* Text label next to ring */}
+              <div className="text-left space-y-1">
+                <span className="text-xs font-bold text-slate-100 uppercase tracking-wider block font-outfit">
+                  {isC3 ? 'Đếm Ngược THPT 2027' : 'Đếm Ngược Vào 10'}
+                </span>
+                <p className="text-xs text-slate-400 leading-tight max-w-[150px] font-normal">
+                  Kỳ thi chuẩn hóa theo cấu trúc GDPT 2018
+                </p>
+                <div className="pt-1 flex items-center gap-1.5 text-xs text-emerald-400 font-mono">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399]" />
+                  <span>Đồng bộ tiến độ</span>
+                </div>
               </div>
             </div>
-            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-3">
-              {isC3 ? 'Đếm ngược THPT 2027' : 'Đếm ngược Vào Lớp 10'}
-            </span>
+
+            {/* Quick Metrics Bar inside HUD */}
+            <div className="w-full grid grid-cols-3 gap-2 pt-3 sm:pt-4 border-t border-cyan-500/20 text-center">
+              <div className="p-2 rounded-xl bg-[#10193e] border border-cyan-500/25 shadow-xs">
+                <div className="text-xs font-mono text-cyan-300 font-bold">+0.85</div>
+                <div className="text-[9px] text-slate-400 font-mono">Năng lực θ</div>
+              </div>
+              <div className="p-2 rounded-xl bg-[#10193e] border border-cyan-500/25 shadow-xs">
+                <div className="text-xs font-mono text-amber-300 font-bold">🔥 7 Ngày</div>
+                <div className="text-[9px] text-slate-400 font-mono">Chuỗi học</div>
+              </div>
+              <div className="p-2 rounded-xl bg-[#10193e] border border-cyan-500/25 shadow-xs">
+                <div className="text-xs font-mono text-emerald-300 font-bold">8.4 / 10</div>
+                <div className="text-[9px] text-slate-400 font-mono">Dự báo điểm</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* ─── 2. TRỤ CỘT LUYỆN THI THÍCH ỨNG (AI CORE PILLARS GRID) ─────────────── */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
+      {/* ══════════════════════════════════════════════════════════════════════
+          2. 4 TRỤ CỘT LUYỆN THI THÍCH ỨNG AI (3D SAPPHIRE CARDS)
+      ══════════════════════════════════════════════════════════════════════ */}
+      <div className="space-y-4 sm:space-y-5 text-slate-100">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-1">
           <div>
-            <h2 className="text-lg md:text-xl font-extrabold text-white">4 Trụ Cột Luyện Thi Thích Ứng AI</h2>
-            <p className="text-xs text-slate-400 mt-0.5">Học tập thông minh theo mô hình tâm trắc học và khoa học nhận thức</p>
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg sm:text-xl font-bold text-slate-100 font-outfit">4 Trụ Cột Luyện Thi Thích Ứng AI</h2>
+              <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-blue-950/80 text-cyan-300 border border-cyan-500/30 uppercase tracking-wider font-bold">
+                CORE PEDAGOGY
+              </span>
+            </div>
+            <p className="text-xs sm:text-sm text-slate-300 mt-1 font-normal">
+              Ứng dụng khoa học nhận thức và mô hình tâm trắc học để tối đa hóa hiệu suất học tập
+            </p>
           </div>
-          <span className="text-[11px] font-mono text-cyan-400 uppercase tracking-wider font-bold">CORE MODULES</span>
+          <span className="text-xs text-cyan-400 font-mono hidden sm:block">
+            CHẠM ĐỂ BẮT ĐẦU
+          </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Card 1: Luyện đề thích ứng */}
+        {/* 4 Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+          
+          {/* Card 1: Luyện Đề Thích Ứng IRT */}
           <div
             onClick={() => onNavigate('irt-test')}
-            className="p-6 rounded-3xl border border-emerald-500/30 hover:border-emerald-400 bg-gradient-to-br from-[#0a2326] via-[#09171c] to-[#060e12] cursor-pointer space-y-4 relative group overflow-hidden shadow-xl hover:scale-[1.02] transition-all duration-300"
+            className="p-6 rounded-3xl border border-cyan-500/25 hover:border-cyan-400/60 bg-gradient-to-br from-[#121c48]/90 to-[#0c1334]/90 hover:shadow-[0_0_25px_rgba(6,182,212,0.25)] hover:scale-[1.02] cursor-pointer space-y-4 relative group overflow-hidden transition-all duration-300 flex flex-col justify-between text-slate-100 shadow-xl"
           >
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-extrabold px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
-                THUẬT TOÁN IRT
-              </span>
-              <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition shadow-lg shadow-emerald-500/20">
-                <Zap className="w-5 h-5" />
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-blue-500/20 text-cyan-300 border border-cyan-500/30 uppercase tracking-wider font-bold">
+                  (01) // 2PL IRT
+                </span>
+                <div className="w-9 h-9 rounded-xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-cyan-400 group-hover:bg-blue-600 group-hover:text-white transition">
+                  <Zap className="w-4 h-4" />
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-base font-bold text-slate-100 group-hover:text-cyan-300 transition font-outfit">
+                  Luyện Đề Thích Ứng 10 Câu
+                </h3>
+                <p className="text-xs text-slate-300 mt-1.5 leading-relaxed font-normal">
+                  Tự động tăng giảm độ khó theo từng câu trả lời để xác định chính xác chỉ số năng lực thực tế.
+                </p>
+              </div>
+
+              <div className="space-y-1 pt-1 text-xs text-slate-300 font-normal">
+                <div className="flex items-center gap-2">
+                  <Check className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                  <span>Đổi độ khó theo năng lực thực</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                  <span>Dự báo điểm số THPT chuẩn xác</span>
+                </div>
               </div>
             </div>
-            <div>
-              <h3 className="text-base font-black text-white group-hover:text-emerald-300 transition font-outfit">
-                Luyện Đề Thích Ứng 10 Câu
-              </h3>
-              <p className="text-xs text-slate-300 mt-1.5 leading-relaxed">
-                Tự động tăng giảm độ khó theo từng câu để xác định đúng năng lực thực.
-              </p>
-            </div>
-            <div className="flex items-center justify-between text-xs text-slate-400 pt-3 border-t border-white/10">
-              <span className="flex items-center gap-1 font-medium"><Clock className="w-3.5 h-3.5" /> ~10 phút</span>
-              <span className="text-emerald-400 font-black group-hover:translate-x-1 transition flex items-center gap-1">
+
+            <div className="flex items-center justify-between text-xs text-slate-400 pt-4 border-t border-cyan-500/20 font-mono">
+              <span>~10 phút làm bài</span>
+              <span className="text-cyan-300 group-hover:translate-x-1 transition flex items-center gap-1 font-bold">
                 Luyện ngay <ArrowRight className="w-3.5 h-3.5" />
               </span>
             </div>
           </div>
 
-          {/* Card 2: Từ vựng não bộ SM-2 */}
+          {/* Card 2: Trí Nhớ Từ Vựng Não Bộ SM-2 */}
           <div
             onClick={() => onNavigate('sm2-flashcards')}
-            className="p-6 rounded-3xl border border-amber-500/30 hover:border-amber-400 bg-gradient-to-br from-[#281a0c] via-[#1c1208] to-[#0f0904] cursor-pointer space-y-4 relative group overflow-hidden shadow-xl hover:scale-[1.02] transition-all duration-300"
+            className="p-6 rounded-3xl border border-purple-500/25 hover:border-purple-400/60 bg-gradient-to-br from-[#1b1240]/90 to-[#100b28]/90 hover:shadow-[0_0_25px_rgba(168,85,247,0.25)] hover:scale-[1.02] cursor-pointer space-y-4 relative group overflow-hidden transition-all duration-300 flex flex-col justify-between text-slate-100 shadow-xl"
           >
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-extrabold px-3 py-1 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30">
-                SUPERMEMO-2
-              </span>
-              <div className="w-10 h-10 rounded-2xl bg-amber-500/20 flex items-center justify-center text-amber-400 group-hover:scale-110 transition shadow-lg shadow-amber-500/20">
-                <BrainCircuit className="w-5 h-5" />
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 uppercase tracking-wider font-bold">
+                  (02) // SM-2
+                </span>
+                <div className="w-9 h-9 rounded-xl bg-purple-600/20 border border-purple-500/30 flex items-center justify-center text-purple-300 group-hover:bg-purple-600 group-hover:text-white transition">
+                  <BrainCircuit className="w-4 h-4" />
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-base font-bold text-slate-100 group-hover:text-purple-300 transition font-outfit">
+                  Trí Nhớ Từ Vựng Não Bộ
+                </h3>
+                <p className="text-xs text-slate-300 mt-1.5 leading-relaxed font-normal">
+                  Ghi nhớ sâu từ vựng SGK Mới theo quy luật nhắc lại ngắt quãng, đưa từ vựng vào bộ nhớ dài hạn.
+                </p>
+              </div>
+
+              <div className="space-y-1 pt-1 text-xs text-slate-300 font-normal">
+                <div className="flex items-center gap-2">
+                  <Check className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                  <span>Chu kỳ quên lãng Ebbinghaus</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                  <span>Flashcard kèm Audio &amp; Ví dụ</span>
+                </div>
               </div>
             </div>
-            <div>
-              <h3 className="text-base font-black text-white group-hover:text-amber-300 transition font-outfit">
-                Trí Nhớ Từ Vựng Não Bộ
-              </h3>
-              <p className="text-xs text-slate-300 mt-1.5 leading-relaxed">
-                Ghi nhớ sâu từ vựng SGK Mới theo quy luật nhắc lại ngắt quãng.
-              </p>
-            </div>
-            <div className="flex items-center justify-between text-xs text-slate-400 pt-3 border-t border-white/10">
-              <span className="flex items-center gap-1 font-medium"><Clock className="w-3.5 h-3.5" /> ~5-8 phút</span>
-              <span className="text-amber-400 font-black group-hover:translate-x-1 transition flex items-center gap-1">
+
+            <div className="flex items-center justify-between text-xs text-slate-400 pt-4 border-t border-purple-500/20 font-mono">
+              <span>~5-8 phút/ngày</span>
+              <span className="text-purple-300 group-hover:translate-x-1 transition flex items-center gap-1 font-bold">
                 Học từ <ArrowRight className="w-3.5 h-3.5" />
               </span>
             </div>
           </div>
 
-          {/* Card 3: Socrates AI Tutor */}
+          {/* Card 3: Socrates AI Mentor 1:1 */}
           <div
             onClick={() => onNavigate('chat')}
-            className="p-6 rounded-3xl border border-blue-500/30 hover:border-blue-400 bg-gradient-to-br from-[#0e1a38] via-[#0b1328] to-[#070b18] cursor-pointer space-y-4 relative group overflow-hidden shadow-xl hover:scale-[1.02] transition-all duration-300"
+            className="p-6 rounded-3xl border border-indigo-500/25 hover:border-indigo-400/60 bg-gradient-to-br from-[#131b46]/90 to-[#0c1232]/90 hover:shadow-[0_0_25px_rgba(99,102,241,0.25)] hover:scale-[1.02] cursor-pointer space-y-4 relative group overflow-hidden transition-all duration-300 flex flex-col justify-between text-slate-100 shadow-xl"
           >
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-extrabold px-3 py-1 rounded-full bg-blue-500/15 text-blue-300 border border-blue-500/30">
-                GIA SƯ 1:1
-              </span>
-              <div className="w-10 h-10 rounded-2xl bg-blue-500/20 flex items-center justify-center text-blue-400 group-hover:scale-110 transition shadow-lg shadow-blue-500/20">
-                <Bot className="w-5 h-5" />
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 uppercase tracking-wider font-bold">
+                  (03) // SOCRATES AI
+                </span>
+                <div className="w-9 h-9 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-300 group-hover:bg-indigo-600 group-hover:text-white transition">
+                  <Bot className="w-4 h-4" />
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-base font-bold text-slate-100 group-hover:text-indigo-300 transition font-outfit">
+                  Gia Sư Socratic 1:1
+                </h3>
+                <p className="text-xs text-slate-300 mt-1.5 leading-relaxed font-normal">
+                  Gợi mở tư duy từng bước, không mớm đáp án. Hướng dẫn giải đề chi tiết và bóc tách bẫy ngữ pháp 24/7.
+                </p>
+              </div>
+
+              <div className="space-y-1 pt-1 text-xs text-slate-300 font-normal">
+                <div className="flex items-center gap-2">
+                  <Check className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                  <span>Dẫn dắt tự sửa lỗi sai</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                  <span>Chẩn đoán bẫy Collocation THPT</span>
+                </div>
               </div>
             </div>
-            <div>
-              <h3 className="text-base font-black text-white group-hover:text-blue-300 transition font-outfit">
-                Gia Sư Socratic 1:1
-              </h3>
-              <p className="text-xs text-slate-300 mt-1.5 leading-relaxed">
-                Gợi mở tư duy từng bước, giải đáp thắc mắc và chỉ ra bẫy đề thi 24/7.
-              </p>
-            </div>
-            <div className="flex items-center justify-between text-xs text-slate-400 pt-3 border-t border-white/10">
-              <span className="flex items-center gap-1 font-medium"><Clock className="w-3.5 h-3.5" /> 24/7</span>
-              <span className="text-blue-400 font-black group-hover:translate-x-1 transition flex items-center gap-1">
+
+            <div className="flex items-center justify-between text-xs text-slate-400 pt-4 border-t border-cyan-500/20 font-mono">
+              <span>Sẵn sàng 24/7</span>
+              <span className="text-indigo-300 group-hover:translate-x-1 transition flex items-center gap-1 font-bold">
                 Hỏi đáp <ArrowRight className="w-3.5 h-3.5" />
               </span>
             </div>
           </div>
 
-          {/* Card 4: Chấm phát âm IPA */}
+          {/* Card 4: Chấm Phát Âm IPA */}
           <div
             onClick={() => onNavigate('pronounce')}
-            className="p-6 rounded-3xl border border-cyan-500/30 hover:border-cyan-400 bg-gradient-to-br from-[#092230] via-[#061722] to-[#030c12] cursor-pointer space-y-4 relative group overflow-hidden shadow-xl hover:scale-[1.02] transition-all duration-300"
+            className="p-6 rounded-3xl border border-emerald-500/25 hover:border-emerald-400/60 bg-gradient-to-br from-[#0e2438]/90 to-[#081524]/90 hover:shadow-[0_0_25px_rgba(16,185,129,0.25)] hover:scale-[1.02] cursor-pointer space-y-4 relative group overflow-hidden transition-all duration-300 flex flex-col justify-between text-slate-100 shadow-xl"
           >
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-extrabold px-3 py-1 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
-                AZURE SPEECH AI
-              </span>
-              <div className="w-10 h-10 rounded-2xl bg-cyan-500/20 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition shadow-lg shadow-cyan-500/20">
-                <Mic className="w-5 h-5" />
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 uppercase tracking-wider font-bold">
+                  (04) // 44 IPA
+                </span>
+                <div className="w-9 h-9 rounded-xl bg-emerald-600/20 border border-emerald-500/30 flex items-center justify-center text-emerald-300 group-hover:bg-emerald-600 group-hover:text-white transition">
+                  <Mic className="w-4 h-4" />
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-base font-bold text-slate-100 group-hover:text-emerald-300 transition font-outfit">
+                  Chấm Phát Âm Chuẩn IPA
+                </h3>
+                <p className="text-xs text-slate-300 mt-1.5 leading-relaxed font-normal">
+                  Phân tích sóng âm chuẩn xác từng nguyên âm, phụ âm cuối, trọng âm và ngữ điệu câu theo bảng 44 âm quốc tế.
+                </p>
+              </div>
+
+              <div className="space-y-1 pt-1 text-xs text-slate-300 font-normal">
+                <div className="flex items-center gap-2">
+                  <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <span>Bảng 44 âm IPA trực quan</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <span>Chấm điểm phát âm tức thì</span>
+                </div>
               </div>
             </div>
-            <div>
-              <h3 className="text-base font-black text-white group-hover:text-cyan-300 transition font-outfit">
-                Chấm Phát Âm Chuẩn IPA
-              </h3>
-              <p className="text-xs text-slate-300 mt-1.5 leading-relaxed">
-                Phân tích sóng âm chuẩn xác từng nguyên âm, phụ âm và ngữ điệu câu.
-              </p>
-            </div>
-            <div className="flex items-center justify-between text-xs text-slate-400 pt-3 border-t border-white/10">
-              <span className="flex items-center gap-1 font-medium"><Clock className="w-3.5 h-3.5" /> ~5 phút</span>
-              <span className="text-cyan-400 font-black group-hover:translate-x-1 transition flex items-center gap-1">
+
+            <div className="flex items-center justify-between text-xs text-slate-400 pt-4 border-t border-cyan-500/20 font-mono">
+              <span>~5 phút luyện âm</span>
+              <span className="text-emerald-300 group-hover:translate-x-1 transition flex items-center gap-1 font-bold">
                 Luyện âm <ArrowRight className="w-3.5 h-3.5" />
               </span>
             </div>
           </div>
+
         </div>
       </div>
 
-      {/* ─── 3. KHO HỌC LIỆU & ĐỀ THI TINH TUYỂN (TABBED SHOWCASE) ──────────── */}
-      <div className="space-y-6 pt-2">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h2 className="text-lg md:text-xl font-extrabold text-white">Kho Học Liệu &amp; Đề Thi Tinh Tuyển</h2>
-            <p className="text-xs text-slate-400 mt-0.5">Chọn chuyên đề ôn luyện chi tiết theo từng mục tiêu điểm số</p>
-          </div>
+      {/* ══════════════════════════════════════════════════════════════════════
+          3. HỆ SINH THÁI KỸ NĂNG THEO PHONG CÁCH DATURA CREATIVE STUDIO
+      ══════════════════════════════════════════════════════════════════════ */}
+      <DaturaSkillsSection 
+        onNavigate={onNavigate} 
+        onOpenPhotoSolver={onOpenPhotoSolver} 
+      />
 
-          {/* Category Tabs Switcher */}
-          {categories.length > 1 && (
-            <div className="flex items-center bg-[#070b16] border border-slate-700/60 p-1.5 rounded-2xl gap-2 overflow-x-auto no-scrollbar shadow-2xl">
-              {categories.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => setActiveCategory(cat.id)}
-                  className={`px-4 py-2.5 rounded-xl text-xs font-black transition whitespace-nowrap cursor-pointer flex items-center gap-2 ${
-                    activeCategory === cat.id
-                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30'
-                      : 'text-slate-400 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  <span>{cat.name}</span>
-                </button>
-              ))}
-            </div>
-          )}
+      {/* ══════════════════════════════════════════════════════════════════════
+          4. LỘ TRÌNH 4 BƯỚC BỨT PHÁ ĐIỂM SỐ (ROYAL SAPPHIRE ROADMAP)
+      ══════════════════════════════════════════════════════════════════════ */}
+      <div className="rounded-3xl bg-[#10193e]/90 border border-cyan-500/25 p-6 sm:p-8 md:p-10 shadow-2xl space-y-6 text-slate-100 backdrop-blur-xl">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div>
+            <h3 className="text-base sm:text-lg font-bold text-slate-100 font-outfit flex items-center gap-2 text-3d-hero">
+              <Sparkles className="w-4 h-4 text-cyan-400" />
+              <span>Quy Trình Học Tập Thích Ứng Cá Nhân Hóa (4 Bước Chuẩn Khoa Học)</span>
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-300 mt-1 font-normal">
+              Phương pháp sư phạm giúp học sinh từ mức 5-6 điểm bứt phá đạt 8.5 - 10 điểm trong kỳ thi chính thức
+            </p>
+          </div>
+          <button
+            onClick={() => onNavigate('guide')}
+            className="text-xs font-mono font-bold text-cyan-400 hover:text-cyan-300 flex items-center gap-1.5 transition cursor-pointer self-start md:self-auto"
+          >
+            <span>Tài liệu nghiên cứu KHKT</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
         </div>
 
-        {/* 2x2 Balanced Deck Grid for Selected Category */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {currentCategoryObj.cards.map((card) => {
-            const Icon = card.icon;
-            return (
-              <div
-                key={card.id}
-                onClick={card.action}
-                className={`p-7 rounded-3xl border ${card.borderColor} bg-gradient-to-br ${card.bgGradient} transition-all duration-300 cursor-pointer flex flex-col justify-between group hover:scale-[1.01] hover:shadow-2xl shadow-xl`}
-              >
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className={`text-[10px] font-black px-3.5 py-1 rounded-full border shadow-sm ${card.badgeColor}`}>
-                      {card.badge}
-                    </span>
-                    <div className={`w-11 h-11 rounded-2xl flex items-center justify-center group-hover:scale-110 transition shadow-lg ${card.iconColor}`}>
-                      <Icon className="w-5 h-5" />
-                    </div>
-                  </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="p-4 rounded-2xl bg-[#0a0f24] border border-cyan-500/20 space-y-2">
+            <div className="flex items-center gap-2 text-cyan-300 font-mono text-xs">
+              <span className="w-5 h-5 rounded-full bg-gradient-to-r from-blue-600 to-cyan-500 text-white flex items-center justify-center font-bold text-[10px]">1</span>
+              <span>CHẨN ĐOÁN THÍCH ỨNG</span>
+            </div>
+            <h4 className="text-sm font-bold text-slate-100">Làm 10 Câu Đề IRT</h4>
+            <p className="text-xs text-slate-300 leading-relaxed font-normal">
+              Hệ thống xác định chính xác tham số năng lực θ và chỉ ra điểm yếu cần khắc phục.
+            </p>
+          </div>
 
-                  <div>
-                    <h3 className="text-base md:text-lg font-black text-white group-hover:text-cyan-300 transition font-outfit">
-                      {card.title}
-                    </h3>
-                    <p className="text-xs md:text-sm text-slate-300 mt-2 leading-relaxed font-normal">
-                      {card.desc}
-                    </p>
-                  </div>
-                </div>
+          <div className="p-4 rounded-2xl bg-[#0a0f24] border border-cyan-500/20 space-y-2">
+            <div className="flex items-center gap-2 text-purple-300 font-mono text-xs">
+              <span className="w-5 h-5 rounded-full bg-gradient-to-r from-purple-600 to-indigo-500 text-white flex items-center justify-center font-bold text-[10px]">2</span>
+              <span>GHI NHỚ NÃO BỘ</span>
+            </div>
+            <h4 className="text-sm font-bold text-slate-100">Luyện Từ Vựng SM-2</h4>
+            <p className="text-xs text-slate-300 leading-relaxed font-normal">
+              Lặp lại ngắt quãng từ vựng then chốt và bẫy cụm từ trước khi giải đề thật.
+            </p>
+          </div>
 
-                <div className="flex items-center justify-between pt-4 mt-4 border-t border-white/10 text-xs">
-                  <span className="text-slate-400 font-medium">{card.meta}</span>
-                  <span className="text-cyan-400 font-bold group-hover:translate-x-1.5 transition-transform flex items-center gap-1.5">
-                    <span>Mở học phần</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </span>
-                </div>
-              </div>
-            );
-          })}
+          <div className="p-4 rounded-2xl bg-[#0a0f24] border border-cyan-500/20 space-y-2">
+            <div className="flex items-center gap-2 text-indigo-300 font-mono text-xs">
+              <span className="w-5 h-5 rounded-full bg-gradient-to-r from-indigo-600 to-blue-500 text-white flex items-center justify-center font-bold text-[10px]">3</span>
+              <span>GỢI MỞ SOCRATES</span>
+            </div>
+            <h4 className="text-sm font-bold text-slate-100">Hỏi Bài Gia Sư 1:1</h4>
+            <p className="text-xs text-slate-300 leading-relaxed font-normal">
+              Gia sư AI dẫn dắt em phân tích các phương án gây nhiễu, hiểu bản chất cấu trúc.
+            </p>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-[#0a0f24] border border-cyan-500/20 space-y-2">
+            <div className="flex items-center gap-2 text-emerald-300 font-mono text-xs">
+              <span className="w-5 h-5 rounded-full bg-gradient-to-r from-emerald-600 to-teal-500 text-white flex items-center justify-center font-bold text-[10px]">4</span>
+              <span>THỰC CHIẾN ĐỀ THẬT</span>
+            </div>
+            <h4 className="text-sm font-bold text-slate-100">Thi Thử 63 Tỉnh Thành</h4>
+            <p className="text-xs text-slate-300 leading-relaxed font-normal">
+              Làm quen với áp lực thời gian, căn giờ chuẩn 50 phút và theo dõi sự tăng trưởng điểm số.
+            </p>
+          </div>
         </div>
       </div>
 

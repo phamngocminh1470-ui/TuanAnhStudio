@@ -208,11 +208,15 @@ export default function ItemBankManager() {
   };
 
   const handleDelete = async (itemId) => {
-    if (!window.confirm(`Xóa câu hỏi ${itemId}? Thao tác không thể hoàn tác.`)) return;
+    const ok = window.appConfirm
+      ? await window.appConfirm(`Bạn có chắc chắn muốn xóa câu hỏi ${itemId} không? Thao tác không thể hoàn tác.`, "Xóa Câu Hỏi Khỏi Ngân Hàng", { type: 'error', confirmText: 'Xóa Câu Hỏi' })
+      : window.confirm(`Xóa câu hỏi ${itemId}? Thao tác không thể hoàn tác.`);
+    if (!ok) return;
     try {
       await axios.delete(`${API}/items/${itemId}`);
       fetchItems();
       fetchStats();
+      if (window.appToast) window.appToast(`Đã xóa câu hỏi ${itemId} thành công!`, 'success');
     } catch (e) { alert('Lỗi xóa câu hỏi: ' + (e.response?.data?.detail || e.message)); }
   };
 

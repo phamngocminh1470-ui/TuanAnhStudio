@@ -3,7 +3,7 @@ import {
   BookOpen, Search, Volume2, ChevronDown, ChevronUp,
   Globe, Tag, X, RefreshCw, BookMarked, GraduationCap,
   Layers, Sparkles, Filter, CheckCircle2, Bookmark,
-  ArrowRight, Loader2, Zap, HelpCircle
+  ArrowRight, Loader2, Zap, HelpCircle, Lock
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -397,12 +397,22 @@ function WordCard({ word }) {
   );
 }
 
-export default function VocabLibrary({ selectedGrade }) {
+export default function VocabLibrary({ selectedGrade = '11', currentUser }) {
+  const isStudent = currentUser && currentUser.role === 'student';
+  const effectiveGrade = isStudent ? (currentUser.grade || selectedGrade || '11') : (selectedGrade || 'all');
+
   const [viewMode, setViewMode] = useState('by_grade'); // 'by_grade' | 'by_topic'
-  const [selectedGradeFilter, setSelectedGradeFilter] = useState(selectedGrade || 'all');
+  const [selectedGradeFilter, setSelectedGradeFilter] = useState(effectiveGrade || '11');
   const [selectedThematicTopic, setSelectedThematicTopic] = useState('all');
   const [activeTopicId, setActiveTopicId] = useState(COMPREHENSIVE_VOCAB_DATA[0].topicId);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Sync when selectedGrade or user grade changes
+  useEffect(() => {
+    if (effectiveGrade) {
+      setSelectedGradeFilter(effectiveGrade);
+    }
+  }, [effectiveGrade]);
 
   // AI Live Dictionary Lookup States
   const [aiLookupResult, setAiLookupResult] = useState(null);
@@ -606,21 +616,50 @@ export default function VocabLibrary({ selectedGrade }) {
           {viewMode === 'by_grade' ? (
             <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
               <span className="text-xs font-bold text-gray-400 shrink-0 mr-1 flex items-center gap-1">
-                <Filter className="w-3.5 h-3.5 text-indigo-400" /> Chọn Khối Lớp:
+                <Filter className="w-3.5 h-3.5 text-indigo-400" /> Khối Lớp Học Liệu:
               </span>
-              {GRADES_CONFIG.map(g => (
-                <button
-                  key={g.id}
-                  onClick={() => setSelectedGradeFilter(g.id)}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer border ${
-                    selectedGradeFilter === g.id
-                      ? 'bg-indigo-600/30 text-indigo-200 border-indigo-500/50 shadow'
-                      : 'bg-white/5 text-gray-400 border-transparent hover:text-white hover:bg-white/10'
-                  }`}
-                >
-                  {g.label}
-                </button>
-              ))}
+              {isStudent ? (
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow">
+                    <Lock className="w-3 h-3 text-emerald-400" />
+                    <span>Khối Lớp {effectiveGrade} (Đã Cố Định)</span>
+                  </div>
+                  <button
+                    onClick={() => setSelectedGradeFilter('THPT')}
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer border ${
+                      selectedGradeFilter === 'THPT'
+                        ? 'bg-indigo-600/30 text-indigo-200 border-indigo-500/50 shadow'
+                        : 'bg-white/5 text-gray-400 border-transparent hover:text-white hover:bg-white/10'
+                    }`}
+                  >
+                    🎯 Chuyên Đề Ôn Thi THPT
+                  </button>
+                  <button
+                    onClick={() => setSelectedGradeFilter(effectiveGrade)}
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer border ${
+                      selectedGradeFilter === effectiveGrade
+                        ? 'bg-indigo-600/30 text-indigo-200 border-indigo-500/50 shadow'
+                        : 'bg-white/5 text-gray-400 border-transparent hover:text-white hover:bg-white/10'
+                    }`}
+                  >
+                    📚 Toàn Bộ Bài Học Lớp {effectiveGrade}
+                  </button>
+                </div>
+              ) : (
+                GRADES_CONFIG.map(g => (
+                  <button
+                    key={g.id}
+                    onClick={() => setSelectedGradeFilter(g.id)}
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer border ${
+                      selectedGradeFilter === g.id
+                        ? 'bg-indigo-600/30 text-indigo-200 border-indigo-500/50 shadow'
+                        : 'bg-white/5 text-gray-400 border-transparent hover:text-white hover:bg-white/10'
+                    }`}
+                  >
+                    {g.label}
+                  </button>
+                ))
+              )}
             </div>
           ) : (
             <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">

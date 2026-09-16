@@ -4,6 +4,8 @@ import MegaNavbar from './components/MegaNavbar';
 import GuestLandingPage from './components/GuestLandingPage';
 import AuthModal from './components/AuthModal';
 import CustomCursor from './components/CustomCursor';
+import CustomAlertModal from './components/CustomAlertModal';
+import MobileInstallModal from './components/MobileInstallModal';
 
 // Lazy loaded heavy components for optimal PageSpeed score
 const LearningHub = lazy(() => import('./components/LearningHub'));
@@ -25,13 +27,14 @@ const PhotoExamSolverModal = lazy(() => import('./components/PhotoExamSolverModa
 const OfficialExamRepository = lazy(() => import('./components/OfficialExamRepository'));
 const TeacherPortal = lazy(() => import('./components/TeacherPortal'));
 const StudentClassroom = lazy(() => import('./components/StudentClassroom'));
+const CanvaProModal = lazy(() => import('./components/CanvaProModal'));
 
 
 import { 
   Sparkles, MessageSquare, Mic, BookOpen, GraduationCap, LayoutDashboard, ChevronRight, 
   Settings, Key, Save, AlertCircle, CheckCircle, Cpu, Zap, Activity, HelpCircle, 
   User, ShieldCheck, LogOut, LogIn, Clock, Headphones, Printer, Trophy, Database, BookMarked, PenLine, Camera, FileText,
-  Shuffle, Users
+  Shuffle, Users, ExternalLink, Gift, Sun, Moon, UserPlus
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -40,27 +43,54 @@ const API_BASE = '/api';
 const DEFAULT_TESTER_USER = {
   id: 'guest_user',
   username: 'Khách Trải Nghiệm',
-  full_name: 'Thí sinh / Giám khảo KHKT',
-  role: 'admin',
-  grade: '10'
+  full_name: 'Khách Trải Nghiệm',
+  role: 'student',
+  grade: '12'
 };
 
 function App() {
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [selectedLevel, setSelectedLevel] = useState('10');
+  const [activeTab, setActiveTab] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('portal') === 'teacher' || params.get('tab') === 'teacher-portal') {
+        return 'teacher-portal';
+      }
+      if (window.location.hostname.includes('tuananhstudio.top')) {
+        return 'teacher-portal';
+      }
+    }
+    return 'dashboard';
+  });
+  const [selectedLevel, setSelectedLevel] = useState('12');
   const [backendStatus, setBackendStatus] = useState('connecting');
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [authMode, setAuthMode] = useState('login');
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isPhotoSolverOpen, setIsPhotoSolverOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(() => {
     try {
       const savedUser = localStorage.getItem('user_session');
-      if (savedUser) return JSON.parse(savedUser);
+      if (savedUser && savedUser !== 'null' && savedUser !== 'undefined') {
+        const parsed = JSON.parse(savedUser);
+        if (parsed && parsed.username) return parsed;
+      }
     } catch (e) {}
-    return DEFAULT_TESTER_USER;
+    return null; // Mặc định là Khách vãng lai để hiển thị Landing Page & cho phép đăng ký tài khoản thật
   });
+
+  const handleOpenAuth = (mode = 'login') => {
+    setAuthMode(mode);
+    setIsAuthOpen(true);
+  };
   const [isAdminMode, setIsAdminMode] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [isCanvaOpen, setIsCanvaOpen] = useState(false);
+  const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
+  const [tuananhTheme, setTuananhTheme] = useState(() => {
+    return localStorage.getItem('tuananh_theme') || 'light';
+  });
+
+  const isTuanAnhDomain = typeof window !== 'undefined' && window.location.hostname.includes('tuananhstudio.top');
 
   // Pha 2: User progress sync hook
   const { loadFromServer, syncStatus, serverStats } = useUserProgress();
@@ -68,6 +98,10 @@ function App() {
   const [keys, setKeys] = useState({
     gemini: localStorage.getItem('api_gemini') || '',
     groq: localStorage.getItem('api_groq') || '',
+    deepseek: localStorage.getItem('api_deepseek') || '',
+    openrouter: localStorage.getItem('api_openrouter') || '',
+    openai: localStorage.getItem('api_openai') || '',
+    claude: localStorage.getItem('api_claude') || '',
     azure: localStorage.getItem('api_azure') || ''
   });
   const [showSaveAlert, setShowSaveAlert] = useState(false);
@@ -225,7 +259,7 @@ function App() {
       axios.defaults.headers.common['Authorization'] = `Bearer ${savedToken}`;
     }
 
-    // Khôi phục user session nếu có, nếu không thì dùng DEFAULT_TESTER_USER
+    // Khôi phục user session nếu có
     const savedUser = localStorage.getItem('user_session');
     if (savedUser) {
       try {
@@ -233,10 +267,10 @@ function App() {
         setCurrentUser(user);
         if (user.grade) setSelectedLevel(user.grade);
       } catch (e) {
-        setCurrentUser(DEFAULT_TESTER_USER);
+        setCurrentUser(null);
       }
     } else {
-      setCurrentUser(DEFAULT_TESTER_USER);
+      setCurrentUser(null);
     }
 
     // Axios interceptor
@@ -247,7 +281,7 @@ function App() {
           localStorage.removeItem('auth_token');
           localStorage.removeItem('user_session');
           delete axios.defaults.headers.common['Authorization'];
-          setCurrentUser(DEFAULT_TESTER_USER);
+          setCurrentUser(null);
         }
         return Promise.reject(err);
       }
@@ -255,8 +289,20 @@ function App() {
 
     const savedGemini = localStorage.getItem('api_gemini') || '';
     const savedGroq = localStorage.getItem('api_groq') || '';
+    const savedDeepseek = localStorage.getItem('api_deepseek') || '';
+    const savedOpenrouter = localStorage.getItem('api_openrouter') || '';
+    const savedOpenai = localStorage.getItem('api_openai') || '';
+    const savedClaude = localStorage.getItem('api_claude') || '';
     const savedAzure = localStorage.getItem('api_azure') || '';
-    setKeys({ gemini: savedGemini, groq: savedGroq, azure: savedAzure });
+    setKeys({
+      gemini: savedGemini,
+      groq: savedGroq,
+      deepseek: savedDeepseek,
+      openrouter: savedOpenrouter,
+      openai: savedOpenai,
+      claude: savedClaude,
+      azure: savedAzure
+    });
     
     const savedLevel = localStorage.getItem('selected_level') || '12';
     setSelectedLevel(savedLevel);
@@ -282,21 +328,42 @@ function App() {
   }, []);
 
   const handleLevelChange = (level) => {
+    if (currentUser && currentUser.role === 'student' && currentUser.grade) {
+      // Học sinh đã đăng ký thì cố định theo khối của tài khoản
+      setSelectedLevel(currentUser.grade);
+      localStorage.setItem('selected_level', currentUser.grade);
+      return;
+    }
     setSelectedLevel(level);
     localStorage.setItem('selected_level', level);
   };
 
-  const handleSaveKeys = async (e) => {
-    if (e && e.preventDefault) e.preventDefault();
-    localStorage.setItem('api_gemini', keys.gemini);
-    localStorage.setItem('api_groq', keys.groq);
-    localStorage.setItem('api_azure', keys.azure);
+  const handleSaveKeys = async (eOrNewKeys) => {
+    let targetKeys = keys;
+    if (eOrNewKeys && eOrNewKeys.preventDefault) {
+      eOrNewKeys.preventDefault();
+    } else if (eOrNewKeys && typeof eOrNewKeys === 'object' && !eOrNewKeys.nativeEvent) {
+      targetKeys = { ...keys, ...eOrNewKeys };
+      setKeys(targetKeys);
+    }
+    
+    localStorage.setItem('api_gemini', targetKeys.gemini || '');
+    localStorage.setItem('api_groq', targetKeys.groq || '');
+    localStorage.setItem('api_deepseek', targetKeys.deepseek || '');
+    localStorage.setItem('api_openrouter', targetKeys.openrouter || '');
+    localStorage.setItem('api_openai', targetKeys.openai || '');
+    localStorage.setItem('api_claude', targetKeys.claude || '');
+    localStorage.setItem('api_azure', targetKeys.azure || '');
     setShowSaveAlert(true);
     try {
       await axios.post('/api/save-keys', {
-        gemini: keys.gemini,
-        groq: keys.groq,
-        azure: keys.azure
+        gemini: targetKeys.gemini,
+        groq: targetKeys.groq,
+        deepseek: targetKeys.deepseek,
+        openrouter: targetKeys.openrouter,
+        openai: targetKeys.openai,
+        claude: targetKeys.claude,
+        azure: targetKeys.azure
       });
     } catch (err) {
       console.warn('Lưu API key lên máy chủ:', err.message);
@@ -305,13 +372,13 @@ function App() {
   };
 
   const handleLogout = () => {
-    // Pha 2: Chỉ xóa token/session, KHÔNG xóa dữ liệu học (theta, history, mastery)
-    // Data học tập vẫn nằm trong localStorage để offline fallback hoạt động
     localStorage.removeItem('user_session');
     localStorage.removeItem('auth_token');
     delete axios.defaults.headers.common['Authorization'];
     setCurrentUser(null);
     setIsProfileOpen(false);
+    setIsAuthOpen(false);
+    setActiveTab('dashboard');
   };
 
   const handleLoginSuccess = async (userData) => {
@@ -341,7 +408,11 @@ function App() {
   ];
 
   return (
-    <div className="flex min-h-screen bg-mesh text-[#f3f4f6] font-sans selection:bg-indigo-500 selection:text-white">
+    <div className={`flex min-h-screen font-sans transition-colors duration-200 ${
+      isTuanAnhDomain
+        ? (tuananhTheme === 'light' ? 'bg-[#f8fafc] text-slate-900 selection:bg-amber-400 selection:text-black' : 'bg-[#090d1f] text-[#f3f4f6] selection:bg-amber-500 selection:text-black')
+        : 'bg-[#0c122c] text-slate-100 selection:bg-blue-600 selection:text-white'
+    }`}>
       {/* Hiệu ứng con trỏ chuột công nghệ cao */}
       <CustomCursor />
 
@@ -350,6 +421,8 @@ function App() {
         isOpen={isAuthOpen} 
         onClose={() => setIsAuthOpen(false)} 
         onLoginSuccess={handleLoginSuccess} 
+        onNavigate={(tab) => setActiveTab(tab)}
+        initialMode={authMode}
       />
 
       {/* User Profile Modal */}
@@ -358,6 +431,7 @@ function App() {
         onClose={() => setIsProfileOpen(false)}
         currentUser={currentUser}
         onProfileUpdate={(updatedUser) => setCurrentUser(updatedUser)}
+        onLogout={handleLogout}
       />
 
       {/* Photo Exam Solver Modal (Chụp ảnh giải đề AI) */}
@@ -368,347 +442,115 @@ function App() {
         keys={keys}
       />
 
-      {/* Sidebar Navigation (Hidden on Dashboard for clean wide layout matching study.thptai.kr) */}
-      <aside className={`w-72 glass border-r border-slate-800 flex-col justify-between shrink-0 z-20 ${
-        activeTab === 'dashboard' || activeTab === 'hub' ? 'hidden' : 'hidden md:flex'
-      }`}>
-        <div className="p-6 space-y-8">
-          {/* Logo Brand */}
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shadow-md shrink-0">
-              <GraduationCap className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <span className="font-bold text-lg text-white tracking-normal block">
-                AI English Mentor
-              </span>
-              <span className="text-[10px] text-amber-400 font-extrabold tracking-wider block uppercase">
-                Luyện Thi Tốt Nghiệp THPT AI
-              </span>
-            </div>
-          </div>
-
-          {/* Navigation Links */}
-          <nav className="space-y-6">
-            {/* Group 1: Trung tâm & Luyện đề */}
-            <div className="space-y-1">
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 pb-1">
-                Lộ Trình &amp; Đề Thi
+      {/* Main Content Space - Full Width Clean Layout with Top MegaNavbar */}
+      <main className="flex-1 flex flex-col min-h-screen overflow-x-hidden relative w-full">
+        {/* Top Navigation Bar: Chuyên biệt cho tuananhstudio.top hoặc MegaNavbar cho examoraai.com */}
+        {isTuanAnhDomain ? (
+          <header className={`sticky top-0 z-40 w-full backdrop-blur-xl px-4 sm:px-8 py-3 flex items-center justify-between transition-colors duration-200 ${
+            tuananhTheme === 'light'
+              ? 'bg-white/95 border-b border-slate-200 text-slate-900 shadow-sm'
+              : 'bg-[#090d1f]/90 border-b border-white/10 text-white shadow-lg'
+          }`}>
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center text-slate-950 font-black shadow-md shadow-orange-500/20">
+                <Shuffle className="w-5 h-5" />
               </div>
-              
-              <button
-                onClick={() => setActiveTab('dashboard')}
-                className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
-                  activeTab === 'dashboard' || activeTab === 'hub'
-                    ? 'bg-blue-600/15 text-blue-400 border border-blue-500/25 font-bold'
-                    : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
-                }`}
-              >
-                <LayoutDashboard className="w-4 h-4 text-blue-400" />
-                <span>Trang Chủ &amp; Đường Đua</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('irt-test')}
-                className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
-                  activeTab === 'irt-test'
-                    ? 'bg-blue-600/15 text-blue-400 border border-blue-500/25 font-bold'
-                    : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
-                }`}
-              >
-                <Zap className="w-4 h-4 text-emerald-400" />
-                <span>Luyện Đề Thích Ứng THPT</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('student-classroom')}
-                className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
-                  activeTab === 'student-classroom'
-                    ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-300 border border-cyan-500/40 font-bold shadow-lg shadow-cyan-500/10'
-                    : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
-                }`}
-              >
-                <GraduationCap className="w-4 h-4 text-cyan-400" />
-                <span>Lớp Học &amp; Bài Tập Của Tôi</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('official-exams')}
-                className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
-                  activeTab === 'official-exams'
-                    ? 'bg-blue-600/15 text-blue-400 border border-blue-500/25 font-bold'
-                    : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
-                }`}
-              >
-                <FileText className="w-4 h-4 text-cyan-400" />
-                <span>Kho Đề Thi Chuẩn Hóa</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('analytics')}
-                className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
-                  activeTab === 'analytics'
-                    ? 'bg-blue-600/15 text-blue-400 border border-blue-500/25 font-bold'
-                    : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
-                }`}
-              >
-                <Activity className="w-4 h-4 text-cyan-400" />
-                <span>Báo Cáo Năng Lực &amp; Điểm</span>
-              </button>
-            </div>
-
-            {/* Group 2: Học liệu & Kỹ năng AI */}
-            <div className="space-y-1">
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 pb-1">
-                Học Liệu &amp; Kỹ Năng AI
-              </div>
-
-              <button
-                onClick={() => setActiveTab('sm2-flashcards')}
-                className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
-                  activeTab === 'sm2-flashcards'
-                    ? 'bg-blue-600/15 text-blue-400 border border-blue-500/25 font-bold'
-                    : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
-                }`}
-              >
-                <Clock className="w-4 h-4 text-amber-400" />
-                <span>Từ Vựng Não Bộ SM-2</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('reading')}
-                className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
-                  activeTab === 'reading'
-                    ? 'bg-blue-600/15 text-blue-400 border border-blue-500/25 font-bold'
-                    : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
-                }`}
-              >
-                <BookOpen className="w-4 h-4 text-cyan-400" />
-                <span>Đọc Thích Ứng (SGK)</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('listening')}
-                className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
-                  activeTab === 'listening'
-                    ? 'bg-blue-600/15 text-blue-400 border border-blue-500/25 font-bold'
-                    : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
-                }`}
-              >
-                <Headphones className="w-4 h-4 text-purple-400" />
-                <span>Nghe Tương Tác Audio</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('pronounce')}
-                className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
-                  activeTab === 'pronounce'
-                    ? 'bg-blue-600/15 text-blue-400 border border-blue-500/25 font-bold'
-                    : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
-                }`}
-              >
-                <Mic className="w-4 h-4 text-emerald-400" />
-                <span>Chấm Phát Âm Chuẩn IPA</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('writing-practice')}
-                className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
-                  activeTab === 'writing-practice'
-                    ? 'bg-blue-600/15 text-blue-400 border border-blue-500/25 font-bold'
-                    : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
-                }`}
-              >
-                <PenLine className="w-4 h-4 text-pink-400" />
-                <span>Luyện Viết Câu AI</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('chat')}
-                className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
-                  activeTab === 'chat'
-                    ? 'bg-blue-600/15 text-blue-400 border border-blue-500/25 font-bold'
-                    : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
-                }`}
-              >
-                <MessageSquare className="w-4 h-4 text-blue-400" />
-                <span>Gia Sư Hội Thoại 1:1</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('vocab-library')}
-                className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
-                  activeTab === 'vocab-library'
-                    ? 'bg-blue-600/15 text-blue-400 border border-blue-500/25 font-bold'
-                    : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
-                }`}
-              >
-                <BookMarked className="w-4 h-4 text-cyan-400" />
-                <span>Học Liệu Từ Vựng</span>
-              </button>
-            </div>
-
-            {/* Group: Cổng Giáo Viên */}
-            <div className="space-y-1">
-              <div className="text-[10px] font-bold text-amber-400 uppercase tracking-wider px-3 pb-1 flex items-center justify-between">
-                <span>Dành Cho Giáo Viên</span>
-                <span className="px-1.5 py-0.2 text-[8px] font-black rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">MỚI</span>
-              </div>
-
-              <button
-                onClick={() => setActiveTab('teacher-portal')}
-                className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
-                  activeTab === 'teacher-portal'
-                    ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-300 border border-amber-500/40 font-bold shadow-lg shadow-amber-500/10'
-                    : 'text-amber-300/90 hover:bg-amber-500/10 hover:text-amber-200'
-                }`}
-              >
-                <Shuffle className="w-4 h-4 text-amber-400" />
-                <div className="text-left">
-                  <div className="font-bold">Xáo Đề &amp; Quản Lý Lớp</div>
-                  <div className="text-[10px] text-gray-400 font-normal">Tạo 4 mã đề (101-104), chấm AI</div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className={`font-black text-base tracking-tight font-outfit ${tuananhTheme === 'light' ? 'text-slate-900' : 'text-white'}`}>
+                    TuanAnhStudio.top
+                  </span>
+                  <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wide ${
+                    tuananhTheme === 'light'
+                      ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                      : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                  }`}>
+                    Chuyên Xáo Đề Thi
+                  </span>
+                  <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide hidden md:inline-block ${
+                    tuananhTheme === 'light'
+                      ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                      : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                  }`}>
+                    Chuẩn Bộ GD&amp;ĐT 2025
+                  </span>
                 </div>
-              </button>
+                <p className={`text-[11px] hidden sm:block ${tuananhTheme === 'light' ? 'text-slate-500 font-medium' : 'text-slate-400'}`}>
+                  Phần mềm xáo đề thi trắc nghiệm chuyên nghiệp &amp; xuất ma trận đáp án chuẩn Bộ GD&amp;ĐT
+                </p>
+              </div>
             </div>
 
-            {/* Group 3: Hệ thống & Trợ giúp */}
-            <div className="space-y-1">
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 pb-1">
-                Hệ Thống &amp; Trợ Giúp
-              </div>
-
+            <div className="flex items-center gap-2.5">
+              {/* Nút Nhận Canva Pro / Edu */}
               <button
-                onClick={() => setActiveTab('guide')}
-                className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
-                  activeTab === 'guide'
-                    ? 'bg-blue-600/15 text-blue-400 border border-blue-500/25 font-bold'
-                    : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
-                }`}
+                onClick={() => setIsCanvaOpen(true)}
+                className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm shadow-purple-500/20 cursor-pointer"
+                title="Nhận bản quyền Canva Pro / Edu miễn phí"
               >
-                <HelpCircle className="w-4 h-4 text-slate-400" />
-                <span>Hướng Dẫn Sử Dụng</span>
+                <Gift className="w-3.5 h-3.5 text-yellow-300 animate-pulse" />
+                <span>🎁 Nhận Canva Pro/Edu</span>
               </button>
 
-              {currentUser && currentUser.role === 'admin' && (
-                <>
-                  <div className="pt-2 text-[10px] font-bold text-emerald-400 uppercase tracking-wider px-3 pb-1">
-                    Quản Trị Viên (Admin)
-                  </div>
+              {/* Nút Đổi Theme Sáng / Tối */}
+              <button
+                onClick={() => {
+                  const next = tuananhTheme === 'light' ? 'dark' : 'light';
+                  setTuananhTheme(next);
+                  localStorage.setItem('tuananh_theme', next);
+                }}
+                className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 border cursor-pointer ${
+                  tuananhTheme === 'light'
+                    ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+                    : 'bg-white/5 hover:bg-white/10 text-slate-300 border-white/10'
+                }`}
+                title={tuananhTheme === 'light' ? 'Chuyển sang nền tối' : 'Chuyển sang nền trắng (Mặc định)'}
+              >
+                {tuananhTheme === 'light' ? <Moon className="w-3.5 h-3.5 text-indigo-600" /> : <Sun className="w-3.5 h-3.5 text-amber-400" />}
+                <span className="hidden md:inline">{tuananhTheme === 'light' ? 'Nền Tối' : 'Nền Trắng'}</span>
+              </button>
 
-                  <button
-                    onClick={() => setActiveTab('item-bank')}
-                    className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
-                      activeTab === 'item-bank'
-                        ? 'bg-blue-600/15 text-blue-400 border border-blue-500/25 font-bold'
-                        : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
-                    }`}
-                  >
-                    <Database className="w-4 h-4 text-emerald-400" />
-                    <span>Ngân Hàng Câu Hỏi (Item Bank)</span>
-                  </button>
-
-                  <button
-                    onClick={() => setActiveTab('admin-panel')}
-                    className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
-                      activeTab === 'admin-panel'
-                        ? 'bg-blue-600/15 text-blue-400 border border-blue-500/25 font-bold'
-                        : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
-                    }`}
-                  >
-                    <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                    <span>Admin Panel</span>
-                  </button>
-                  
-                  <button
-                    onClick={() => setActiveTab('settings')}
-                    className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
-                      activeTab === 'settings'
-                        ? 'bg-blue-600/15 text-blue-400 border border-blue-500/25 font-bold'
-                        : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
-                    }`}
-                  >
-                    <Settings className="w-4 h-4 text-slate-400" />
-                    <span>Cấu Hình API Keys</span>
-                  </button>
-                </>
-              )}
+              {/* Link sang Examora AI */}
+              <a
+                href="https://examoraai.com"
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border shadow-sm cursor-pointer ${
+                  tuananhTheme === 'light'
+                    ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 border-slate-200'
+                    : 'bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border-white/10'
+                }`}
+                title="Mở Hệ Thống Ôn Thi Trắc Nghiệm Thông Minh Examora AI"
+              >
+                <span>Hệ Thống Examora AI</span>
+                <ExternalLink className="w-3.5 h-3.5 text-indigo-500" />
+              </a>
             </div>
-          </nav>
-        </div>
+          </header>
+        ) : (
+          <MegaNavbar
+            activeTab={activeTab}
+            onNavigate={(tab) => setActiveTab(tab)}
+            selectedGrade={selectedLevel}
+            onGradeChange={handleLevelChange}
+            currentUser={currentUser}
+            onOpenAuth={handleOpenAuth}
+            onOpenProfile={() => setIsProfileOpen(true)}
+            onLogout={handleLogout}
+            onOpenPhotoSolver={() => setIsPhotoSolverOpen(true)}
+            onOpenCanva={() => setIsCanvaOpen(true)}
+            onOpenInstallModal={() => setIsInstallModalOpen(true)}
+          />
+        )}
 
-        {/* Backend Status & User Profile */}
-        <div className="p-5 border-t border-slate-800 bg-slate-950/40 space-y-3">
-          {currentUser ? (
-            <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
-              <div className="flex items-center justify-between">
-                <button
-                  onClick={() => setIsProfileOpen(true)}
-                  className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition flex-1 min-w-0"
-                  title="Xem hồ sơ cá nhân"
-                >
-                  <div className="w-8 h-8 rounded-lg bg-indigo-600/40 text-indigo-200 flex items-center justify-center font-black text-sm shrink-0">
-                    {(currentUser.fullname || currentUser.username || 'U').charAt(0).toUpperCase()}
-                  </div>
-                  <div className="min-w-0">
-                    <span className="text-xs font-bold text-white block truncate">{currentUser.fullname || currentUser.username}</span>
-                    <span className="text-[10px] text-slate-400 font-medium uppercase">{currentUser.role} • Lớp {currentUser.grade}</span>
-                  </div>
-                </button>
-                <button onClick={handleLogout} className="p-1.5 text-slate-400 hover:text-rose-400 transition cursor-pointer shrink-0" title="Đăng xuất">
-                  <LogOut className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          ) : (
-            <button
-              onClick={() => setIsAuthOpen(true)}
-              className="w-full py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer"
-            >
-              <LogIn className="w-4 h-4" />
-              <span>Đăng nhập / Đăng ký</span>
-            </button>
-          )}
-
-          <div className="flex items-center justify-between pt-1">
-            <span className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider flex items-center gap-1.5">
-              <Activity className="w-3.5 h-3.5 text-indigo-400" /> Trạng thái Server
-            </span>
-            {backendStatus === 'online' ? (
-              <span className="text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md font-bold flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                SẴN SÀNG
-              </span>
-            ) : (
-              <span className="text-[10px] text-rose-400 bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded-md font-bold flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
-                ĐANG KẾT NỐI
-              </span>
-            )}
-          </div>
-        </div>
-      </aside>
-
-      {/* Main Content Space */}
-      <main className="flex-1 flex flex-col min-h-screen overflow-x-hidden relative">
-        {/* Top Mega Navigation Bar matching study.thptai.kr */}
-        <MegaNavbar
-          activeTab={activeTab}
-          onNavigate={(tab) => setActiveTab(tab)}
-          selectedGrade={selectedLevel}
-          onGradeChange={handleLevelChange}
-          currentUser={currentUser}
-          onOpenAuth={() => setIsAuthOpen(true)}
-          onOpenProfile={() => setIsProfileOpen(true)}
-          onLogout={handleLogout}
-          onOpenPhotoSolver={() => setIsPhotoSolverOpen(true)}
-        />
-
-        {/* Tab Body - Balanced Spacious Responsive Container */}
-        <div className="flex-1 px-3 sm:px-6 md:px-10 py-4 sm:py-6 md:py-8 pb-24 lg:pb-8 flex flex-col justify-start w-full max-w-[1600px] mx-auto">
+        {/* Tab Body - Expansive Full-Bleed Layout with Edge-to-Edge Diffusion */}
+        <div className={`flex-1 flex flex-col justify-start w-full ${
+          !currentUser && (activeTab === 'dashboard' || activeTab === 'hub')
+            ? 'px-0 py-0'
+            : 'px-3 sm:px-6 md:px-8 lg:px-12 2xl:px-16 py-4 sm:py-6 md:py-8 pb-32 sm:pb-36 lg:pb-12'
+        }`}>
           <Suspense fallback={
             <div className="flex flex-col items-center justify-center py-24 space-y-4 animate-fade-in">
-              <div className="w-10 h-10 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin"></div>
-              <p className="text-xs font-bold text-gray-400 font-mono tracking-wider">ĐANG TẢI TÍNH NĂNG...</p>
+              <div className="w-10 h-10 border-4 border-black/20 border-t-black rounded-full animate-spin"></div>
+              <p className="text-xs font-medium text-zinc-500 font-mono tracking-wider">ĐANG TẢI DỮ LIỆU...</p>
             </div>
           }>
             {/* TAB LEARNING HUB (Home View) */}
@@ -724,8 +566,8 @@ function App() {
                 />
               ) : (
                 <GuestLandingPage
-                  onOpenAuth={() => setIsAuthOpen(true)}
-                  onStartTrial={() => setIsAuthOpen(true)}
+                  onOpenAuth={handleOpenAuth}
+                  onStartTrial={() => handleOpenAuth('register')}
                   selectedGrade={selectedLevel}
                   onGradeChange={handleLevelChange}
                 />
@@ -734,29 +576,30 @@ function App() {
 
             {/* CÁC TAB HỌC TẬP YÊU CẦU ĐĂNG NHẬP / ĐĂNG KÝ (Ngoại trừ Dashboard, Hướng dẫn & Cổng Giáo Viên) */}
             {!currentUser && activeTab !== 'dashboard' && activeTab !== 'hub' && activeTab !== 'guide' && activeTab !== 'teacher-portal' ? (
-              <div className="flex-1 flex flex-col items-center justify-center py-16 px-4 max-w-lg mx-auto text-center space-y-6 animate-fade-in">
-                <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-500 flex items-center justify-center text-white shadow-2xl shadow-indigo-500/30 mx-auto animate-bounce-soft">
-                  <GraduationCap className="w-10 h-10" />
+              <div className="flex-1 flex flex-col items-center justify-center py-20 px-4 max-w-lg mx-auto text-center space-y-6 animate-fade-in text-slate-100">
+                <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-blue-600 to-indigo-600 border border-cyan-400/40 flex items-center justify-center text-white shadow-xl mx-auto">
+                  <GraduationCap className="w-8 h-8" />
                 </div>
                 <div className="space-y-2">
-                  <h3 className="text-2xl md:text-3xl font-black text-white font-outfit">Yêu Cầu Đăng Nhập Hệ Thống</h3>
-                  <p className="text-sm text-gray-300 leading-relaxed">
-                    Vui lòng <strong className="text-indigo-400">Đăng ký tài khoản mới</strong> hoặc <strong className="text-indigo-400">Đăng nhập</strong> để lưu hồ sơ học tập cá nhân, đo năng lực IRT và đồng bộ tiến độ của bạn!
+                  <h3 className="text-2xl md:text-3xl font-bold text-3d-hero font-outfit">Đăng Ký Tài Khoản Để Tiếp Tục</h3>
+                  <p className="text-sm text-slate-300 leading-relaxed">
+                    Vui lòng <strong className="text-cyan-300 font-semibold">Đăng ký tài khoản mới</strong> hoặc <strong className="text-cyan-300 font-semibold">Đăng nhập</strong> để lưu hồ sơ học tập cá nhân, đo năng lực IRT và đồng bộ tiến độ của bạn!
                   </p>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3 w-full justify-center pt-2">
                   <button
-                    onClick={() => setIsAuthOpen(true)}
-                    className="px-6 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-xl shadow-indigo-500/30 transition cursor-pointer flex items-center justify-center gap-2"
+                    onClick={() => handleOpenAuth('register')}
+                    className="btn-3d-primary px-6 py-3.5 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    <LogIn className="w-4 h-4" />
-                    <span>Đăng nhập / Đăng ký ngay</span>
+                    <UserPlus className="w-4 h-4" />
+                    <span>Đăng ký tài khoản mới</span>
                   </button>
                   <button
-                    onClick={() => setActiveTab('dashboard')}
-                    className="px-6 py-3.5 rounded-2xl bg-white/5 hover:bg-white/10 text-gray-300 font-bold text-sm border border-white/10 transition cursor-pointer"
+                    onClick={() => handleOpenAuth('login')}
+                    className="btn-3d-secondary px-6 py-3.5 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    <span>Về trang chủ</span>
+                    <LogIn className="w-4 h-4" />
+                    <span>Đã có tài khoản? Đăng nhập</span>
                   </button>
                 </div>
               </div>
@@ -790,7 +633,13 @@ function App() {
                 )}
 
                 {/* TAB CHAT AI MENTOR */}
-                {activeTab === 'chat' && <ChatMentor selectedGrade={selectedLevel} keys={keys} />}
+                {activeTab === 'chat' && (
+                  <ChatMentor 
+                    selectedGrade={selectedLevel} 
+                    keys={keys} 
+                    currentUser={currentUser} 
+                  />
+                )}
 
                 {/* TAB PRONUNCIATION ASSESSOR */}
                 {activeTab === 'pronounce' && <PronunciationAssessor selectedGrade={selectedLevel} keys={keys} />}
@@ -812,7 +661,11 @@ function App() {
 
                 {/* TAB OFFICIAL EXAMS REPOSITORY */}
                 {activeTab === 'official-exams' && (
-                  <OfficialExamRepository onStartExam={(tab) => setActiveTab(tab)} />
+                  <OfficialExamRepository 
+                    selectedGrade={selectedLevel}
+                    currentUser={currentUser}
+                    onStartExam={(tab) => setActiveTab(tab)} 
+                  />
                 )}
 
                 {/* TAB USER GUIDE */}
@@ -826,7 +679,10 @@ function App() {
 
                 {/* TAB VOCAB LIBRARY (student-facing) */}
                 {activeTab === 'vocab-library' && (
-                  <VocabLibrary selectedGrade={selectedLevel} />
+                  <VocabLibrary 
+                    selectedGrade={selectedLevel} 
+                    currentUser={currentUser}
+                  />
                 )}
 
                 {/* TAB ITEM BANK MANAGER */}
@@ -845,11 +701,20 @@ function App() {
                     classes={portalClasses} 
                     setClasses={updatePortalClasses}
                     onNavigate={(tab) => setActiveTab(tab)}
+                    standaloneShufflerOnly={isTuanAnhDomain}
+                    isLightMode={isTuanAnhDomain ? (tuananhTheme === 'light') : false}
+                    onOpenCanva={() => setIsCanvaOpen(true)}
                   />
                 )}
 
                 {/* TAB ADMIN PANEL */}
-                {activeTab === 'admin-panel' && <AdminPanel keys={keys} onSaveKeys={handleSaveKeys} />}
+                {activeTab === 'admin-panel' && (
+                  <AdminPanel 
+                    keys={keys} 
+                    onSaveKeys={handleSaveKeys} 
+                    onOpenAuth={() => setIsAuthOpen(true)} 
+                  />
+                )}
               </>
             )}
           </Suspense>
@@ -876,7 +741,7 @@ function App() {
 
               <form onSubmit={handleSaveKeys} className="space-y-5">
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-300 uppercase tracking-wider block">Gemini API Key</label>
+                  <label className="text-xs font-bold text-slate-300 uppercase tracking-wider block">Google Gemini API Key</label>
                   <input
                     type="password"
                     value={keys.gemini}
@@ -885,12 +750,12 @@ function App() {
                     className="w-full bg-[#070a16] border border-white/10 hover:border-white/20 focus:border-blue-500 outline-none rounded-2xl px-4 py-3.5 text-sm text-slate-200 placeholder-slate-600 transition duration-200 shadow-inner"
                   />
                   <p className="text-[11px] text-slate-400 font-medium">
-                    Tạo khóa miễn phí tại: <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline font-bold hover:text-blue-300">Google AI Studio</a>
+                    Tạo khóa miễn phí tại: <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline font-bold hover:text-blue-300">Google AI Studio</a>
                   </p>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-300 uppercase tracking-wider block">Groq API Key (Tùy chọn)</label>
+                  <label className="text-xs font-bold text-slate-300 uppercase tracking-wider block">Groq API Key (Siêu Tốc 500 từ/s)</label>
                   <input
                     type="password"
                     value={keys.groq}
@@ -899,7 +764,63 @@ function App() {
                     className="w-full bg-[#070a16] border border-white/10 hover:border-white/20 focus:border-blue-500 outline-none rounded-2xl px-4 py-3.5 text-sm text-slate-200 placeholder-slate-600 transition duration-200 shadow-inner"
                   />
                   <p className="text-[11px] text-slate-400 font-medium">
-                    Tạo khóa miễn phí tại: <a href="https://console.groq.com/" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline font-bold hover:text-blue-300">Groq Console</a>
+                    Tạo khóa miễn phí tại: <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline font-bold hover:text-blue-300">Groq Console</a>
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-300 uppercase tracking-wider block">DeepSeek API Key (Tư Duy Suy Luận R1)</label>
+                  <input
+                    type="password"
+                    value={keys.deepseek}
+                    onChange={(e) => setKeys({ ...keys, deepseek: e.target.value })}
+                    placeholder="sk-..."
+                    className="w-full bg-[#070a16] border border-white/10 hover:border-white/20 focus:border-blue-500 outline-none rounded-2xl px-4 py-3.5 text-sm text-slate-200 placeholder-slate-600 transition duration-200 shadow-inner"
+                  />
+                  <p className="text-[11px] text-slate-400 font-medium">
+                    Nhận 500k tokens miễn phí tại: <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline font-bold hover:text-blue-300">DeepSeek Platform</a>
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-300 uppercase tracking-wider block">OpenAI API Key (GPT-4o, o1, o3-mini)</label>
+                  <input
+                    type="password"
+                    value={keys.openai}
+                    onChange={(e) => setKeys({ ...keys, openai: e.target.value })}
+                    placeholder="sk-proj-..."
+                    className="w-full bg-[#070a16] border border-white/10 hover:border-white/20 focus:border-blue-500 outline-none rounded-2xl px-4 py-3.5 text-sm text-slate-200 placeholder-slate-600 transition duration-200 shadow-inner"
+                  />
+                  <p className="text-[11px] text-slate-400 font-medium">
+                    Tạo khóa tại: <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline font-bold hover:text-blue-300">OpenAI Platform</a>
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-300 uppercase tracking-wider block">Anthropic Claude API Key (Claude 3.7 / 3.5 Sonnet)</label>
+                  <input
+                    type="password"
+                    value={keys.claude}
+                    onChange={(e) => setKeys({ ...keys, claude: e.target.value })}
+                    placeholder="sk-ant-..."
+                    className="w-full bg-[#070a16] border border-white/10 hover:border-white/20 focus:border-blue-500 outline-none rounded-2xl px-4 py-3.5 text-sm text-slate-200 placeholder-slate-600 transition duration-200 shadow-inner"
+                  />
+                  <p className="text-[11px] text-slate-400 font-medium">
+                    Tạo khóa tại: <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline font-bold hover:text-blue-300">Anthropic Console</a>
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-300 uppercase tracking-wider block">OpenRouter API Key (Đa Mô Hình 200+ All-in-One)</label>
+                  <input
+                    type="password"
+                    value={keys.openrouter}
+                    onChange={(e) => setKeys({ ...keys, openrouter: e.target.value })}
+                    placeholder="sk-or-v1-..."
+                    className="w-full bg-[#070a16] border border-white/10 hover:border-white/20 focus:border-blue-500 outline-none rounded-2xl px-4 py-3.5 text-sm text-slate-200 placeholder-slate-600 transition duration-200 shadow-inner"
+                  />
+                  <p className="text-[11px] text-slate-400 font-medium">
+                    Tạo khóa đa mô hình tại: <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline font-bold hover:text-blue-300">OpenRouter AI</a>
                   </p>
                 </div>
 
@@ -908,7 +829,7 @@ function App() {
                   className="btn-primary w-full py-4 text-sm font-extrabold shadow-xl flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <Save className="w-5 h-5" />
-                  <span>Lưu cấu hình API Key</span>
+                  <span>Lưu cấu hình API Keys</span>
                 </button>
               </form>
             </div>
@@ -924,6 +845,21 @@ function App() {
         onClose={() => setIsExportModalOpen(false)} 
         selectedGrade={selectedLevel}
       />
+
+      {/* CANVA PRO / EDU REGISTRATION MODAL */}
+      <CanvaProModal
+        isOpen={isCanvaOpen}
+        onClose={() => setIsCanvaOpen(false)}
+      />
+
+      {/* MOBILE APP INSTALL MODAL */}
+      <MobileInstallModal
+        isOpen={isInstallModalOpen}
+        onClose={() => setIsInstallModalOpen(false)}
+      />
+
+      {/* CUSTOM GLASSMORPHIC POPUP NOTIFICATION MODAL */}
+      <CustomAlertModal />
     </div>
   );
 }

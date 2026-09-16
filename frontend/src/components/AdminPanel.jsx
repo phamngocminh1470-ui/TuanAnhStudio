@@ -6,7 +6,7 @@ import {
   Info, FileText, Zap, Mic, BookOpen, Plus, Trash2, Edit, Sparkles, Check, Globe,
   Copy, MessageSquare, Send,
   Laptop, ShieldAlert, Monitor, LogOut, CheckCircle2, Shield,
-  Eye, EyeOff, ExternalLink, Brain, Bot, CheckCircle, XCircle, Flame, Sliders, Save
+  Eye, EyeOff, ExternalLink, Brain, Bot, CheckCircle, XCircle, Flame, Sliders, Save, Gift
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -317,6 +317,31 @@ export default function AdminPanel({ keys, onSaveKeys, onOpenAuth }) {
     }
   });
 
+  // Tải danh sách yêu cầu đăng ký giáo viên từ máy chủ
+  useEffect(() => {
+    const fetchTeacherRequests = async () => {
+      try {
+        const res = await axios.get(`${API_BASE}/teacher-requests`);
+        if (res.data?.data && Array.isArray(res.data.data)) {
+          setTeacherRequests(prev => {
+            const map = new Map();
+            res.data.data.forEach(item => map.set(String(item.id), item));
+            const merged = [...res.data.data];
+            prev.forEach(p => {
+              if (!map.has(String(p.id))) {
+                merged.push(p);
+              }
+            });
+            return merged;
+          });
+        }
+      } catch (e) {
+        console.warn('Lỗi fetch teacher requests:', e);
+      }
+    };
+    fetchTeacherRequests();
+  }, []);
+
   // Lưu danh sách key vào localStorage mỗi khi thay đổi
   useEffect(() => {
     try {
@@ -357,6 +382,12 @@ export default function AdminPanel({ keys, onSaveKeys, onOpenAuth }) {
     setNewKeyCustomCode(`${prefix}-${randomNum}`);
 
     setTeacherRequests(prev => prev.map(r => r.id === req.id ? { ...r, status: 'approved' } : r));
+    
+    // Cập nhật trạng thái trên backend nếu là ID số
+    if (!isNaN(Number(req.id))) {
+      axios.patch(`${API_BASE}/teacher-requests/${req.id}/status`, { status: 'approved' }).catch(() => {});
+    }
+
     alert(`✓ Đã điền thông tin Thầy/Cô ${req.teacherName} vào Form bên dưới. Bạn kiểm tra lại và bấm nút 'Xác Nhận Thêm & Kích Hoạt Key Này' để hoàn tất!`);
   };
 
@@ -366,6 +397,9 @@ export default function AdminPanel({ keys, onSaveKeys, onOpenAuth }) {
       : window.confirm("Xóa yêu cầu đăng ký này khỏi danh sách?");
     if (ok) {
       setTeacherRequests(prev => prev.filter(r => r.id !== reqId));
+      if (!isNaN(Number(reqId))) {
+        axios.delete(`${API_BASE}/teacher-requests/${reqId}`).catch(() => {});
+      }
     }
   };
 
@@ -476,6 +510,84 @@ export default function AdminPanel({ keys, onSaveKeys, onOpenAuth }) {
   const [newPassword, setNewPassword] = useState('');
   const [resetMessage, setResetMessage] = useState('');
   const [confirmReset, setConfirmReset] = useState(null); // username to reset progress
+
+  // ── Canva Pro / Edu Requests Management ──────────────────────────────
+  const [canvaRequests, setCanvaRequests] = useState([]);
+  const [loadingCanva, setLoadingCanva] = useState(false);
+  const [canvaInviteLink, setCanvaInviteLink] = useState('');
+  const [savingCanvaLink, setSavingCanvaLink] = useState(false);
+  const [canvaSaveStatus, setCanvaSaveStatus] = useState(null);
+  const [canvaFilter, setCanvaFilter] = useState('all'); // 'all' | 'pending' | 'added'
+  const [canvaSearch, setCanvaSearch] = useState('');
+  const [copiedCanvaFormat, setCopiedCanvaFormat] = useState(null);
+
+  const fetchCanvaData = async () => {
+    setLoadingCanva(true);
+    try {
+      const [reqsRes, cfgRes] = await Promise.all([
+        axios.get(`${API_BASE}/canva/requests`),
+        axios.get(`${API_BASE}/canva/config`)
+      ]);
+      if (reqsRes.data && reqsRes.data.data) {
+        setCanvaRequests(reqsRes.data.data);
+      }
+      if (cfgRes.data && cfgRes.data.invite_link) {
+        setCanvaInviteLink(cfgRes.data.invite_link);
+      }
+    } catch (e) {
+      console.error('Failed to load canva data:', e);
+    } finally {
+      setLoadingCanva(false);
+    }
+  };
+
+  const handleSaveCanvaLink = async () => {
+    setSavingCanvaLink(true);
+    setCanvaSaveStatus(null);
+    try {
+      await axios.post(`${API_BASE}/canva/config`, { invite_link: canvaInviteLink.trim() });
+      setCanvaSaveStatus({ type: 'success', text: 'Đã lưu link mời Canva Pro thành công!' });
+      setTimeout(() => setCanvaSaveStatus(null), 3000);
+    } catch (e) {
+      setCanvaSaveStatus({ type: 'error', text: 'Lỗi lưu link mời: ' + e.message });
+    } finally {
+      setSavingCanvaLink(false);
+    }
+  };
+
+  const handleToggleCanvaStatus = async (id, currentStatus) => {
+    const nextStatus = currentStatus === 'added' ? 'pending' : 'added';
+    try {
+      const formData = new FormData();
+      formData.append('status', nextStatus);
+      await axios.patch(`${API_BASE}/canva/requests/${id}/status`, formData);
+      setCanvaRequests(prev => prev.map(r => r.id === id ? { ...r, status: nextStatus } : r));
+    } catch (e) {
+      alert('Không thể cập nhật trạng thái: ' + e.message);
+    }
+  };
+
+  const handleCopyCanvaEmails = (delimiter = ',') => {
+    const targetList = filteredCanvaRequests.length > 0 ? filteredCanvaRequests : canvaRequests;
+    if (targetList.length === 0) {
+      alert('Chưa có email nào để sao chép.');
+      return;
+    }
+    const emails = targetList.map(r => r.email).filter(Boolean);
+    const text = delimiter === ',' ? emails.join(', ') : emails.join('\n');
+    navigator.clipboard.writeText(text);
+    setCopiedCanvaFormat(delimiter);
+    setTimeout(() => setCopiedCanvaFormat(null), 2500);
+  };
+
+  const filteredCanvaRequests = useMemo(() => {
+    return canvaRequests.filter(r => {
+      const matchFilter = canvaFilter === 'all' || r.status === canvaFilter;
+      const q = canvaSearch.toLowerCase().trim();
+      const matchSearch = !q || (r.email && r.email.toLowerCase().includes(q)) || (r.fullname && r.fullname.toLowerCase().includes(q)) || (r.school && r.school.toLowerCase().includes(q));
+      return matchFilter && matchSearch;
+    });
+  }, [canvaRequests, canvaFilter, canvaSearch]);
 
   // ── Data loaders ──────────────────────────────────────────────────────────
 
@@ -654,12 +766,16 @@ export default function AdminPanel({ keys, onSaveKeys, onOpenAuth }) {
     fetchIpaSounds();
     fetchSentences();
     fetchSessions();
+    fetchCanvaData();
   }, [sentenceGradeFilter]);
 
   useEffect(() => {
     if (adminTab === 'security') {
       fetchSessions();
       fetchSecurityStatus();
+    }
+    if (adminTab === 'canva') {
+      fetchCanvaData();
     }
   }, [adminTab]);
 
@@ -1057,6 +1173,7 @@ export default function AdminPanel({ keys, onSaveKeys, onOpenAuth }) {
     { id: 'security',  icon: ShieldAlert, label: `Bảo Mật & Thiết Bị${otherActiveCount > 0 ? ` (⚠️ ${otherActiveCount} máy lạ)` : ''}` },
     { id: 'users',     icon: Users,     label: `Quản lý Học sinh (${students.length})` },
     { id: 'teacher-keys', icon: KeyRound, label: `Quản Lý & Sinh Key Giáo Viên (${teacherKeys.length})` },
+    { id: 'canva',     icon: Gift,      label: `🎁 Yêu Cầu Canva Pro${canvaRequests.length > 0 ? ` (${canvaRequests.length})` : ''}` },
     { id: 'content',   icon: BookOpen,  label: 'Quản lý Học liệu (CMS)' },
     { id: 'export',    icon: Download,  label: 'Xuất dữ liệu KHKT' },
     { id: 'system',    icon: Cpu,       label: 'API Keys & Hệ thống' },
@@ -2149,6 +2266,232 @@ export default function AdminPanel({ keys, onSaveKeys, onOpenAuth }) {
             </div>
 
           </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════
+          TAB: QUẢN LÝ YÊU CẦU CANVA PRO / EDU
+      ══════════════════════════════════════════════════════════════ */}
+      {adminTab === 'canva' && (
+        <div className="space-y-6 animate-fade-in">
+          
+          {/* Cấu hình link mời trực tiếp & Thao tác sao chép hàng loạt */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            {/* Box 1: Cấu hình Link Mời Tham Gia Trực Tiếp */}
+            <div className="lg:col-span-6 glass-card rounded-2xl p-6 border border-purple-500/30 space-y-4 bg-gradient-to-br from-[#120826] via-[#090b1c] to-[#070e1a]">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400 shrink-0 shadow-inner">
+                  <Gift className="w-5 h-5 text-yellow-300" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-base text-white font-outfit">Link Mời Lớp Canva Pro Tức Thì</h3>
+                  <p className="text-xs text-slate-400">Hiển thị cho học sinh/giáo viên ở Cách 1 để tự tham gia lớp không cần chờ Admin add thủ công</p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-300 block">
+                  Đường dẫn (URL) lời mời nhóm Canva của Admin:
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="url"
+                    value={canvaInviteLink}
+                    onChange={(e) => setCanvaInviteLink(e.target.value)}
+                    placeholder="https://www.canva.com/brand/join?token=..."
+                    className="flex-1 bg-black/50 border border-white/10 focus:border-purple-500 rounded-xl px-3.5 py-2.5 text-xs text-slate-200 outline-none font-mono"
+                  />
+                  <button
+                    onClick={handleSaveCanvaLink}
+                    disabled={savingCanvaLink}
+                    className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs shadow-md transition cursor-pointer disabled:opacity-50 shrink-0 flex items-center gap-1.5"
+                  >
+                    <Save className="w-3.5 h-3.5" />
+                    <span>{savingCanvaLink ? 'Đang lưu...' : 'Lưu Link'}</span>
+                  </button>
+                </div>
+                {canvaSaveStatus && (
+                  <p className={`text-xs font-bold ${canvaSaveStatus.type === 'success' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    {canvaSaveStatus.text}
+                  </p>
+                )}
+                {canvaInviteLink && (
+                  <div className="flex items-center gap-2 pt-1 text-[11px] text-purple-300">
+                    <span>Trạng thái: Link đang hoạt động.</span>
+                    <a href={canvaInviteLink} target="_blank" rel="noreferrer" className="text-cyan-400 hover:underline inline-flex items-center gap-0.5">
+                      Thử mở link <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Box 2: Thao Tác Sao Chép Email Hàng Loạt */}
+            <div className="lg:col-span-6 glass-card rounded-2xl p-6 border border-white/10 space-y-4 bg-gradient-to-br from-[#0c142b] to-[#070c18]">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400 shrink-0">
+                    <Copy className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-base text-white font-outfit">Sao Chép Email Hàng Loạt</h3>
+                    <p className="text-xs text-slate-400">Dán nhanh vào ô "Mời thành viên" trên trang quản trị Canva</p>
+                  </div>
+                </div>
+                <button
+                  onClick={fetchCanvaData}
+                  disabled={loadingCanva}
+                  className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition cursor-pointer"
+                  title="Làm mới dữ liệu"
+                >
+                  <RefreshCw className={`w-4 h-4 ${loadingCanva ? 'animate-spin text-cyan-400' : ''}`} />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                <button
+                  onClick={() => handleCopyCanvaEmails(',')}
+                  className="p-3.5 rounded-xl bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-200 hover:text-white font-bold text-xs transition flex flex-col items-center justify-center gap-1.5 cursor-pointer shadow-sm"
+                >
+                  <span className="font-extrabold text-white">📋 Copy Dấu Phẩy ( , )</span>
+                  <span className="text-[10px] text-purple-300 font-normal">Dán thẳng vào ô Canva Invite</span>
+                  {copiedCanvaFormat === ',' && <span className="text-[10px] text-emerald-400 font-bold">✓ Đã Copy!</span>}
+                </button>
+
+                <button
+                  onClick={() => handleCopyCanvaEmails('\n')}
+                  className="p-3.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/30 text-emerald-200 hover:text-white font-bold text-xs transition flex flex-col items-center justify-center gap-1.5 cursor-pointer shadow-sm"
+                >
+                  <span className="font-extrabold text-white">📋 Copy Xuống Dòng ( \n )</span>
+                  <span className="text-[10px] text-emerald-300 font-normal">Dán vào Excel / Sheets</span>
+                  {copiedCanvaFormat === '\n' && <span className="text-[10px] text-emerald-400 font-bold">✓ Đã Copy!</span>}
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Bảng danh sách email yêu cầu */}
+          <div className="glass-card rounded-2xl p-6 border border-white/10 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <h3 className="font-extrabold text-base text-white font-outfit">
+                  Danh Sách Email Đăng Ký ({filteredCanvaRequests.length}/{canvaRequests.length})
+                </h3>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2.5">
+                {/* Search */}
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={canvaSearch}
+                    onChange={(e) => setCanvaSearch(e.target.value)}
+                    placeholder="Tìm email, họ tên, trường..."
+                    className="pl-8 pr-3 py-1.5 rounded-xl bg-black/40 border border-white/10 text-xs text-slate-200 focus:outline-none focus:border-purple-500 w-48 sm:w-60"
+                  />
+                </div>
+
+                {/* Filter */}
+                <div className="flex items-center bg-white/5 border border-white/10 p-0.5 rounded-xl gap-0.5">
+                  {[
+                    { id: 'all', label: 'Tất cả' },
+                    { id: 'pending', label: 'Chờ thêm' },
+                    { id: 'added', label: 'Đã thêm' }
+                  ].map(f => (
+                    <button
+                      key={f.id}
+                      onClick={() => setCanvaFilter(f.id)}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                        canvaFilter === f.id
+                          ? 'bg-purple-600 text-white shadow-xs'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Table */}
+            <div className="overflow-x-auto rounded-xl border border-white/10">
+              <table className="w-full text-left text-xs text-slate-300">
+                <thead className="bg-[#0b1022] text-slate-400 uppercase text-[10px] font-mono tracking-wider border-b border-white/10">
+                  <tr>
+                    <th className="p-3">#</th>
+                    <th className="p-3">Địa Chỉ Email</th>
+                    <th className="p-3">Họ và Tên</th>
+                    <th className="p-3">Đối Tượng</th>
+                    <th className="p-3">Trường / Đơn Vị</th>
+                    <th className="p-3">Thời Gian</th>
+                    <th className="p-3 text-center">Trạng Thái</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5 font-sans">
+                  {filteredCanvaRequests.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="p-8 text-center text-slate-500">
+                        {loadingCanva ? 'Đang tải danh sách...' : 'Không tìm thấy yêu cầu nào phù hợp.'}
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredCanvaRequests.map((req, idx) => (
+                      <tr key={req.id} className="hover:bg-white/[0.02] transition">
+                        <td className="p-3 font-mono text-slate-500">{idx + 1}</td>
+                        <td className="p-3 font-mono font-bold text-white">
+                          <div className="flex items-center gap-2">
+                            <span>{req.email}</span>
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText(req.email);
+                              }}
+                              className="p-1 rounded bg-white/5 hover:bg-white/15 text-slate-400 hover:text-white cursor-pointer"
+                              title="Copy email này"
+                            >
+                              <Copy className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </td>
+                        <td className="p-3 text-slate-200">{req.fullname || '—'}</td>
+                        <td className="p-3">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                            req.role_type === 'teacher'
+                              ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                              : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                          }`}>
+                            {req.role_type === 'teacher' ? 'Giáo viên' : 'Học sinh'}
+                          </span>
+                        </td>
+                        <td className="p-3 text-slate-400">{req.school || '—'}</td>
+                        <td className="p-3 text-[11px] text-slate-500 font-mono">
+                          {req.created_at ? req.created_at.slice(0, 16).replace('T', ' ') : '—'}
+                        </td>
+                        <td className="p-3 text-center">
+                          <button
+                            onClick={() => handleToggleCanvaStatus(req.id, req.status)}
+                            className={`px-3 py-1 rounded-xl text-xs font-bold transition cursor-pointer border ${
+                              req.status === 'added'
+                                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/30'
+                                : 'bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30'
+                            }`}
+                            title="Bấm để đổi trạng thái Đã thêm / Chờ thêm"
+                          >
+                            {req.status === 'added' ? '✓ Đã Thêm' : '⏳ Chờ Duyệt'}
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+          </div>
+
         </div>
       )}
 

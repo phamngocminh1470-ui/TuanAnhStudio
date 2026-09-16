@@ -101,14 +101,13 @@ export default function CustomCursor() {
       {ripples.map((ripple) => (
         <div
           key={ripple.id}
-          className="fixed pointer-events-none z-[99999] rounded-full border border-emerald-400 animate-ping-once"
+          className="fixed pointer-events-none z-[99999] rounded-full border border-emerald-400/40 animate-ping-once"
           style={{
             left: ripple.x,
             top: ripple.y,
             transform: 'translate(-50%, -50%)',
-            width: '55px',
-            height: '55px',
-            boxShadow: '0 0 25px rgba(16, 185, 129, 0.8), inset 0 0 15px rgba(59, 130, 246, 0.6)'
+            width: '28px',
+            height: '28px'
           }}
         />
       ))}
@@ -116,12 +115,12 @@ export default function CustomCursor() {
       {/* Trailing Outer Ring */}
       <div
         ref={trailingRef}
-        className={`fixed top-0 left-0 pointer-events-none z-[99998] rounded-full transition-all duration-200 ease-out ${
+        className={`fixed top-0 left-0 pointer-events-none z-[99998] rounded-full transition-all duration-150 ease-out ${
           isHovered
-            ? 'w-14 h-14 bg-emerald-500/10 border border-emerald-400/80 shadow-[0_0_30px_rgba(16,185,129,0.45)] backdrop-blur-[2px]'
+            ? 'w-7 h-7 bg-emerald-500/5 border border-emerald-400/60'
             : isClicked
-            ? 'w-8 h-8 bg-cyan-500/25 border border-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.7)]'
-            : 'w-9 h-9 border border-white/25 shadow-[0_0_12px_rgba(255,255,255,0.15)]'
+            ? 'w-4 h-4 bg-emerald-500/10 border border-emerald-500/60'
+            : 'w-5 h-5 border border-white/20'
         }`}
         style={{
           willChange: 'transform',
@@ -133,10 +132,10 @@ export default function CustomCursor() {
         ref={cursorRef}
         className={`fixed top-0 left-0 pointer-events-none z-[99999] rounded-full transition-transform duration-75 ease-out ${
           isHovered
-            ? 'w-2.5 h-2.5 bg-emerald-400 shadow-[0_0_15px_#10b981]'
+            ? 'w-1.5 h-1.5 bg-emerald-400'
             : isClicked
-            ? 'w-3.5 h-3.5 bg-cyan-300 shadow-[0_0_20px_#22d3ee]'
-            : 'w-2 h-2 bg-emerald-400 shadow-[0_0_10px_#10b981]'
+            ? 'w-1 h-1 bg-emerald-500'
+            : 'w-1 h-1 bg-emerald-400'
         }`}
         style={{
           transform: `translate3d(${position.x}px, ${position.y}px, 0) translate(-50%, -50%)`,

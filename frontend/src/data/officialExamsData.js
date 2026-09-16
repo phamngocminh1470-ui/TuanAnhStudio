@@ -1816,6 +1816,152 @@ export const COMPREHENSIVE_EXAMS_DATABASE = [
         "trapTip": "S + have/has + V3/ed + SINCE + Mốc thời gian."
       }
     ]
+  },
+  {
+    "id": "thpt-lop11-hk1-2026",
+    "level": "thpt",
+    "grade": "11",
+    "category": "lop10_11",
+    "province": "Chương Trình GDPT 2018",
+    "school": "Sở GD&ĐT • Khối 11",
+    "date": "2026.04.10",
+    "type": "Học Kỳ I Lớp 11",
+    "typeColor": "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+    "title": "Đề Khảo sát Chất lượng Tiếng Anh Học Kỳ I — Lớp 11 Chuẩn GDPT 2018",
+    "subtitle": "Nguồn: Thư Viện Học Liệu (thuvienhoclieu.com) • Đề chuẩn 40 câu trắc nghiệm • Chủ đề Lối sống khỏe, Đô thị thông minh & ASEAN",
+    "questionsCount": 4,
+    "time": 45,
+    "questions": [
+      {
+        "id": 1,
+        "part": "PHẦN I: TỪ VỰNG CHỦ ĐỀ ASEAN (UNIT 4 - TIẾNG ANH 11)",
+        "question": "Vietnam has actively contributed to maintaining peace and ______ in the Southeast Asian region.",
+        "options": [
+          { "key": "A", "text": "stability" },
+          { "key": "B", "text": "stable" },
+          { "key": "C", "text": "stably" },
+          { "key": "D", "text": "stabilize" }
+        ],
+        "correctAnswer": "A",
+        "explanation": "Cấu trúc song hành với liên từ 'and': 'peace (danh từ) and stability (danh từ)'. Nghĩa là 'hòa bình và sự ổn định'.",
+        "trapTip": "Song hành ngữ pháp: Noun and Noun -> peace and stability."
+      },
+      {
+        "id": 2,
+        "part": "PHẦN II: DANH ĐỘNG TỪ LÀM CHỦ NGỮ",
+        "question": "______ solar panels on residential rooftops helps generate clean electricity for households.",
+        "options": [
+          { "key": "A", "text": "Installing" },
+          { "key": "B", "text": "Install" },
+          { "key": "C", "text": "Installed" },
+          { "key": "D", "text": "Installation of" }
+        ],
+        "correctAnswer": "A",
+        "explanation": "Danh động từ (Gerund - Installing) đứng đầu câu làm chủ ngữ cho động từ 'helps'.",
+        "trapTip": "Gerund (V-ing) làm chủ ngữ của câu số ít."
+      },
+      {
+        "id": 3,
+        "part": "PHẦN III: THÌ QUÁ KHỨ ĐƠN VS QUÁ KHỨ TIẾP DIỄN",
+        "question": "While the environmental volunteers ______ garbage on the beach, it started to rain heavily.",
+        "options": [
+          { "key": "A", "text": "were collecting" },
+          { "key": "B", "text": "collected" },
+          { "key": "C", "text": "have collected" },
+          { "key": "D", "text": "are collecting" }
+        ],
+        "correctAnswer": "A",
+        "explanation": "Hành động đang diễn ra trong quá khứ (were collecting) thì có hành động khác xen vào (started). Mệnh đề đi với 'While' dùng Quá khứ tiếp diễn.",
+        "trapTip": "While + S + was/were V-ing, S + V2/ed."
+      },
+      {
+        "id": 4,
+        "part": "PHẦN IV: CÂU CHẺ NHẤN MẠNH (CLEFT SENTENCE)",
+        "question": "It was in the historic city of Hanoi ______ the youth leadership summit was held last month.",
+        "options": [
+          { "key": "A", "text": "that" },
+          { "key": "B", "text": "which" },
+          { "key": "C", "text": "where" },
+          { "key": "D", "text": "when" }
+        ],
+        "correctAnswer": "A",
+        "explanation": "Cấu trúc câu chẻ nhấn mạnh trạng ngữ: 'It was + Trạng ngữ + THAT + S + V'. Lưu ý trong câu chẻ chuẩn ngữ pháp tiếng Anh, luôn dùng 'THAT' thay vì 'where'.",
+        "trapTip": "Cleft sentence: It is/was + [Thành phần nhấn mạnh] + THAT..."
+      }
+    ]
+  },
+  {
+    "id": "thpt-lop11-hk2-2026",
+    "level": "thpt",
+    "grade": "11",
+    "category": "lop10_11",
+    "province": "Chương Trình GDPT 2018",
+    "school": "Global Success 11 • Học Kỳ II",
+    "date": "2026.05.02",
+    "type": "Học Kỳ II Lớp 11",
+    "typeColor": "bg-cyan-500/10 text-cyan-400 border-cyan-500/20",
+    "title": "Đề Khảo sát Năng lực Tiếng Anh Lớp 11 — GDPT 2018 (Học Kỳ II Toàn Diện)",
+    "subtitle": "Nguồn: Thư Viện Học Liệu (thuvienhoclieu.com) • Bám sát Unit 6-10: Bảo tồn sinh thái, Kỹ năng sống & Giáo dục tương lai",
+    "questionsCount": 4,
+    "time": 45,
+    "questions": [
+      {
+        "id": 1,
+        "part": "PHẦN I: PHÂN TỪ HOÀN THÀNH (PERFECT PARTICIPLE)",
+        "question": "______ all their homework, the students were permitted to participate in the sports club.",
+        "options": [
+          { "key": "A", "text": "Having finished" },
+          { "key": "B", "text": "Finishing" },
+          { "key": "C", "text": "Finished" },
+          { "key": "D", "text": "To finish" }
+        ],
+        "correctAnswer": "A",
+        "explanation": "Phân từ hoàn thành (Having + V3/ed) dùng để rút gọn mệnh đề trạng ngữ, nhấn mạnh hành động 'hoàn thành bài tập' đã xảy ra và hoàn tất trước hành động 'được phép tham gia'.",
+        "trapTip": "Having + V3/ed nhấn mạnh hành động xảy ra trước trong quá khứ."
+      },
+      {
+        "id": 2,
+        "part": "PHẦN II: TỪ VỰNG CHỦ ĐỀ SỐNG ĐỘC LẬP (UNIT 8 - LỚP 11)",
+        "question": "Time management skills allow high school students to become more ______ and confident.",
+        "options": [
+          { "key": "A", "text": "self-reliant" },
+          { "key": "B", "text": "relying" },
+          { "key": "C", "text": "reliance" },
+          { "key": "D", "text": "reliably" }
+        ],
+        "correctAnswer": "A",
+        "explanation": "'self-reliant' (tự lập, tự chủ) là tính từ ghép đi cùng 'confident' sau 'become'.",
+        "trapTip": "Self-reliant = Tự lập, tự dựa vào sức mình."
+      },
+      {
+        "id": 3,
+        "part": "PHẦN III: CÂU ĐIỀU KIỆN LOẠI 2 (HYPOTHETICAL)",
+        "question": "If we ______ more renewable energy resources, we would reduce reliance on fossil fuels.",
+        "options": [
+          { "key": "A", "text": "utilized" },
+          { "key": "B", "text": "utilize" },
+          { "key": "C", "text": "have utilized" },
+          { "key": "D", "text": "will utilize" }
+        ],
+        "correctAnswer": "A",
+        "explanation": "Câu điều kiện loại 2 diễn tả giả định trái ngược với hiện tại: 'If + S + V2/ed, S + would/could + V-bare'.",
+        "trapTip": "Mệnh đề chính có 'would reduce' -> Mệnh đề If chia Quá khứ đơn (utilized)."
+      },
+      {
+        "id": 4,
+        "part": "PHẦN IV: RÚT GỌN MỆNH ĐỀ QUAN HỆ",
+        "question": "The scientific report ______ by Vietnamese researchers received international recognition.",
+        "options": [
+          { "key": "A", "text": "published" },
+          { "key": "B", "text": "publishing" },
+          { "key": "C", "text": "which published" },
+          { "key": "D", "text": "was published" }
+        ],
+        "correctAnswer": "A",
+        "explanation": "Rút gọn mệnh đề quan hệ dạng bị động: 'The scientific report (which was) published by...' -> chỉ giữ lại quá khứ phân từ 'published'.",
+        "trapTip": "Mệnh đề quan hệ bị động rút gọn thành V3/ed."
+      }
+    ]
   }
 ];
 

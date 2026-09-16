@@ -266,7 +266,7 @@ export default function SM2Flashcards({ selectedGrade, currentUser }) {
           <GraduationCap className="w-8 h-8 text-amber-400 shrink-0" />
           <div>
             <span className="text-[10px] text-amber-400 font-extrabold uppercase tracking-wider block">Hệ thống Luyện thi AI</span>
-            <span className="text-xs font-bold text-white block">AI ENGLISH MENTOR</span>
+            <span className="text-xs font-bold text-white block">Examora AI</span>
             <span className="text-[10px] text-gray-400 block font-semibold">Nền tảng học tập thích ứng cá nhân hóa</span>
           </div>
         </div>
@@ -364,28 +364,28 @@ export default function SM2Flashcards({ selectedGrade, currentUser }) {
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <button
                     onClick={() => handleSM2Rating(1)}
-                    className="p-4 rounded-2xl bg-gradient-to-b from-rose-500/20 to-rose-600/30 hover:from-rose-500/30 hover:to-rose-600/40 border border-rose-500/40 text-rose-300 text-xs font-bold transition flex flex-col items-center gap-1 cursor-pointer shadow-md"
+                    className="p-4 rounded-2xl bg-rose-500/5 hover:bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs font-bold transition flex flex-col items-center gap-1 cursor-pointer shadow-sm"
                   >
                     <span className="text-sm font-black">Chưa nhớ (1)</span>
                     <span className="text-[11px] text-rose-300 font-medium">Ôn lại sau 1 ngày</span>
                   </button>
                   <button
                     onClick={() => handleSM2Rating(3)}
-                    className="p-4 rounded-2xl bg-gradient-to-b from-amber-500/20 to-orange-600/30 hover:from-amber-500/30 hover:to-orange-600/40 border border-amber-500/40 text-amber-300 text-xs font-bold transition flex flex-col items-center gap-1 cursor-pointer shadow-md"
+                    className="p-4 rounded-2xl bg-amber-500/5 hover:bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-bold transition flex flex-col items-center gap-1 cursor-pointer shadow-sm"
                   >
                     <span className="text-sm font-black">Khó nhớ (3)</span>
                     <span className="text-[11px] text-amber-300 font-medium">Ôn lại sau 3 ngày</span>
                   </button>
                   <button
                     onClick={() => handleSM2Rating(4)}
-                    className="p-4 rounded-2xl bg-gradient-to-b from-indigo-500/20 to-purple-600/30 hover:from-indigo-500/30 hover:to-purple-600/40 border border-indigo-500/40 text-indigo-300 text-xs font-bold transition flex flex-col items-center gap-1 cursor-pointer shadow-md"
+                    className="p-4 rounded-2xl bg-indigo-500/5 hover:bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 text-xs font-bold transition flex flex-col items-center gap-1 cursor-pointer shadow-sm"
                   >
                     <span className="text-sm font-black">Nhớ rõ (4)</span>
                     <span className="text-[11px] text-indigo-300 font-medium">Ôn lại sau 6 ngày</span>
                   </button>
                   <button
                     onClick={() => handleSM2Rating(5)}
-                    className="p-4 rounded-2xl bg-gradient-to-b from-emerald-500/20 to-teal-600/30 hover:from-emerald-500/30 hover:to-teal-600/40 border border-emerald-500/40 text-emerald-300 text-xs font-bold transition flex flex-col items-center gap-1 cursor-pointer shadow-md"
+                    className="p-4 rounded-2xl bg-emerald-500/5 hover:bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-bold transition flex flex-col items-center gap-1 cursor-pointer shadow-sm"
                   >
                     <span className="text-sm font-black">Rất dễ (5)</span>
                     <span className="text-[11px] text-emerald-300 font-medium">Ôn lại sau 15 ngày</span>
@@ -406,7 +406,7 @@ export default function SM2Flashcards({ selectedGrade, currentUser }) {
               </div>
               <div>
                 <span className="text-[10px] text-amber-400 font-extrabold uppercase tracking-wider block">Đơn vị Phát triển</span>
-                <h4 className="text-sm font-black text-white">AI ENGLISH MENTOR LAB</h4>
+                <h4 className="text-sm font-black text-white">Examora AI LAB</h4>
                 <p className="text-[11px] text-gray-400">Dự án Thực nghiệm KHKT</p>
               </div>
             </div>

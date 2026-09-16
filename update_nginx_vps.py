@@ -3,8 +3,9 @@ import sys
 
 sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
-nginx_conf = """server {
-    server_name tuananhstudio.top www.tuananhstudio.top;
+nginx_conf = """# 1. Main Server Block: HTTPS for examoraai.com and www.examoraai.com
+server {
+    server_name examoraai.com www.examoraai.com;
     root /var/www/tuananhstudio/frontend/dist;
     index index.html;
 
@@ -58,24 +59,36 @@ nginx_conf = """server {
     }
 
     listen 443 ssl http2; # managed by Certbot
-    ssl_certificate /etc/letsencrypt/live/tuananhstudio.top/fullchain.pem; # managed by Certbot
-    ssl_certificate_key /etc/letsencrypt/live/tuananhstudio.top/privkey.pem; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/examoraai.com/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/examoraai.com/privkey.pem; # managed by Certbot
     include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
 }
 
+# 2. HTTP to HTTPS redirect for examoraai.com
 server {
-    if ($host = www.tuananhstudio.top) {
-        return 301 https://$host$request_uri;
-    }
+    listen 80;
+    server_name examoraai.com www.examoraai.com;
+    return 301 https://examoraai.com$request_uri;
+}
 
-    if ($host = tuananhstudio.top) {
-        return 301 https://$host$request_uri;
-    }
+# 3. HTTPS redirect from old domain tuananhstudio.top to new domain examoraai.com
+server {
+    server_name tuananhstudio.top www.tuananhstudio.top;
+    listen 443 ssl http2;
+    ssl_certificate /etc/letsencrypt/live/tuananhstudio.top/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/tuananhstudio.top/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 
+    return 301 https://examoraai.com$request_uri;
+}
+
+# 4. HTTP redirect from old domain tuananhstudio.top to new domain examoraai.com
+server {
     listen 80;
     server_name tuananhstudio.top www.tuananhstudio.top;
-    return 404;
+    return 301 https://examoraai.com$request_uri;
 }
 """
 
@@ -97,7 +110,7 @@ def update_nginx():
         print('Nginx test err/info:', err)
 
     client.close()
-    print('Nginx successfully updated on VPS!')
+    print('Nginx successfully updated and redirected on VPS!')
 
 if __name__ == '__main__':
     update_nginx()

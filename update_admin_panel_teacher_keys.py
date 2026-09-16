@@ -103,7 +103,7 @@ teacher_keys_state = """  const [students, setStudents] = useState([]);
 
   // Hàm copy lời nhắn Zalo chuẩn để gửi cho giáo viên
   const handleCopyZaloMessage = (keyObj) => {
-    const msg = `Dạ em gửi Thầy/Cô ${keyObj.teacherName} (${keyObj.school}) Mã Kích Hoạt Quyền Giáo Viên trên hệ thống:\\n\\n🔑 MÃ KÍCH HOẠT: ${keyObj.key}\\n🌐 ĐỊA CHỈ TRUY CẬP: https://tuananhstudio.top\\n\\nThầy/Cô vào mục 'Cổng Giáo Viên' dán mã trên để mở khóa toàn bộ không gian quản lý lớp học, xáo đề thi 101-104 và giao bài tập cho học sinh nhé ạ!`;
+    const msg = `Dạ em gửi Thầy/Cô ${keyObj.teacherName} (${keyObj.school}) Mã Kích Hoạt Quyền Giáo Viên trên hệ thống:\\n\\n🔑 MÃ KÍCH HOẠT: ${keyObj.key}\\n🌐 ĐỊA CHỈ TRUY CẬP: https://examoraai.com\\n\\nThầy/Cô vào mục 'Cổng Giáo Viên' dán mã trên để mở khóa toàn bộ không gian quản lý lớp học, xáo đề thi 101-104 và giao bài tập cho học sinh nhé ạ!`;
     navigator.clipboard.writeText(msg);
     setCopiedZaloMsg(true);
     setTimeout(() => setCopiedZaloMsg(false), 2500);

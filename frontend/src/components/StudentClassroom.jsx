@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   GraduationCap, BookOpen, Clock, CheckCircle2, Play, AlertCircle, 
-  RotateCcw, ArrowLeft, Megaphone, Trophy, FileText, ChevronRight,
-  Sparkles, Check, X, HelpCircle, Lock, Award, Calendar, LogOut
+  ArrowLeft, Megaphone, Trophy, FileText, ChevronRight,
+  Sparkles, Check, X, HelpCircle, Lock, Award, Calendar, LogOut,
+  ShieldAlert, ShieldCheck, AlertTriangle, Eye
 } from 'lucide-react';
 
 export default function StudentClassroom({ classes, setClasses, onNavigate }) {
@@ -11,15 +12,142 @@ export default function StudentClassroom({ classes, setClasses, onNavigate }) {
   const [studentName, setStudentName] = useState(() => localStorage.getItem('student_display_name') || 'Học Sinh');
   const [errorMsg, setErrorMsg] = useState('');
 
-  // Bài kiểm tra đang làm
+  // Danh sách bài đã nộp/hoàn thành của học sinh trong lớp này
+  const [completedExams, setCompletedExams] = useState(() => {
+    try {
+      const code = localStorage.getItem('student_joined_class_code') || '';
+      const name = localStorage.getItem('student_display_name') || 'Học Sinh';
+      const key = `examora_completed_exams_${code}_${name}`;
+      const saved = localStorage.getItem(key);
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return {};
+  });
+
+  // Bài kiểm tra đang mở
   const [activeExam, setActiveExam] = useState(null);
   const [answers, setAnswers] = useState({});
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isReviewOnly, setIsReviewOnly] = useState(false);
   const [quizScore, setQuizScore] = useState(null);
   const [showExplanation, setShowExplanation] = useState(false);
 
+  // Hệ thống Chống Gian Lận (Anti-Cheat)
+  const [violationCount, setViolationCount] = useState(0);
+  const [violationAlertModal, setViolationAlertModal] = useState({ show: false, count: 0, reason: '' });
+  const activeExamRef = useRef(activeExam);
+  const isSubmittedRef = useRef(isSubmitted);
+  const violationCountRef = useRef(violationCount);
+
+  useEffect(() => {
+    activeExamRef.current = activeExam;
+  }, [activeExam]);
+
+  useEffect(() => {
+    isSubmittedRef.current = isSubmitted;
+  }, [isSubmitted]);
+
+  useEffect(() => {
+    violationCountRef.current = violationCount;
+  }, [violationCount]);
+
   // Tìm lớp học mà học sinh đang tham gia
   const currentClass = classes.find(c => c.code.toUpperCase() === joinedCode.toUpperCase());
+
+  // Lưu completedExams vào localStorage mỗi khi thay đổi
+  const saveCompletedExamRecord = (asgId, record) => {
+    setCompletedExams(prev => {
+      const next = { ...prev, [asgId]: record };
+      try {
+        const key = `examora_completed_exams_${joinedCode}_${studentName}`;
+        localStorage.setItem(key, JSON.stringify(next));
+      } catch (e) {}
+      return next;
+    });
+  };
+
+  // ════════════════════════════════════════════════════════════════════════════
+  // HỆ THỐNG CHỐNG GIAN LẬN: BẮT SỰ KIỆN RỜI TAB / BLUR / PHÍM TẮT / COPY / CHUỘT PHẢI
+  // ════════════════════════════════════════════════════════════════════════════
+  useEffect(() => {
+    if (!activeExam || isSubmitted) return;
+
+    const handleTabViolation = (reason) => {
+      if (!activeExamRef.current || isSubmittedRef.current) return;
+      
+      const newCount = violationCountRef.current + 1;
+      setViolationCount(newCount);
+
+      if (newCount === 1) {
+        setViolationAlertModal({
+          show: true,
+          count: 1,
+          reason: 'Hệ thống phát hiện bạn vừa rời khỏi cửa sổ làm bài (chuyển tab hoặc mở ứng dụng khác). Vui lòng tập trung làm bài!'
+        });
+      } else if (newCount === 2) {
+        setViolationAlertModal({
+          show: true,
+          count: 2,
+          reason: 'CẢNH BÁO LẦN 2: Bạn đã rời khỏi màn hình thi 2 lần! Nếu tiếp tục vi phạm lần thứ 3, hệ thống sẽ TỰ ĐỘNG THU BÀI và nộp bài thi ngay lập tức.'
+        });
+      } else if (newCount >= 3) {
+        setViolationAlertModal({
+          show: true,
+          count: 3,
+          reason: 'VI PHẠM QUY CHẾ THI: Bạn đã rời màn hình quá 3 lần! Hệ thống đang tự động khóa bài và nộp bài thi ngay lập tức.'
+        });
+        // Tự động thu bài và nộp bài cưỡng chế
+        setTimeout(() => {
+          handleSubmitExam(true, 3);
+        }, 1500);
+      }
+    };
+
+    const onVisibilityChange = () => {
+      if (document.hidden) {
+        handleTabViolation('Chuyển Tab Trình Duyệt');
+      }
+    };
+
+    const onWindowBlur = () => {
+      handleTabViolation('Mở Ứng Dụng Khác');
+    };
+
+    const onContextMenu = (e) => {
+      e.preventDefault();
+    };
+
+    const onCopyPaste = (e) => {
+      e.preventDefault();
+    };
+
+    const onKeyDown = (e) => {
+      // Chặn F12, Ctrl+Shift+I, Ctrl+U, Ctrl+C, Ctrl+V, Ctrl+S
+      if (
+        e.key === 'F12' ||
+        (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'C' || e.key === 'c' || e.key === 'J' || e.key === 'j')) ||
+        (e.ctrlKey && (e.key === 'u' || e.key === 'U' || e.key === 'c' || e.key === 'C' || e.key === 'v' || e.key === 'V' || e.key === 's' || e.key === 'S'))
+      ) {
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    window.addEventListener('blur', onWindowBlur);
+    document.addEventListener('contextmenu', onContextMenu);
+    document.addEventListener('copy', onCopyPaste);
+    document.addEventListener('paste', onCopyPaste);
+    document.addEventListener('keydown', onKeyDown);
+
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('blur', onWindowBlur);
+      document.removeEventListener('contextmenu', onContextMenu);
+      document.removeEventListener('copy', onCopyPaste);
+      document.removeEventListener('paste', onCopyPaste);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [activeExam, isSubmitted]);
 
   const handleJoinClass = (e) => {
     e.preventDefault();
@@ -41,26 +169,57 @@ export default function StudentClassroom({ classes, setClasses, onNavigate }) {
     alert(`✓ Chúc mừng bạn đã tham gia: ${found.name}! Hãy vào làm bài tập do Thầy/Cô giao nhé.`);
   };
 
-  const handleLeaveClass = () => {
-    if (window.confirm("Bạn có chắc chắn muốn rời khỏi lớp học này để nhập mã lớp khác không?")) {
+  const handleLeaveClass = async () => {
+    const ok = window.appConfirm
+      ? await window.appConfirm("Bạn có chắc chắn muốn rời khỏi lớp học này để nhập mã lớp khác không?", "Rời Lớp Học", { type: 'warning', confirmText: 'Rời Lớp' })
+      : window.confirm("Bạn có chắc chắn muốn rời khỏi lớp học này để nhập mã lớp khác không?");
+    if (ok) {
       setJoinedCode('');
       localStorage.removeItem('student_joined_class_code');
       setInputCode('');
       setActiveExam(null);
       setIsSubmitted(false);
+      setIsReviewOnly(false);
     }
   };
 
+  // Bắt đầu làm bài thi mới
   const handleStartExam = (asg) => {
+    // Kiểm tra nếu bài đã hoàn thành
+    if (completedExams[asg.id]) {
+      // Mở chế độ xem lại bài đã nộp
+      const record = completedExams[asg.id];
+      setActiveExam(asg);
+      setAnswers(record.answers || {});
+      setIsSubmitted(true);
+      setIsReviewOnly(true);
+      setQuizScore({ correct: record.correct, total: record.total, score10: record.score10 });
+      setShowExplanation(true);
+      setViolationCount(record.cheatViolations || 0);
+      return;
+    }
+
+    // Kiểm tra hết hạn
+    if (asg.deadline && asg.deadline !== 'unlimited') {
+      const deadlineDate = new Date(asg.deadline + 'T23:59:59');
+      if (deadlineDate < new Date()) {
+        alert("⛔ Bài kiểm tra này đã quá hạn nộp bài. Bạn không thể làm bài này nữa!");
+        return;
+      }
+    }
+
     setActiveExam(asg);
     setAnswers({});
     setIsSubmitted(false);
+    setIsReviewOnly(false);
     setQuizScore(null);
     setShowExplanation(false);
+    setViolationCount(0);
   };
 
-  const handleSubmitExam = () => {
-    if (!activeExam) return;
+  // Nộp bài thi
+  const handleSubmitExam = (isForcedByCheat = false, forcedViolations = 0) => {
+    if (!activeExam || isSubmitted) return;
     const questions = activeExam.questions || [];
     const total = questions.length;
     let correct = 0;
@@ -73,14 +232,31 @@ export default function StudentClassroom({ classes, setClasses, onNavigate }) {
 
     const score10 = Number(((correct / total) * 10).toFixed(1));
     const result = { correct, total, score10 };
+    const currentViolations = isForcedByCheat ? forcedViolations : violationCount;
+
     setQuizScore(result);
     setIsSubmitted(true);
+    setIsReviewOnly(false);
     setShowExplanation(true);
+
+    // Lưu vĩnh viễn trạng thái đã hoàn thành của học sinh này
+    const record = {
+      asgId: activeExam.id,
+      asgTitle: activeExam.title,
+      score10,
+      correct,
+      total,
+      answers,
+      submittedAt: new Date().toLocaleString('vi-VN'),
+      cheatViolations: currentViolations,
+      isForcedByCheat
+    };
+    saveCompletedExamRecord(activeExam.id, record);
 
     // Cập nhật điểm của học sinh này vào Sổ Điểm của Lớp
     if (currentClass && setClasses) {
-      const studentEmail = `${studentName.toLowerCase().replace(/\\s+/g, '')}@student.edu.vn`;
-      let existingStudents = currentClass.students || [];
+      const studentEmail = `${studentName.toLowerCase().replace(/\s+/g, '')}@student.edu.vn`;
+      let existingStudents = [...(currentClass.students || [])];
       const foundIdx = existingStudents.findIndex(s => s.name === studentName);
 
       if (foundIdx >= 0) {
@@ -186,13 +362,61 @@ export default function StudentClassroom({ classes, setClasses, onNavigate }) {
   }
 
   // ════════════════════════════════════════════════════════════════════════════
-  // 2. MÀN HÌNH LÀM BÀI KIỂM TRA TRỰC TUYẾN
+  // 2. MÀN HÌNH LÀM BÀI KIỂM TRA TRỰC TUYẾN & XEM LẠI BÀI ĐÃ NỘP
   // ════════════════════════════════════════════════════════════════════════════
   if (activeExam) {
     const questions = activeExam.questions || [];
+    const isCompletedMode = isSubmitted || isReviewOnly || Boolean(completedExams[activeExam.id]);
 
     return (
-      <div className="max-w-5xl mx-auto space-y-6 px-4 md:px-6 pb-20 animate-fade-in">
+      <div className="max-w-5xl mx-auto space-y-6 px-4 md:px-6 pb-20 animate-fade-in select-none">
+        
+        {/* Anti-cheat violation modal */}
+        {violationAlertModal.show && (
+          <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
+            <div className="relative w-full max-w-md bg-[#130712] border-2 border-rose-500/80 rounded-3xl p-6 md:p-8 text-center space-y-5 shadow-[0_0_60px_rgba(244,63,94,0.4)] animate-scale-up">
+              <div className="w-16 h-16 rounded-3xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center mx-auto text-rose-400 shadow-xl shadow-rose-500/30">
+                <ShieldAlert className="w-8 h-8 animate-bounce" />
+              </div>
+              <div className="space-y-2">
+                <span className="px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 font-mono font-black text-xs uppercase tracking-wider">
+                  CẢNH BÁO GIAN LẬN (VI PHẠM {violationAlertModal.count}/3)
+                </span>
+                <h3 className="text-xl font-extrabold text-white font-outfit">Phát Hiện Rời Cửa Sổ Thi!</h3>
+                <p className="text-xs text-slate-300 leading-relaxed font-medium">
+                  {violationAlertModal.reason}
+                </p>
+              </div>
+              <button
+                onClick={() => setViolationAlertModal({ show: false, count: 0, reason: '' })}
+                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-black text-xs shadow-lg shadow-rose-500/30 transition cursor-pointer"
+              >
+                Tôi Đã Hiểu &amp; Tiếp Tục Làm Bài
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Thanh Giám Sát Chống Gian Lận (Chỉ hiện khi đang làm bài) */}
+        {!isCompletedMode && (
+          <div className="p-3.5 rounded-2xl bg-gradient-to-r from-cyan-950/40 via-[#071329] to-indigo-950/40 border border-cyan-500/30 flex items-center justify-between gap-3 text-xs shadow-lg">
+            <div className="flex items-center gap-2 font-bold text-cyan-300">
+              <ShieldCheck className="w-4 h-4 text-emerald-400 animate-pulse" />
+              <span>HỆ THỐNG GIÁM SÁT CHỐNG GIAN LẬN: <strong className="text-emerald-300 font-mono">ĐANG BẬT</strong></span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] text-slate-400">Rời tab:</span>
+              <span className={`px-2 py-0.5 rounded font-mono font-bold text-xs ${
+                violationCount === 0 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' :
+                violationCount === 1 ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' :
+                'bg-rose-500/20 text-rose-300 border border-rose-500/30 animate-pulse'
+              }`}>
+                {violationCount} / 3 Lần
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* Exam Top Bar */}
         <div className="glass-card rounded-3xl p-6 border border-cyan-500/30 bg-[#070e24] shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -212,43 +436,46 @@ export default function StudentClassroom({ classes, setClasses, onNavigate }) {
           </div>
 
           <div className="flex items-center gap-3">
-            {!isSubmitted ? (
+            {!isCompletedMode ? (
               <button
-                onClick={handleSubmitExam}
-                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-extrabold text-xs shadow-lg shadow-emerald-500/25 transition cursor-pointer"
+                onClick={() => handleSubmitExam(false)}
+                className="px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-black text-xs shadow-lg shadow-emerald-500/25 transition cursor-pointer flex items-center gap-2"
               >
-                Nộp Bài &amp; Xem Điểm Ngay
+                <Check className="w-4 h-4" />
+                <span>Nộp Bài &amp; Xem Điểm Ngay</span>
               </button>
             ) : (
-              <button
-                onClick={() => {
-                  setAnswers({});
-                  setIsSubmitted(false);
-                  setQuizScore(null);
-                }}
-                className="px-4 py-2 rounded-xl bg-amber-500/20 text-amber-300 text-xs font-bold border border-amber-500/30 flex items-center gap-1.5 cursor-pointer"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Làm Lại Bài Này</span>
-              </button>
+              <div className="px-4 py-2 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-black flex items-center gap-2">
+                <Lock className="w-3.5 h-3.5" />
+                <span>ĐÃ HOÀN THÀNH (KHÔNG THỂ LÀM LẠI)</span>
+              </div>
             )}
           </div>
         </div>
 
         {/* Score Banner (sau khi nộp bài) */}
-        {isSubmitted && quizScore && (
+        {isCompletedMode && quizScore && (
           <div className="p-6 rounded-3xl bg-gradient-to-r from-emerald-950/60 via-[#07132a] to-cyan-950/60 border border-emerald-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in shadow-xl">
             <div>
-              <span className="text-xs font-mono font-bold text-emerald-400 uppercase tracking-widest">KẾT QUẢ BÀI KIỂM TRA</span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-mono font-bold text-emerald-400 uppercase tracking-widest">KẾT QUẢ BÀI KIỂM TRA CHÍNH THỨC</span>
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  HOÀN THÀNH 100%
+                </span>
+              </div>
               <h3 className="text-2xl md:text-3xl font-black text-white mt-1">Đạt {quizScore.score10} / 10.0 Điểm</h3>
-              <p className="text-xs text-emerald-300 mt-0.5">✓ Điểm số đã được tự động lưu vào Sổ Điểm của Thầy/Cô.</p>
+              <p className="text-xs text-emerald-300 mt-0.5">
+                ✓ Điểm số đã được ghi nhận vào Sổ Điểm của Thầy/Cô. Bài kiểm tra này chỉ được làm 01 lần duy nhất!
+              </p>
             </div>
             <div className="flex items-center gap-3 font-mono text-xs">
-              <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl text-emerald-300">
-                Đúng: <strong>{quizScore.correct}</strong> / {quizScore.total} câu
+              <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl text-emerald-300 text-center">
+                <div className="text-[10px] text-emerald-400/70 uppercase">Đúng</div>
+                <strong className="text-base">{quizScore.correct}</strong> / {quizScore.total} câu
               </div>
-              <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-2xl text-red-300">
-                Sai: <strong>{quizScore.total - quizScore.correct}</strong> câu
+              <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-2xl text-red-300 text-center">
+                <div className="text-[10px] text-red-400/70 uppercase">Sai</div>
+                <strong className="text-base">{quizScore.total - quizScore.correct}</strong> câu
               </div>
             </div>
           </div>
@@ -264,7 +491,7 @@ export default function StudentClassroom({ classes, setClasses, onNavigate }) {
               <div 
                 key={q.id || idx} 
                 className={`glass p-5 md:p-6 rounded-3xl border transition-all space-y-4 ${
-                  isSubmitted
+                  isCompletedMode
                     ? isCorrect ? 'border-emerald-500/40 bg-emerald-950/10' : 'border-red-500/40 bg-red-950/10'
                     : 'border-white/10 bg-[#060a18]'
                 }`}
@@ -273,7 +500,7 @@ export default function StudentClassroom({ classes, setClasses, onNavigate }) {
                   <span className="text-[11px] font-mono font-bold text-slate-400 uppercase">
                     CÂU {idx + 1} • {q.part || 'Trắc nghiệm THPT'}
                   </span>
-                  {isSubmitted && (
+                  {isCompletedMode && (
                     <span className={`text-xs font-bold flex items-center gap-1 ${isCorrect ? 'text-emerald-400' : 'text-red-400'}`}>
                       {isCorrect ? <Check className="w-3.5 h-3.5" /> : <X className="w-3.5 h-3.5" />}
                       <span>{isCorrect ? 'Chính xác' : `Sai (Đáp án: ${q.correctAnswer})`}</span>
@@ -288,7 +515,7 @@ export default function StudentClassroom({ classes, setClasses, onNavigate }) {
                     const selectedThis = answers[q.id] === opt.key;
                     let style = 'bg-white/5 border-white/10 text-slate-200 hover:border-white/20';
 
-                    if (isSubmitted) {
+                    if (isCompletedMode) {
                       if (opt.key === q.correctAnswer) {
                         style = 'bg-emerald-500/20 border-emerald-500 text-emerald-200 font-bold shadow-md shadow-emerald-500/10';
                       } else if (selectedThis && opt.key !== q.correctAnswer) {
@@ -303,9 +530,9 @@ export default function StudentClassroom({ classes, setClasses, onNavigate }) {
                     return (
                       <button
                         key={opt.key}
-                        disabled={isSubmitted}
+                        disabled={isCompletedMode}
                         onClick={() => setAnswers(prev => ({ ...prev, [q.id]: opt.key }))}
-                        className={`p-3.5 rounded-2xl border text-left text-xs transition flex items-start gap-2.5 cursor-pointer disabled:cursor-default ${style}`}
+                        className={`p-3.5 rounded-2xl border text-left text-xs transition flex items-start gap-2.5 ${isCompletedMode ? 'cursor-not-allowed opacity-90' : 'cursor-pointer'} ${style}`}
                       >
                         <span className="w-5 h-5 rounded-lg bg-black/40 border border-white/10 flex items-center justify-center font-mono font-bold text-xs shrink-0 mt-0.5">{opt.key}</span>
                         <span className="flex-1">{opt.text}</span>
@@ -314,7 +541,7 @@ export default function StudentClassroom({ classes, setClasses, onNavigate }) {
                   })}
                 </div>
 
-                {isSubmitted && (
+                {isCompletedMode && (
                   <div className="p-4 rounded-2xl bg-black/40 border border-white/10 text-xs space-y-1.5 animate-fade-in">
                     <div className="font-bold text-emerald-400">Đáp án đúng: {q.correctAnswer}</div>
                     <p className="text-slate-300 leading-relaxed">{q.explanation}</p>
@@ -409,39 +636,83 @@ export default function StudentClassroom({ classes, setClasses, onNavigate }) {
 
         {currentClass.assignments && currentClass.assignments.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {currentClass.assignments.map((asg) => (
-              <div 
-                key={asg.id}
-                className="glass p-5 md:p-6 rounded-3xl border border-white/10 space-y-4 hover:border-cyan-500/40 transition shadow-xl bg-gradient-to-b from-[#091024] to-[#050914]"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <h3 className="font-extrabold text-sm text-white leading-relaxed">{asg.title}</h3>
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">
-                    {asg.status === 'open' ? 'Đang Mở' : 'Đã Đóng'}
-                  </span>
-                </div>
+            {currentClass.assignments.map((asg) => {
+              const completedRecord = completedExams[asg.id];
+              const isCompleted = Boolean(completedRecord);
+              const isUnlimited = !asg.deadline || asg.deadline === 'unlimited';
+              const isExpired = !isUnlimited && new Date(asg.deadline + 'T23:59:59') < new Date();
 
-                <div className="flex flex-wrap items-center justify-between text-xs text-slate-400 pt-2 border-t border-white/5">
-                  <span className="flex items-center gap-1">
-                    <FileText className="w-3.5 h-3.5 text-cyan-400" /> {asg.questions?.length || 0} câu hỏi
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5 text-amber-400" /> {asg.timeLimit || 15} phút
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Calendar className="w-3.5 h-3.5 text-indigo-400" /> Hạn: {asg.deadline}
-                  </span>
-                </div>
-
-                <button
-                  onClick={() => handleStartExam(asg)}
-                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-black text-xs shadow-lg shadow-cyan-500/20 transition flex items-center justify-center gap-2 cursor-pointer"
+              return (
+                <div 
+                  key={asg.id}
+                  className={`glass p-5 md:p-6 rounded-3xl border space-y-4 transition shadow-xl bg-gradient-to-b ${
+                    isCompleted 
+                      ? 'border-emerald-500/30 from-[#06141a] to-[#040c12]' 
+                      : isExpired 
+                      ? 'border-red-500/20 from-[#14080c] to-[#0a0406]'
+                      : 'border-white/10 hover:border-cyan-500/40 from-[#091024] to-[#050914]'
+                  }`}
                 >
-                  <Play className="w-4 h-4 fill-current" />
-                  <span>Làm Bài Kiểm Tra Này Ngay</span>
-                </button>
-              </div>
-            ))}
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="font-extrabold text-sm text-white leading-relaxed">{asg.title}</h3>
+                    {isCompleted ? (
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0 flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3" />
+                        <span>HOÀN THÀNH ({completedRecord.score10}/10)</span>
+                      </span>
+                    ) : isExpired ? (
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-500/20 text-rose-300 border border-rose-500/30 shrink-0 flex items-center gap-1">
+                        <AlertTriangle className="w-3 h-3" />
+                        <span>ĐÃ HẾT HẠN</span>
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">
+                        Đang Mở
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-between text-xs text-slate-400 pt-2 border-t border-white/5">
+                    <span className="flex items-center gap-1">
+                      <FileText className="w-3.5 h-3.5 text-cyan-400" /> {asg.questions?.length || 0} câu hỏi
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Clock className="w-3.5 h-3.5 text-amber-400" /> {asg.timeLimit || 15} phút
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Calendar className="w-3.5 h-3.5 text-indigo-400" /> 
+                      {isUnlimited ? 'Không giới hạn' : `Hạn: ${asg.deadline}`}
+                    </span>
+                  </div>
+
+                  {isCompleted ? (
+                    <button
+                      onClick={() => handleStartExam(asg)}
+                      className="w-full py-3 rounded-2xl bg-emerald-600/30 hover:bg-emerald-600/40 text-emerald-300 font-extrabold text-xs border border-emerald-500/30 transition flex items-center justify-center gap-2 cursor-pointer shadow-md"
+                    >
+                      <Eye className="w-4 h-4" />
+                      <span>Xem Lại Bài Đã Nộp &amp; Lời Giải</span>
+                    </button>
+                  ) : isExpired ? (
+                    <button
+                      disabled
+                      className="w-full py-3 rounded-2xl bg-white/5 text-slate-500 font-bold text-xs border border-white/5 flex items-center justify-center gap-2 cursor-not-allowed"
+                    >
+                      <Lock className="w-4 h-4" />
+                      <span>Đã Quá Hạn Nộp Bài</span>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleStartExam(asg)}
+                      className="w-full py-3 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-black text-xs shadow-lg shadow-cyan-500/20 transition flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <Play className="w-4 h-4 fill-current" />
+                      <span>Làm Bài Kiểm Tra Này Ngay</span>
+                    </button>
+                  )}
+                </div>
+              );
+            })}
           </div>
         ) : (
           <div className="glass p-12 rounded-3xl border border-white/10 text-center space-y-3">

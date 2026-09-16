@@ -3,13 +3,13 @@ import {
   User, Mail, Lock, Target, GraduationCap, X, CheckCircle2,
   AlertCircle, Save, RefreshCw, Eye, EyeOff, RotateCcw,
   TrendingUp, Calendar, Clock, MessageSquare, Brain, ChevronRight,
-  Sparkles, Flame, Award, Bell
+  Sparkles, Flame, Award, Bell, LogOut
 } from 'lucide-react';
 import axios from 'axios';
 
 const API = '/api';
 
-export default function UserProfileModal({ isOpen, onClose, currentUser, onProfileUpdate }) {
+export default function UserProfileModal({ isOpen, onClose, currentUser, onProfileUpdate, onLogout }) {
   const [profileForm, setProfileForm] = useState({
     fullname: '', email: '', grade: '12', target_score: 7.0, avatar_seed: ''
   });
@@ -318,14 +318,14 @@ export default function UserProfileModal({ isOpen, onClose, currentUser, onProfi
                 <p className="text-[11px] text-slate-500 mt-1.5">Tên này sẽ hiển thị trên bảng xếp hạng</p>
               </div>
 
-              {/* Khối lớp & Điểm mục tiêu */}
-              <div className="grid grid-cols-2 gap-3 pt-1">
-                <div>
-                  <label className="text-xs font-bold text-slate-300 mb-1.5 block">Khối lớp</label>
+              {/* Khối lớp */}
+              <div className="pt-1">
+                <label className="text-xs font-bold text-slate-300 mb-1.5 block">Khối lớp học tập</label>
+                {currentUser?.role === 'admin' ? (
                   <select
                     value={profileForm.grade}
                     onChange={e => setFieldProfile('grade', e.target.value)}
-                    className="w-full bg-black/40 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:border-blue-500 cursor-pointer"
+                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-blue-500 cursor-pointer"
                   >
                     <option value="6" className="bg-[#0b0f19]">Lớp 6</option>
                     <option value="7" className="bg-[#0b0f19]">Lớp 7</option>
@@ -335,19 +335,22 @@ export default function UserProfileModal({ isOpen, onClose, currentUser, onProfi
                     <option value="11" className="bg-[#0b0f19]">Lớp 11</option>
                     <option value="12" className="bg-[#0b0f19]">Lớp 12</option>
                   </select>
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-slate-300 mb-1.5 block">Mục tiêu THPT</label>
-                  <select
-                    value={profileForm.target_score}
-                    onChange={e => setFieldProfile('target_score', e.target.value)}
-                    className="w-full bg-black/40 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:border-blue-500 cursor-pointer"
-                  >
-                    {[6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10].map(s => (
-                      <option key={s} value={s} className="bg-[#0b0f19]">{s} điểm</option>
-                    ))}
-                  </select>
-                </div>
+                ) : (
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between bg-black/40 border border-emerald-500/30 rounded-xl px-4 py-3 text-sm text-white">
+                      <div className="flex items-center gap-2">
+                        <GraduationCap className="w-4 h-4 text-emerald-400" />
+                        <span className="font-bold text-emerald-300">Khối Lớp {profileForm.grade || currentUser?.grade || '11'}</span>
+                      </div>
+                      <span className="text-[11px] text-slate-400 font-semibold flex items-center gap-1">
+                        <Lock className="w-3.5 h-3.5 text-emerald-400" /> Cố định theo tài khoản
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-slate-400 italic">
+                      Khối lớp gắn liền với dữ liệu năng lực IRT và lộ trình cá nhân hóa. Liên hệ Thầy/Cô nếu cần đổi khối.
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Submit Save Button */}
@@ -359,6 +362,21 @@ export default function UserProfileModal({ isOpen, onClose, currentUser, onProfi
                 {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 Lưu thay đổi
               </button>
+
+              {/* Logout / Switch Account Button */}
+              {onLogout && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    onLogout();
+                  }}
+                  className="w-full mt-2 py-3 px-4 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 hover:text-rose-200 border border-rose-500/20 font-bold text-sm transition duration-200 flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Đăng Xuất / Chuyển Tài Khoản Khác</span>
+                </button>
+              )}
             </form>
           </div>
 

@@ -124,7 +124,7 @@ def build_12_core_topics_doc():
     r_main.font.bold = True
     r_main.font.color.rgb = RGBColor(0x0F, 0x36, 0x66)
 
-    r_proj = p_title.add_run("Dự án: Hệ thống học tập thích ứng cá nhân hóa hỗ trợ tự học tiếng Anh cho học sinh THPT dựa trên mô hình IRT, thuật toán SM-2 và Trí tuệ nhân tạo\nWebsite: https://tuananhstudio.top")
+    r_proj = p_title.add_run("Dự án: Hệ thống học tập thích ứng cá nhân hóa hỗ trợ tự học tiếng Anh cho học sinh THPT dựa trên mô hình IRT, thuật toán SM-2 và Trí tuệ nhân tạo\nWebsite: https://examoraai.com")
     r_proj.font.size = Pt(13)
     r_proj.font.italic = True
 
@@ -149,7 +149,7 @@ def build_12_core_topics_doc():
     add_header(doc, "3. TÍNH THỰC TIỄN (PRACTICAL EFFECTIVENESS)", level=1)
     add_bullet_point(doc, " Giải quyết triệt để 3 rào cản nhức nhối của học sinh phổ thông: (1) Quá tải bài tập không vừa sức; (2) Học vẹt từ vựng rồi quên 80% sau 1-2 tuần; (3) E ngại nuốt âm đuôi và thiếu môi trường tương tác 1-1.", "Giải quyết đúng vấn đề thực tế: ")
     add_bullet_point(doc, " Kết quả thực nghiệm 120 học sinh trong 8 tuần cho thấy nhóm dùng hệ thống tăng trung bình +2.45 điểm (gấp 3.3 lần nhóm đối chứng), nhớ từ vựng sau 14 ngày đạt 84.5% (tăng +105%), tiết kiệm 52.4% thời gian làm bài kiểm tra.", "Hiệu quả thực chứng vượt bậc: ")
-    add_bullet_point(doc, " Sản phẩm không nằm trên giấy tờ lý thuyết mà đã chạy thực tế trực tuyến 100% tại https://tuananhstudio.top với độ trễ phản hồi dưới 0.5 giây.", "Sản phẩm hoàn thiện, sẵn sàng vận hành: ")
+    add_bullet_point(doc, " Sản phẩm không nằm trên giấy tờ lý thuyết mà đã chạy thực tế trực tuyến 100% tại https://examoraai.com với độ trễ phản hồi dưới 0.5 giây.", "Sản phẩm hoàn thiện, sẵn sàng vận hành: ")
 
     # 4. TÍNH CỘNG ĐỒNG
     add_header(doc, "4. TÍNH CỘNG ĐỒNG VÀ NHÂN VĂN (COMMUNITY IMPACT)", level=1)
@@ -163,7 +163,7 @@ def build_12_core_topics_doc():
     add_bullet_point(doc, " Sĩ số lớp đông (40-45 học sinh/lớp) khiến việc dạy học mang tính đồng loạt cào bằng; học sinh khá tốn thời gian vào bài dễ, học sinh yếu bị ngợp trước bài khó. Giáo viên không thể kèm cặp sát sao từng lỗ hổng ngữ pháp riêng lẻ.", "Rào cản về sĩ số và thời gian: ")
     add_bullet_point(doc, " Học sinh chủ yếu chép danh sách từ để kiểm tra 15 phút rồi quên 70-80% chỉ sau 1-2 tuần do thiếu cơ chế lặp lại ngắt quãng.", "Thói quen học vẹt mau quên: ")
     add_bullet_point(doc, " Đa số học sinh rất e ngại phần phát âm vì hay bị nuốt âm đuôi và thiếu môi trường luyện tập đối thoại 1-1 thường xuyên.", "Tâm lý e ngại phát âm: ")
-    add_paragraph_text(doc, "Xuất phát từ những trăn trở thực tiễn đó, nhóm chúng em đã nghiên cứu và phát triển dự án AI English Mentor.")
+    add_paragraph_text(doc, "Xuất phát từ những trăn trở thực tiễn đó, nhóm chúng em đã nghiên cứu và phát triển dự án Examora AI.")
 
     # 6. MỤC ĐÍCH NGHIÊN CỨU
     add_header(doc, "6. MỤC ĐÍCH NGHIÊN CỨU (RESEARCH OBJECTIVES)", level=1)
@@ -181,7 +181,7 @@ def build_12_core_topics_doc():
 
     # 8. GIẢ THUYẾT KHOA HỌC
     add_header(doc, "8. GIẢ THUYẾT KHOA HỌC (SCIENTIFIC HYPOTHESES)", level=1)
-    add_paragraph_text(doc, "• Giả thuyết H1 (Về điểm số): Học sinh sử dụng hệ thống AI English Mentor (Nhóm Thực nghiệm) sẽ có mức tăng trưởng điểm số kiểm tra và năng lực Theta cao hơn có ý nghĩa thống kê (p < 0.05) so với học sinh học theo phương pháp truyền thống (Nhóm Đối chứng).")
+    add_paragraph_text(doc, "• Giả thuyết H1 (Về điểm số): Học sinh sử dụng hệ thống Examora AI (Nhóm Thực nghiệm) sẽ có mức tăng trưởng điểm số kiểm tra và năng lực Theta cao hơn có ý nghĩa thống kê (p < 0.05) so với học sinh học theo phương pháp truyền thống (Nhóm Đối chứng).")
     add_paragraph_text(doc, "• Giả thuyết H2 (Về trí nhớ từ vựng): Tỷ lệ ghi nhớ từ vựng sau 14 ngày của nhóm sử dụng Flashcards SM-2 đạt trên 75%, cao hơn ít nhất 30% so với nhóm đối chứng học truyền thống.")
     add_paragraph_text(doc, "• Giả thuyết H3 (Về thời gian đánh giá): Bài kiểm tra thích ứng CAT dựa trên IRT giảm ít nhất 40% thời gian làm bài so với bài thi 50 câu cố định mà vẫn duy trì sai số ước lượng chuẩn SEM < 0.30.")
 

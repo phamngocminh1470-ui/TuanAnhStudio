@@ -204,6 +204,12 @@ async def test_api_connection(provider: str, key: str) -> dict:
                     latency = int((time.time() - start_t) * 1000)
                     data = res.json()
                     reply = data["content"][0]["text"].strip()
+                    return {"status": "success", "latency_ms": latency, "model": "Claude 3.7 / 3.5 Sonnet", "reply": reply}
+                elif "credit balance is too low" in res.text.lower():
+                    return {
+                        "status": "error",
+                        "message": "Khóa API Claude CHÍNH XÁC 100%! Tuy nhiên tài khoản Anthropic Console của bạn đang có số dư $0.00 (chưa nạp credit). Bạn hãy nạp $5 tại mục Plans & Billing trên Anthropic Console, hoặc dùng Claude 3.7 Sonnet qua OpenRouter dễ hơn nhiều nhé!"
+                    }
                 else:
                     return {"status": "error", "message": f"Anthropic Claude báo lỗi ({res.status_code}): {res.text[:200]}"}
 

@@ -121,20 +121,20 @@ export default function InteractiveMarqueeBanner({ onNavigate, onOpenPhotoSolver
       <div
         key={idx}
         onClick={item.action}
-        className="group relative flex items-center gap-3.5 px-4 py-3 rounded-2xl bg-[#090e21]/80 hover:bg-[#121a38] border border-white/10 hover:border-indigo-500/40 transition-all duration-300 cursor-pointer shadow-lg hover:shadow-indigo-500/10 shrink-0 select-none min-w-[280px] sm:min-w-[320px] backdrop-blur-xl"
+        className="group relative flex items-center gap-3.5 px-4 py-3 rounded-2xl bg-[#10193e]/90 hover:bg-[#182558] border border-cyan-500/20 hover:border-cyan-400/50 transition-all duration-300 cursor-pointer shadow-[0_4px_20px_rgba(3,7,26,0.6)] hover:shadow-[0_0_20px_rgba(6,182,212,0.25)] shrink-0 select-none min-w-[280px] sm:min-w-[320px] backdrop-blur-xl"
       >
         <div className={`w-10 h-10 rounded-xl bg-gradient-to-tr ${item.color} flex items-center justify-center text-white shadow-md group-hover:scale-110 transition-transform shrink-0`}>
           <Icon className="w-5 h-5" />
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-white group-hover:text-indigo-300 transition-colors truncate">
+            <span className="text-xs font-bold text-slate-100 group-hover:text-cyan-300 transition-colors truncate">
               {item.title}
             </span>
           </div>
-          <p className="text-[11px] text-gray-400 truncate mt-0.5">{item.desc}</p>
+          <p className="text-[11px] text-slate-400 truncate mt-0.5">{item.desc}</p>
         </div>
-        <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full border ${item.badgeColor} shrink-0`}>
+        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${item.badgeColor} shrink-0`}>
           {item.badge}
         </span>
       </div>
@@ -144,9 +144,9 @@ export default function InteractiveMarqueeBanner({ onNavigate, onOpenPhotoSolver
   return (
     <div className="w-full py-4 space-y-3 overflow-hidden relative">
       
-      {/* Gradient mờ 2 bên mép để dải chạy vào/ra mượt mà */}
-      <div className="absolute left-0 top-0 bottom-0 w-12 md:w-24 bg-gradient-to-r from-[#050814] to-transparent z-10 pointer-events-none" />
-      <div className="absolute right-0 top-0 bottom-0 w-12 md:w-24 bg-gradient-to-l from-[#050814] to-transparent z-10 pointer-events-none" />
+      {/* Gradient mờ 2 bên mép để dải chạy vào/ra mượt mà với nền Royal Sapphire */}
+      <div className="absolute left-0 top-0 bottom-0 w-16 md:w-32 bg-gradient-to-r from-[#0c122c] to-transparent z-10 pointer-events-none" />
+      <div className="absolute right-0 top-0 bottom-0 w-16 md:w-32 bg-gradient-to-l from-[#0c122c] to-transparent z-10 pointer-events-none" />
 
       {/* Dòng 1: Chạy từ phải sang trái */}
       <div className="animate-marquee flex gap-3">

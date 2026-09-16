@@ -6,7 +6,7 @@ import {
   Search, ShieldAlert, Sparkle, Trophy, CheckSquare, MessageSquare,
   Lock, Unlock, Key, Phone, ArrowLeft, Clock, PenTool, Edit3, Share2, Megaphone,
   UserCheck, AlertTriangle, FileSpreadsheet, ExternalLink, Play, RotateCcw, X, Upload,
-  FileCheck, HelpCircle
+  FileCheck, HelpCircle, Gift
 } from 'lucide-react';
 import axios from 'axios';
 import mammoth from 'mammoth';
@@ -120,7 +120,39 @@ const INITIAL_TOPICS = [
   }
 ];
 
-// Hàm bóc tách thông minh hỗ trợ mọi định dạng đề thi
+// Hàm chuyển đổi HTML từ Mammoth (giữ lại bold/underline) sang Markdown
+function convertHtmlToMarkdown(html) {
+  if (!html) return '';
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+  const paragraphs = doc.querySelectorAll('p');
+  let markdown = '';
+  
+  paragraphs.forEach(p => {
+    let pText = '';
+    p.childNodes.forEach(node => {
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        const tagName = node.tagName.toLowerCase();
+        const text = node.textContent;
+        if (tagName === 'strong' || tagName === 'b') {
+          pText += `**${text}**`;
+        } else if (tagName === 'u' || tagName === 'ins') {
+          pText += `__${text}__`;
+        } else {
+          pText += text;
+        }
+      } else {
+        pText += node.textContent;
+      }
+    });
+    if (pText.trim().length > 0) {
+      markdown += pText.trim() + '\n';
+    }
+  });
+  return markdown;
+}
+
+// Hàm bóc tách thông minh hỗ trợ nhận diện bold/underline từ file Word
 function parseExamTextToQuestions(text) {
   if (!text || !text.trim()) return [];
   
@@ -140,36 +172,67 @@ function parseExamTextToQuestions(text) {
     let optionB = '';
     let optionC = '';
     let optionD = '';
-    let correctKey = 'A';
+    let correctKey = ''; // Bắt đầu trống để tìm qua bold/underline
 
-    // Trường hợp 4 đáp án nằm chung 1 dòng hoặc nhiều dòng
     const blockContent = rawLines.join('\n');
     
-    // Tìm đáp án đúng
-    const ansMatch = blockContent.match(/(?:Đáp án|Đáp án đúng|Answer|Key)[\s.:]+([A-D])/i);
-    if (ansMatch) {
-      correctKey = ansMatch[1].toUpperCase();
-    }
+    // Quét tìm các dòng lựa chọn A, B, C, D và nhận diện in đậm/gạch chân
+    rawLines.forEach(l => {
+      const cleanLine = l.replace(/^[\s*_~]*/, ''); // loại bỏ ký tự markdown ở đầu
+      if (/^A[.:)]/i.test(cleanLine)) {
+        optionA = cleanLine.replace(/^A[.:)]\s*/i, '').replace(/[\s*_~]*$/, '');
+        if (
+          l.includes('**A.**') || l.includes('__A.__') || 
+          l.includes('**A**') || l.includes('__A__') || 
+          l.startsWith('**A.') || l.startsWith('__A.') ||
+          l.includes('**' + optionA + '**') || l.includes('__' + optionA + '__')
+        ) {
+          correctKey = 'A';
+        }
+      }
+      else if (/^B[.:)]/i.test(cleanLine)) {
+        optionB = cleanLine.replace(/^B[.:)]\s*/i, '').replace(/[\s*_~]*$/, '');
+        if (
+          l.includes('**B.**') || l.includes('__B.__') || 
+          l.includes('**B**') || l.includes('__B__') || 
+          l.startsWith('**B.') || l.startsWith('__B.') ||
+          l.includes('**' + optionB + '**') || l.includes('__' + optionB + '__')
+        ) {
+          correctKey = 'B';
+        }
+      }
+      else if (/^C[.:)]/i.test(cleanLine)) {
+        optionC = cleanLine.replace(/^C[.:)]\s*/i, '').replace(/[\s*_~]*$/, '');
+        if (
+          l.includes('**C.**') || l.includes('__C.__') || 
+          l.includes('**C**') || l.includes('__C__') || 
+          l.startsWith('**C.') || l.startsWith('__C.') ||
+          l.includes('**' + optionC + '**') || l.includes('__' + optionC + '__')
+        ) {
+          correctKey = 'C';
+        }
+      }
+      else if (/^D[.:)]/i.test(cleanLine)) {
+        optionD = cleanLine.replace(/^D[.:)]\s*/i, '').replace(/[\s*_~]*$/, '');
+        if (
+          l.includes('**D.**') || l.includes('__D.__') || 
+          l.includes('**D**') || l.includes('__D__') || 
+          l.startsWith('**D.') || l.startsWith('__D.') ||
+          l.includes('**' + optionD + '**') || l.includes('__' + optionD + '__')
+        ) {
+          correctKey = 'D';
+        }
+      }
+    });
 
-    // Thử tách các options dạng A. B. C. D.
-    const optAMatch = blockContent.match(/(?:^|\s)(?:A[.:)]\s*)([\s\S]*?)(?=(?:\s[B-D][.:)]|$|Đáp án|Answer))/i);
-    const optBMatch = blockContent.match(/(?:^|\s)(?:B[.:)]\s*)([\s\S]*?)(?=(?:\s[C-D][.:)]|$|Đáp án|Answer))/i);
-    const optCMatch = blockContent.match(/(?:^|\s)(?:C[.:)]\s*)([\s\S]*?)(?=(?:\s[D][.:)]|$|Đáp án|Answer))/i);
-    const optDMatch = blockContent.match(/(?:^|\s)(?:D[.:)]\s*)([\s\S]*?)(?=(?:$|Đáp án|Answer))/i);
-
-    if (optAMatch && optBMatch && optCMatch && optDMatch) {
-      optionA = optAMatch[1].trim().split('\n')[0];
-      optionB = optBMatch[1].trim().split('\n')[0];
-      optionC = optCMatch[1].trim().split('\n')[0];
-      optionD = optDMatch[1].trim().split('\n')[0];
-    } else {
-      // Fallback theo từng dòng
-      rawLines.forEach(l => {
-        if (/^A[.:)]/i.test(l)) optionA = l.replace(/^A[.:)]\s*/i, '');
-        else if (/^B[.:)]/i.test(l)) optionB = l.replace(/^B[.:)]\s*/i, '');
-        else if (/^C[.:)]/i.test(l)) optionC = l.replace(/^C[.:)]\s*/i, '');
-        else if (/^D[.:)]/i.test(l)) optionD = l.replace(/^D[.:)]\s*/i, '');
-      });
+    // Nếu không nhận diện được qua bold/underline, tìm qua từ khóa "Đáp án: A" ở dưới
+    if (!correctKey) {
+      const ansMatch = blockContent.match(/(?:Đáp án|Đáp án đúng|Answer|Key)[\s.:]+([A-D])/i);
+      if (ansMatch) {
+        correctKey = ansMatch[1].toUpperCase();
+      } else {
+        correctKey = 'A'; // mặc định nếu không có gì
+      }
     }
 
     const options = [
@@ -287,12 +350,30 @@ const INITIAL_CLASSES = [
   }
 ];
 
-export default function TeacherPortal({ keys, classes: propClasses, setClasses: propSetClasses, onNavigate }) {
+export default function TeacherPortal({ keys, classes: propClasses, setClasses: propSetClasses, onNavigate, standaloneShufflerOnly, isLightMode = true, onOpenCanva }) {
+  // Nhận diện tên miền riêng tuananhstudio.top hoặc chế độ chuyên biệt chỉ xáo đề
+  const isDedicatedDomain = typeof window !== 'undefined' && window.location.hostname.includes('tuananhstudio.top');
+  const isShufflerOnlyMode = isDedicatedDomain || standaloneShufflerOnly;
+  const isLight = isShufflerOnlyMode ? (isLightMode !== undefined ? isLightMode : true) : (isLightMode || false);
+
   // ════════════════════════════════════════════════════════════════════════════
   // 0. BẢO MẬT & KÍCH HOẠT QUYỀN GIÁO VIÊN
   // ════════════════════════════════════════════════════════════════════════════
   const [isTeacherActivated, setIsTeacherActivated] = useState(() => {
+    if (typeof window !== 'undefined' && (window.location.hostname.includes('tuananhstudio.top') || standaloneShufflerOnly)) {
+      return true;
+    }
     return localStorage.getItem('is_teacher_activated') === 'true';
+  });
+  const [teacherInfo, setTeacherInfo] = useState(() => {
+    try {
+      const saved = localStorage.getItem('teacher_activation_info');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    if (typeof window !== 'undefined' && (window.location.hostname.includes('tuananhstudio.top') || standaloneShufflerOnly)) {
+      return { name: 'Thầy/Cô Giáo Viên', school: 'THPT', key: 'TUANANHSTUDIO-VIP', expiryDate: 'lifetime' };
+    }
+    return null;
   });
   const [activationInputCode, setActivationInputCode] = useState('');
   const [activationError, setActivationError] = useState('');
@@ -308,67 +389,131 @@ export default function TeacherPortal({ keys, classes: propClasses, setClasses: 
     e.preventDefault();
     const code = activationInputCode.trim().toUpperCase();
     
+    // 1. Quét danh sách key từ localStorage
     let dynamicKeys = [];
     try {
       const saved = localStorage.getItem('admin_teacher_license_keys');
       if (saved) dynamicKeys = JSON.parse(saved);
     } catch (e) {}
 
-    const isMatchDynamicKey = dynamicKeys.some(k => k.key.toUpperCase() === code && k.status === 'active');
+    // Thêm các key mặc định để tương thích ngược
+    const defaultKeys = [
+      { key: 'GV-THPT-2026', teacherName: 'Cô Thùy Trang', school: 'THPT Hướng Dẫn KHKT', expiryDate: 'lifetime', status: 'active' },
+      { key: 'VIP-TEACHER', teacherName: 'Admin Tuấn Anh', school: 'Ban Quản Trị Hệ Thống', expiryDate: 'lifetime', status: 'active' },
+      { key: 'GV-HANOI-12', teacherName: 'Thầy Nguyễn Văn Nam', school: 'THPT Chu Văn An (Hà Nội)', expiryDate: 'lifetime', status: 'active' },
+      { key: 'ADMIN', teacherName: 'Admin Toàn Quyền', school: 'Hệ Thống', expiryDate: 'lifetime', status: 'active' }
+    ];
+
+    const allKeys = [...dynamicKeys, ...defaultKeys];
     
-    if (
-      isMatchDynamicKey ||
-      code === 'GV-THPT-2026' || 
-      code === 'VIP-TEACHER' || 
-      code === '0975711254' || 
-      code === 'TUANANH-0975711254' || 
-      code === 'GV-2026' ||
-      (code.startsWith('GV-') && code.length >= 6) ||
-      code === 'ADMIN'
-    ) {
+    // Tìm key khớp
+    const matchedKey = allKeys.find(k => k.key.toUpperCase() === code);
+    
+    if (matchedKey) {
+      if (matchedKey.status === 'locked') {
+        setActivationError("Mã key này đã bị khóa bởi Admin. Vui lòng liên hệ để mở khóa!");
+        return;
+      }
+      
+      // Kiểm tra ngày hết hạn
+      const currentDateStr = new Date().toISOString().split('T')[0];
+      if (matchedKey.expiryDate && matchedKey.expiryDate !== 'lifetime' && matchedKey.expiryDate < currentDateStr) {
+        setActivationError(`Mã key đã hết hạn sử dụng vào ngày ${matchedKey.expiryDate}! Vui lòng liên hệ Admin để gia hạn.`);
+        return;
+      }
+
       setIsTeacherActivated(true);
       localStorage.setItem('is_teacher_activated', 'true');
+      
+      const teacherObj = {
+        name: matchedKey.teacherName,
+        school: matchedKey.school,
+        key: matchedKey.key,
+        expiryDate: matchedKey.expiryDate || 'lifetime'
+      };
+      setTeacherInfo(teacherObj);
+      localStorage.setItem('teacher_activation_info', JSON.stringify(teacherObj));
       setActivationError('');
-      alert("✓ Xác thực thành công! Chào mừng Thầy/Cô đến với Cổng Quản Trị Giáo Viên THPT.");
+      alert(`✓ Xác thực thành công! Chào mừng Thầy/Cô ${matchedKey.teacherName} đến với Cổng Quản Trị Giáo Viên.`);
     } else {
-      setActivationError("Mã kích hoạt không chính xác hoặc đã bị khóa. Vui lòng liên hệ Admin qua Zalo 0975.711.254 để nhận mã miễn phí!");
+      setActivationError("Mã kích hoạt không chính xác. Vui lòng liên hệ Admin qua Zalo 0975.711.254 để nhận mã!");
     }
   };
 
-  const handleDeactivateTeacher = () => {
-    if (window.confirm("Thầy/Cô có muốn khóa phiên làm việc của Giáo Viên không?")) {
+  const handleDeactivateTeacher = async () => {
+    const ok = window.appConfirm
+      ? await window.appConfirm("Thầy/Cô có muốn khóa phiên làm việc của Giáo Viên và đăng xuất không?", "Khóa Phiên Làm Việc", { type: 'warning', confirmText: 'Khóa & Đăng Xuất' })
+      : window.confirm("Thầy/Cô có muốn khóa phiên làm việc của Giáo Viên không?");
+    if (ok) {
       setIsTeacherActivated(false);
       localStorage.removeItem('is_teacher_activated');
+      localStorage.removeItem('teacher_activation_info');
+      setTeacherInfo(null);
     }
   };
 
-  const handleSendTeacherRegistration = (e) => {
+  const handleSendTeacherRegistration = async (e) => {
     e.preventDefault();
     if (!teacherName || !teacherPhone) {
       alert("Vui lòng điền họ tên và số điện thoại / Zalo!");
       return;
     }
+    
+    // Gửi lên Backend API
+    try {
+      await axios.post(`${API_BASE}/teacher-requests`, {
+        teacher_name: teacherName.trim(),
+        phone: teacherPhone.trim(),
+        school: (teacherSchool || 'Trường THPT').trim(),
+        role_title: 'Giáo viên',
+        note: (teacherNote || '').trim()
+      });
+    } catch (err) {
+      console.warn('Lỗi API backend teacher-requests:', err);
+    }
+
+    // Lưu thông tin yêu cầu vào danh sách chờ duyệt của Admin trên local
+    try {
+      const existingReqs = JSON.parse(localStorage.getItem('admin_teacher_registration_requests') || '[]');
+      const newReq = {
+        id: 'REQ-' + Date.now(),
+        teacherName: teacherName.trim(),
+        phone: teacherPhone.trim(),
+        school: (teacherSchool || 'Trường THPT').trim(),
+        note: (teacherNote || '').trim(),
+        timestamp: new Date().toLocaleString('vi-VN'),
+        status: 'pending'
+      };
+      existingReqs.unshift(newReq);
+      localStorage.setItem('admin_teacher_registration_requests', JSON.stringify(existingReqs));
+    } catch (err) {
+      console.warn('Lỗi lưu yêu cầu giáo viên:', err);
+    }
+
+    // Tự động mở Zalo Admin
+    window.open('https://zalo.me/0975711254', '_blank');
+
     setContactSuccess(true);
-    setTimeout(() => {
-      setIsTeacherActivated(true);
-      localStorage.setItem('is_teacher_activated', 'true');
-      setShowContactModal(false);
-      setContactSuccess(false);
-      alert(`✓ Cảm ơn Thầy/Cô ${teacherName}! Hệ thống đã tự động kích hoạt tài khoản Giáo Viên cho Thầy/Cô.`);
-    }, 1500);
   };
 
   // ════════════════════════════════════════════════════════════════════════════
   // 1. TÍNH NĂNG XÁO ĐỀ THI & TẢI FILE WORD (.DOCX / .DOC / .TXT)
   // ════════════════════════════════════════════════════════════════════════════
-  const [activeSection, setActiveSection] = useState('classes'); // 'classes' | 'shuffler' | 'weekly-topic'
+  const [activeSection, setActiveSection] = useState(isShufflerOnlyMode ? 'shuffler' : 'classes'); // 'classes' | 'shuffler' | 'weekly-topic'
   const [rawExamInput, setRawExamInput] = useState(SAMPLE_TEACHER_EXAM);
   const [numVariants, setNumVariants] = useState(4);
+  const [shuffleQuestions, setShuffleQuestions] = useState(true);
+  const [shuffleOptions, setShuffleOptions] = useState(true);
   const [shuffledExams, setShuffledExams] = useState(null);
   const [selectedExamCode, setSelectedExamCode] = useState(null);
   const [copiedKey, setCopiedKey] = useState(false);
   const [isLoadingFile, setIsLoadingFile] = useState(false);
   const fileInputRef = useRef(null);
+
+  // Tính năng nâng cao chuyên xáo đề & ma trận đáp án
+  const [preservePassages, setPreservePassages] = useState(true);
+  const [showMasterMatrix, setShowMasterMatrix] = useState(false);
+  const [copiedMatrix, setCopiedMatrix] = useState(false);
 
   // Xử lý tải file đề thi của giáo viên lên (.docx, .doc, .txt)
   const handleUploadExamFile = async (e) => {
@@ -380,13 +525,20 @@ export default function TeacherPortal({ keys, classes: propClasses, setClasses: 
 
     try {
       if (fileName.endsWith('.docx')) {
-        // Đọc file Word .docx bằng mammoth
+        // Đọc file Word .docx bằng mammoth (chuyển sang HTML giữ định dạng)
         const arrayBuffer = await file.arrayBuffer();
-        const result = await mammoth.extractRawText({ arrayBuffer });
-        const text = result.value;
+        const result = await mammoth.convertToHtml({ 
+          arrayBuffer,
+          styleMap: [
+            "u => u",
+            "strike => del"
+          ]
+        });
+        const html = result.value;
+        const text = convertHtmlToMarkdown(html);
         setRawExamInput(text);
         const parsed = parseExamTextToQuestions(text);
-        alert(`✓ Đã tải file Word "${file.name}" thành công! Hệ thống nhận diện được ${parsed.length} câu hỏi trắc nghiệm.`);
+        alert(`✓ Đã tải file Word "${file.name}" thành công! Hệ thống nhận diện được ${parsed.length} câu hỏi trắc nghiệm (Tự động bóc tách đáp án in đậm/gạch chân).`);
       } else {
         // Đọc file .txt hoặc .doc
         const reader = new FileReader();
@@ -419,13 +571,59 @@ export default function TeacherPortal({ keys, classes: propClasses, setClasses: 
 
     for (let i = 0; i < numVariants; i++) {
       const codeStr = String(baseCode + i);
-      // Đảo thứ tự câu hỏi ngẫu nhiên
-      const shuffledQList = [...parsed].sort(() => Math.random() - 0.5);
+
+      let shuffledQList = [];
+      if (shuffleQuestions) {
+        if (preservePassages) {
+          // Nhóm các câu hỏi thuộc cùng đoạn văn đọc hiểu để không bị xé lẻ
+          const chunks = [];
+          let currentPassageChunk = null;
+
+          parsed.forEach((q) => {
+            const isPassageStart = /(?:read\s+the\s+following\s+passage|đọc\s+đoạn\s+văn|passage\s+\d+|bài\s+đọc)/i.test(q.question);
+            const isContinuation = /(?:according\s+to\s+the\s+passage|which\s+of\s+the\s+following|the\s+word\s+["'].*["']\s+in\s+paragraph|the\s+passage\s+mainly|what\s+does\s+the\s+author|inferred\s+from\s+the\s+passage)/i.test(q.question);
+
+            if (isPassageStart) {
+              if (currentPassageChunk && currentPassageChunk.length > 0) {
+                chunks.push(currentPassageChunk);
+              }
+              currentPassageChunk = [q];
+            } else if (currentPassageChunk && isContinuation) {
+              currentPassageChunk.push(q);
+            } else {
+              if (currentPassageChunk && currentPassageChunk.length > 0) {
+                chunks.push(currentPassageChunk);
+                currentPassageChunk = null;
+              }
+              chunks.push([q]);
+            }
+          });
+          if (currentPassageChunk && currentPassageChunk.length > 0) {
+            chunks.push(currentPassageChunk);
+          }
+
+          // Xáo trộn thứ tự các cụm câu hỏi
+          const shuffledChunks = [...chunks].sort(() => Math.random() - 0.5);
+          // Ghép lại thành danh sách phẳng (giữ câu chứa bài đọc ở đầu cụm)
+          shuffledQList = shuffledChunks.flatMap(chunk => {
+            if (chunk.length > 1) {
+              const first = chunk[0];
+              const rest = chunk.slice(1).sort(() => Math.random() - 0.5);
+              return [first, ...rest];
+            }
+            return chunk;
+          });
+        } else {
+          shuffledQList = [...parsed].sort(() => Math.random() - 0.5);
+        }
+      } else {
+        shuffledQList = [...parsed];
+      }
 
       const finalQuestions = shuffledQList.map((q, qIdx) => {
         const originalCorrectText = q.options.find(o => o.key === q.correctAnswer)?.text || '';
-        // Đảo thứ tự các phương án A, B, C, D
-        const shuffledOptions = [...q.options].sort(() => Math.random() - 0.5);
+        // Đảo thứ tự các phương án A, B, C, D nếu chọn shuffleOptions, ngược lại giữ nguyên
+        const shuffledOptions = shuffleOptions ? [...q.options].sort(() => Math.random() - 0.5) : [...q.options];
         const keys = ['A', 'B', 'C', 'D'];
         const mappedOptions = shuffledOptions.map((opt, optIdx) => ({
           key: keys[optIdx],
@@ -648,6 +846,81 @@ body { font-family: 'Times New Roman', serif; font-size: 13pt; line-height: 1.35
     setTimeout(() => setCopiedKey(false), 2000);
   };
 
+  // 1. Chuẩn hóa & làm sạch định dạng đề thi tự động
+  const handleAutoCleanExam = () => {
+    if (!rawExamInput || !rawExamInput.trim()) {
+      alert("Vui lòng dán hoặc tải đề thi cần chuẩn hóa trước!");
+      return;
+    }
+    let text = rawExamInput.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    let qCount = 0;
+    // Chuẩn hóa định dạng số câu: "1.", "1/", "1 -", "Question 1:", "Bài 1:" thành "Câu X:"
+    text = text.replace(/(?:^|\n)\s*(?:(?:Câu|Question|Bài)\s*\d+[\s.:]|(?:\d+)[\s.):\/-]+)/gim, () => {
+      qCount++;
+      return `\n\nCâu ${qCount}: `;
+    });
+    // Đảm bảo các phương án A., B., C., D. xuống dòng rõ ràng
+    text = text.replace(/\s+([A-D])[.:)]\s+/g, '\n$1. ');
+    // Đảm bảo đáp án xuống dòng
+    text = text.replace(/\s*(?:Đáp án|Answer|Key)[\s.:]+([A-D])/gi, '\nĐáp án: $1');
+    text = text.trim();
+    setRawExamInput(text);
+    const parsed = parseExamTextToQuestions(text);
+    alert(`✓ Đã chuẩn hóa định dạng đề thi tự động! Hệ thống nhận diện được ${parsed.length} câu hỏi trắc nghiệm chuẩn.`);
+  };
+
+  // 2. Xuất file Word riêng biệt cho Bảng Ma Trận Đáp Án Đối Chiếu Tổng Hợp
+  const handleExportMasterMatrixWord = () => {
+    if (!shuffledExams || shuffledExams.length === 0) return;
+    const totalQ = shuffledExams[0]?.questions?.length || 0;
+    let html = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head><meta charset='utf-8'><title>BẢNG MA TRẬN ĐÁP ÁN ĐỐI CHIẾU CÁC MÃ ĐỀ</title>
+<style>
+@page { size: A4; margin: 1.5cm; }
+body { font-family: 'Times New Roman', serif; font-size: 12pt; line-height: 1.3; }
+.title { text-align: center; font-weight: bold; font-size: 15pt; text-transform: uppercase; margin-bottom: 5px; }
+.sub { text-align: center; font-size: 11pt; font-style: italic; margin-bottom: 20px; }
+table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+th, td { border: 1px solid #000; padding: 6px 4px; text-align: center; font-size: 11pt; }
+th { background-color: #f2f2f2; font-weight: bold; }
+</style>
+</head>
+<body>
+<div class="title">BẢNG MA TRẬN ĐÁP ÁN TỔNG HỢP CÁC MÃ ĐỀ THI</div>
+<div class="sub">Hệ thống xáo đề tự động Examora AI • tuananhstudio.top</div>
+<table>
+  <thead>
+    <tr>
+      <th>Câu</th>
+      ${shuffledExams.map(ex => `<th>Mã ${ex.examCode}</th>`).join('')}
+    </tr>
+  </thead>
+  <tbody>
+    ${Array.from({ length: totalQ }, (_, i) => {
+      const qNum = i + 1;
+      return `<tr>
+        <td><strong>${qNum}</strong></td>
+        ${shuffledExams.map(ex => {
+          const ans = ex.answerKey.find(a => a.qNum === qNum)?.ans || '-';
+          return `<td><strong>${ans}</strong></td>`;
+        }).join('')}
+      </tr>`;
+    }).join('')}
+  </tbody>
+</table>
+</body></html>`;
+
+    const blob = new Blob(['\ufeff' + html], { type: 'application/msword;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Ma_Tran_Dap_An_Tong_Hop_${shuffledExams.length}_MaDe.doc`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   const [internalClasses, setInternalClasses] = useState(INITIAL_CLASSES);
   const classes = propClasses || internalClasses;
   const setClasses = propSetClasses || setInternalClasses;
@@ -667,6 +940,7 @@ body { font-family: 'Times New Roman', serif; font-size: 13pt; line-height: 1.35
   // Form giao bài tập mới (Tự tải file / Dán đề của giáo viên)
   const [newAssignmentTitle, setNewAssignmentTitle] = useState('');
   const [newAssignmentText, setNewAssignmentText] = useState(SAMPLE_TEACHER_EXAM);
+  const [newAssignmentDeadlineType, setNewAssignmentDeadlineType] = useState('unlimited'); // 'date' | 'unlimited'
   const [newAssignmentDeadline, setNewAssignmentDeadline] = useState('2026-10-01');
   const [newAssignmentTimeLimit, setNewAssignmentTimeLimit] = useState(15);
   const [isCreatingAssignment, setIsCreatingAssignment] = useState(false);
@@ -704,8 +978,11 @@ body { font-family: 'Times New Roman', serif; font-size: 13pt; line-height: 1.35
     setSelectedClassWorkspace(null);
   };
 
-  const handleDeleteClass = (classId) => {
-    if (window.confirm("Thầy/Cô có chắc chắn muốn xóa lớp học này không? Toàn bộ danh sách học sinh và dữ liệu lớp sẽ bị gỡ bỏ.")) {
+  const handleDeleteClass = async (classId) => {
+    const ok = window.appConfirm
+      ? await window.appConfirm("Thầy/Cô có chắc chắn muốn xóa lớp học này không? Toàn bộ danh sách học sinh và dữ liệu lớp sẽ bị gỡ bỏ.", "Xóa Lớp Học", { type: 'error', confirmText: 'Xóa Lớp' })
+      : window.confirm("Thầy/Cô có chắc chắn muốn xóa lớp học này không? Toàn bộ danh sách học sinh và dữ liệu lớp sẽ bị gỡ bỏ.");
+    if (ok) {
       setClasses(prev => prev.filter(c => c.id !== classId));
       if (selectedClassWorkspace?.id === classId) {
         setSelectedClassWorkspace(null);
@@ -775,14 +1052,15 @@ body { font-family: 'Times New Roman', serif; font-size: 13pt; line-height: 1.35
       return;
     }
 
+    const finalDeadline = newAssignmentDeadlineType === 'unlimited' ? 'unlimited' : (newAssignmentDeadline || '2026-10-01');
     const newAsg = {
       id: `asg-${Date.now()}`,
       title: newAssignmentTitle.trim(),
       questions: parsedQuestions,
-      deadline: newAssignmentDeadline || '2026-10-01',
+      deadline: finalDeadline,
       timeLimit: Number(newAssignmentTimeLimit) || 15,
       submittedCount: 0,
-      totalStudents: selectedClassWorkspace.students.length || selectedClassWorkspace.studentCount,
+      totalStudents: selectedClassWorkspace.students?.length || selectedClassWorkspace.studentCount,
       status: 'open'
     };
 
@@ -890,14 +1168,20 @@ body { font-family: 'Times New Roman', serif; font-size: 13pt; line-height: 1.35
   const [isEvaluatingSentence, setIsEvaluatingSentence] = useState(false);
   const [isEvaluatingEssay, setIsEvaluatingEssay] = useState(false);
 
-  const handleDeleteTopic = (topicId) => {
-    if (window.confirm("Thầy/Cô có chắc chắn muốn xóa chủ đề Topic này không?")) {
+  const handleDeleteTopic = async (topicId) => {
+    const ok = window.appConfirm
+      ? await window.appConfirm("Thầy/Cô có chắc chắn muốn xóa chủ đề Topic này không?", "Xóa Chủ Đề Lớp", { type: 'error', confirmText: 'Xóa Chủ Đề' })
+      : window.confirm("Thầy/Cô có chắc chắn muốn xóa chủ đề Topic này không?");
+    if (ok) {
       setTopics(prev => prev.filter(t => t.id !== topicId));
     }
   };
 
-  const handleDeleteSubmission = (topicId, submissionId) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa bài nộp này không?")) {
+  const handleDeleteSubmission = async (topicId, submissionId) => {
+    const ok = window.appConfirm
+      ? await window.appConfirm("Bạn có chắc chắn muốn xóa bài nộp này không?", "Xóa Bài Nộp", { type: 'warning', confirmText: 'Xóa Bài' })
+      : window.confirm("Bạn có chắc chắn muốn xóa bài nộp này không?");
+    if (ok) {
       setTopics(prev => prev.map(t => {
         if (t.id === topicId) {
           return { ...t, submissions: t.submissions.filter(s => s.id !== submissionId) };
@@ -1081,13 +1365,13 @@ Trả về định dạng JSON thuần túy:
   // ════════════════════════════════════════════════════════════════════════════
   if (!isTeacherActivated) {
     return (
-      <div className="max-w-4xl mx-auto space-y-8 py-10 px-4 animate-fade-in">
-        <div className="glass-card rounded-3xl p-8 md:p-12 border border-amber-500/30 bg-gradient-to-b from-[#161208] via-[#0e0c1a] to-[#070b18] text-center space-y-8 shadow-2xl relative overflow-hidden">
+      <div className="w-full max-w-5xl mx-auto space-y-8 py-6 sm:py-10 px-2 sm:px-4 animate-fade-in">
+        <div className="glass-card rounded-3xl p-6 sm:p-10 md:p-12 border border-amber-500/30 bg-gradient-to-b from-[#161208] via-[#0e0c1a] to-[#070b18] text-center space-y-8 shadow-2xl relative overflow-hidden">
           <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center mx-auto text-black shadow-xl shadow-orange-500/25">
             <Lock className="w-10 h-10 stroke-[2.5]" />
           </div>
 
-          <div className="space-y-3 max-w-2xl mx-auto">
+          <div className="space-y-3 max-w-3xl mx-auto">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-mono font-extrabold uppercase">
               <ShieldAlert className="w-4 h-4" />
               CỔNG QUẢN TRỊ BẢO MẬT DÀNH RIÊNG CHO GIÁO VIÊN THPT
@@ -1095,12 +1379,12 @@ Trả về định dạng JSON thuần túy:
             <h1 className="text-3xl md:text-5xl font-black text-white font-outfit tracking-tight">
               Yêu Cầu Kích Hoạt Quyền Giáo Viên
             </h1>
-            <p className="text-sm md:text-base text-slate-300 leading-relaxed font-normal">
+            <p className="text-sm md:text-base text-slate-300 leading-relaxed font-normal max-w-2xl mx-auto">
               Để bảo mật ngân hàng đề thi, dữ liệu điểm số và tránh học sinh can thiệp vào lớp học, khu vực này <strong>yêu cầu Thầy/Cô kích hoạt quyền truy cập</strong> trước khi sử dụng.
             </p>
           </div>
 
-          <div className="max-w-md mx-auto p-6 rounded-2xl bg-black/50 border border-white/10 space-y-4 shadow-xl">
+          <div className="max-w-lg mx-auto p-6 sm:p-7 rounded-2xl bg-black/60 border border-amber-500/30 space-y-4 shadow-2xl">
             <form onSubmit={handleVerifyTeacherCode} className="space-y-3">
               <label className="text-xs text-left font-bold text-gray-300 block">
                 🔑 Nhập Mã Kích Hoạt Giáo Viên:
@@ -1150,7 +1434,7 @@ Trả về định dạng JSON thuần túy:
               className="px-6 py-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 font-bold text-xs transition flex items-center gap-2 cursor-pointer"
             >
               <Send className="w-4 h-4 text-emerald-400" />
-              <span>Gửi Đăng Ký Cấp Quyền Tự Động</span>
+              <span>Gửi Yêu Cầu Cấp Quyền Tới Admin</span>
             </button>
 
             <button
@@ -1280,16 +1564,52 @@ Trả về định dạng JSON thuần túy:
                   <GraduationCap className="w-6 h-6 text-cyan-400" />
                   <h3 className="font-extrabold text-base text-white font-outfit">Đăng Ký Cấp Quyền Giáo Viên THPT</h3>
                 </div>
-                <button onClick={() => setShowContactModal(false)} className="text-gray-400 hover:text-white">✕</button>
+                <button onClick={() => { setShowContactModal(false); setContactSuccess(false); }} className="text-gray-400 hover:text-white">✕</button>
               </div>
 
               {contactSuccess ? (
-                <div className="p-6 text-center space-y-3 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl">
-                  <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto" />
-                  <h4 className="font-bold text-white text-base">Đã Tiếp Nhận &amp; Tự Động Kích Hoạt!</h4>
+                <div className="p-6 text-center space-y-4 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl animate-in fade-in">
+                  <div className="w-14 h-14 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/20">
+                    <CheckCircle2 className="w-8 h-8" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <h4 className="font-extrabold text-white text-base">Đã Gửi Yêu Cầu Tới Admin Thành Công!</h4>
+                    <p className="text-xs text-slate-300 leading-relaxed">
+                      Thông tin của Thầy/Cô <strong className="text-emerald-300">{teacherName}</strong> đã được chuyển tới Admin Tuấn Anh để kiểm duyệt hồ sơ.
+                    </p>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl bg-black/40 border border-amber-500/30 text-amber-200 text-xs leading-relaxed text-left space-y-1">
+                    <div className="font-bold flex items-center gap-1.5 text-amber-300">
+                      <Sparkles className="w-3.5 h-3.5" /> Hướng dẫn nhận Mã Kích Hoạt ngay:
+                    </div>
+                    <div>Thầy/Cô vui lòng nhắn tin Zalo tới số <strong>0975.711.254 (Admin Tuấn Anh)</strong> để được cấp Mã Key riêng và mở khóa quyền sử dụng.</div>
+                  </div>
+
+                  <div className="pt-2 flex flex-col sm:flex-row gap-2 justify-center">
+                    <a
+                      href="https://zalo.me/0975711254"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-5 py-2.5 rounded-xl bg-[#0068FF] hover:bg-[#0055D4] text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 transition"
+                    >
+                      <MessageSquare className="w-4 h-4" />
+                      <span>Nhắn Zalo Nhận Mã: 0975.711.254</span>
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => { setShowContactModal(false); setContactSuccess(false); }}
+                      className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-slate-200 text-xs font-bold transition cursor-pointer"
+                    >
+                      Đã Hiểu &amp; Đóng
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <form onSubmit={handleSendTeacherRegistration} className="space-y-3.5">
+                  <p className="text-xs text-slate-300">
+                    Vui lòng điền thông tin bên dưới, Admin Tuấn Anh sẽ phê duyệt và cấp Mã Key riêng cho Thầy/Cô:
+                  </p>
                   <div>
                     <label className="text-[11px] text-gray-300 font-bold block mb-1">Họ và Tên Giáo Viên: *</label>
                     <input
@@ -1327,8 +1647,8 @@ Trả về định dạng JSON thuần túy:
                   </div>
 
                   <div className="pt-2 flex justify-end gap-2">
-                    <button type="button" onClick={() => setShowContactModal(false)} className="px-4 py-2 rounded-xl bg-white/5 text-gray-300 text-xs font-bold">Đóng</button>
-                    <button type="submit" className="px-5 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-xs font-extrabold shadow">Gửi &amp; Kích Hoạt Ngay</button>
+                    <button type="button" onClick={() => setShowContactModal(false)} className="px-4 py-2 rounded-xl bg-white/5 text-gray-300 text-xs font-bold cursor-pointer">Đóng</button>
+                    <button type="submit" className="px-5 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-xs font-extrabold shadow cursor-pointer">Gửi Yêu Cầu Cho Admin</button>
                   </div>
                 </form>
               )}
@@ -1345,74 +1665,189 @@ Trả về định dạng JSON thuần túy:
   return (
     <div className="space-y-8 w-full max-w-[1600px] mx-auto px-4 md:px-8 pb-20 animate-fade-in">
       
-      {/* Top Banner */}
-      <div className="glass-card rounded-3xl p-6 md:p-8 border border-white/10 bg-gradient-to-r from-[#0c1430] via-[#070b1a] to-[#120a28] shadow-2xl flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-        <div className="space-y-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[11px] font-mono font-extrabold flex items-center gap-1.5">
-              <UserCheck className="w-3.5 h-3.5" />
-              TÀI KHOẢN GIÁO VIÊN ĐÃ XÁC THỰC
-            </span>
-            <span className="text-xs text-amber-300 font-bold bg-amber-500/10 px-2.5 py-0.5 rounded-lg border border-amber-500/20">
-              Hotline/Zalo: 0975.711.254 (Admin Tuấn Anh)
-            </span>
+      {isShufflerOnlyMode ? (
+        /* GIAO DIỆN CHUYÊN BIỆT THUẦN TÚY XÁO ĐỀ (tuananhstudio.top) */
+        <div className={`rounded-3xl p-6 md:p-8 border shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-6 transition-colors duration-200 ${
+          isLight
+            ? 'bg-white border-slate-200 text-slate-900 shadow-sm'
+            : 'glass-card border-amber-500/30 bg-gradient-to-r from-[#140b2a] via-[#090f26] to-[#07131b] shadow-2xl text-white'
+        }`}>
+          <div className="space-y-2.5">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className={`px-3 py-1 rounded-full text-[11px] font-mono font-black flex items-center gap-1.5 shadow-xs ${
+                isLight
+                  ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                  : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+              }`}>
+                <Shuffle className={`w-3.5 h-3.5 ${isLight ? 'text-amber-600' : 'text-amber-400'}`} />
+                TUANANHSTUDIO.TOP • PHẦN MỀM XÁO ĐỀ CHUYÊN NGHIỆP
+              </span>
+              <span className={`px-2.5 py-0.5 rounded-md text-[10px] font-extrabold uppercase ${
+                isLight
+                  ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                  : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+              }`}>
+                Chuẩn Bộ GD&amp;ĐT 2025
+              </span>
+              <span className={`text-xs font-bold px-2.5 py-0.5 rounded-lg border ${
+                isLight
+                  ? 'text-blue-900 bg-blue-50 border-blue-200'
+                  : 'text-cyan-300 bg-cyan-500/10 border-cyan-500/20'
+              }`}>
+                Hotline/Zalo: 0975.711.254 (Admin Tuấn Anh)
+              </span>
+            </div>
+            <h1 className={`text-2xl md:text-3xl font-black font-outfit tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
+              Phần Mềm Xáo Đề Thi Chuyên Nghiệp &amp; Tạo Ma Trận THPT
+            </h1>
+            <p className={`text-xs md:text-sm max-w-3xl font-normal leading-relaxed ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>
+              Phần mềm sư phạm chuyên dụng dành cho Giáo viên: Tải file Word (.docx) &rarr; Tự động đảo câu hỏi &amp; phương án &rarr; Bảo toàn cụm bài đọc hiểu &rarr; Xuất Bảng Ma Trận Đáp Án Đối Chiếu &amp; Tải Trọn Bộ Đề Word (.docx) chuẩn cấu trúc Bộ GD&amp;ĐT!
+            </p>
           </div>
-          <h1 className="text-2xl md:text-4xl font-black text-white font-outfit tracking-tight">
-            Cổng Giáo Viên &amp; Quản Trị Học Tập THPT
-          </h1>
-          <p className="text-xs md:text-sm text-slate-300 max-w-2xl font-normal">
-            Không gian riêng để Thầy/Cô quản lý lớp học, tự tải file đề thi (.docx / .doc / .txt) lên giao cho học sinh làm trực tuyến, xáo đề và xuất file Word / PDF chuẩn UTF-8.
-          </p>
+
+          <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+            {onOpenCanva && (
+              <button
+                type="button"
+                onClick={onOpenCanva}
+                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-extrabold text-xs shadow-md shadow-purple-500/20 transition flex items-center gap-1.5 cursor-pointer"
+              >
+                <Gift className="w-3.5 h-3.5 text-yellow-300 animate-pulse" />
+                <span>🎁 Nhận Canva Pro / Edu</span>
+              </button>
+            )}
+            <a
+              href="https://examoraai.com"
+              target="_blank"
+              rel="noreferrer"
+              className={`px-4 py-2.5 rounded-xl font-bold text-xs transition flex items-center gap-1.5 border cursor-pointer shadow-sm ${
+                isLight
+                  ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-200'
+                  : 'bg-white/10 hover:bg-white/15 text-white border-white/15'
+              }`}
+            >
+              <ExternalLink className="w-3.5 h-3.5 text-indigo-600" />
+              <span>Vào Nền Tảng Examora AI</span>
+            </a>
+          </div>
         </div>
+      ) : (
+        /* GIAO DIỆN CỔNG GIÁO VIÊN TÍCH HỢP ĐẦY ĐỦ TRÊN examoraai.com */
+        <>
+          {/* Banner Kết Nối Giữa examoraai.com & tuananhstudio.top */}
+          <div className="rounded-2xl p-4 border border-cyan-500/30 bg-gradient-to-r from-[#0d1e3a]/90 via-[#0a162b]/90 to-[#121c38]/90 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
+            <div className="flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-2xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400 shrink-0 shadow-inner">
+                <ExternalLink className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-extrabold text-white text-xs sm:text-sm">
+                    🌐 Cổng Quản Trị Giáo Viên &amp; Công Cụ Sư Phạm
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                    Tích Hợp Toàn Diện
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-300 mt-0.5">
+                  Thầy/Cô có thể thao tác trực tiếp tại đây hoặc chuyển sang tên miền riêng tuananhstudio.top để làm việc toàn màn hình mượt mà hơn.
+                </p>
+              </div>
+            </div>
 
-        <button
-          onClick={handleDeactivateTeacher}
-          className="px-3.5 py-2 rounded-xl bg-white/5 hover:bg-red-500/20 text-slate-400 hover:text-red-300 text-xs font-bold transition border border-white/10 flex items-center gap-1.5 cursor-pointer w-fit"
-          title="Khóa lại cổng giáo viên để bảo mật"
-        >
-          <Lock className="w-3.5 h-3.5" />
-          <span>Khóa Cổng GV</span>
-        </button>
-      </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <a
+                href="https://tuananhstudio.top"
+                target="_blank"
+                rel="noreferrer"
+                className="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-extrabold text-xs transition flex items-center gap-1.5 shadow-lg shadow-cyan-500/20 cursor-pointer"
+              >
+                <span>Mở Cổng Riêng tuananhstudio.top</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            </div>
+          </div>
 
-      {/* Nav Tab Switcher */}
-      <div className="flex items-center p-1.5 rounded-2xl bg-white/[0.04] border border-white/10 w-fit overflow-x-auto no-scrollbar gap-1">
-        <button
-          onClick={() => { setActiveSection('classes'); setSelectedClassWorkspace(null); setActiveTakingAssignment(null); }}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-extrabold transition cursor-pointer ${
-            activeSection === 'classes'
-              ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-black shadow-lg shadow-emerald-500/20'
-              : 'text-slate-400 hover:text-white'
-          }`}
-        >
-          <Users className="w-4 h-4" />
-          <span>Quản Lý Lớp Học &amp; Giao Bài</span>
-        </button>
+          {/* Top Banner */}
+          <div className="glass-card rounded-3xl p-6 md:p-8 border border-white/10 bg-gradient-to-r from-[#0c1430] via-[#070b1a] to-[#120a28] shadow-2xl flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[11px] font-mono font-extrabold flex items-center gap-1.5">
+                  <UserCheck className="w-3.5 h-3.5" />
+                  TÀI KHOẢN GIÁO VIÊN ĐÃ XÁC THỰC
+                </span>
+                {teacherInfo && (
+                  <span className="px-3 py-1 rounded-full bg-cyan-500/25 text-cyan-300 border border-cyan-500/30 text-[11px] font-bold">
+                    Thầy/Cô: {teacherInfo.name} ({teacherInfo.school})
+                  </span>
+                )}
+                {teacherInfo && (
+                  <span className="px-3 py-1 rounded-full bg-amber-500/25 text-amber-300 border border-amber-500/30 text-[11px] font-bold">
+                    Hạn Dùng Key: {teacherInfo.expiryDate === 'lifetime' ? 'Trọn Đời (VIP)' : teacherInfo.expiryDate}
+                  </span>
+                )}
+                <span className="text-xs text-amber-300 font-bold bg-amber-500/10 px-2.5 py-0.5 rounded-lg border border-amber-500/20">
+                  Hotline/Zalo: 0975.711.254 (Admin Tuấn Anh)
+                </span>
+              </div>
+              <h1 className="text-2xl md:text-4xl font-black text-white font-outfit tracking-tight">
+                Cổng Giáo Viên &amp; Quản Trị Học Tập THPT
+              </h1>
+              <p className="text-xs md:text-sm text-slate-300 max-w-2xl font-normal">
+                Không gian riêng để Thầy/Cô quản lý lớp học, tự tải file đề thi (.docx / .doc / .txt) lên giao cho học sinh làm trực tuyến, xáo đề và xuất file Word / PDF chuẩn UTF-8.
+              </p>
+            </div>
 
-        <button
-          onClick={() => { setActiveSection('shuffler'); setSelectedClassWorkspace(null); setActiveTakingAssignment(null); }}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-extrabold transition cursor-pointer ${
-            activeSection === 'shuffler'
-              ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-black shadow-lg shadow-amber-500/20'
-              : 'text-slate-400 hover:text-white'
-          }`}
-        >
-          <Shuffle className="w-4 h-4" />
-          <span>Công Cụ Xáo Đề Thi</span>
-        </button>
+            <button
+              onClick={handleDeactivateTeacher}
+              className="px-3.5 py-2 rounded-xl bg-white/5 hover:bg-red-500/20 text-slate-400 hover:text-red-300 text-xs font-bold transition border border-white/10 flex items-center gap-1.5 cursor-pointer w-fit"
+              title="Khóa lại cổng giáo viên để bảo mật"
+            >
+              <Lock className="w-3.5 h-3.5" />
+              <span>Khóa Cổng GV</span>
+            </button>
+          </div>
 
-        <button
-          onClick={() => { setActiveSection('weekly-topic'); setSelectedClassWorkspace(null); setActiveTakingAssignment(null); }}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-extrabold transition cursor-pointer ${
-            activeSection === 'weekly-topic'
-              ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/20'
-              : 'text-slate-400 hover:text-white'
-          }`}
-        >
-          <Edit3 className="w-4 h-4" />
-          <span>Thử Thách Tuần: Từ Vựng &amp; Viết Đoạn Văn AI</span>
-        </button>
-      </div>
+          {/* Nav Tab Switcher */}
+          <div className="flex items-center p-1.5 rounded-2xl bg-white/[0.04] border border-white/10 w-fit overflow-x-auto no-scrollbar gap-1">
+            <button
+              onClick={() => { setActiveSection('classes'); setSelectedClassWorkspace(null); setActiveTakingAssignment(null); }}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-extrabold transition cursor-pointer ${
+                activeSection === 'classes'
+                  ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-black shadow-lg shadow-emerald-500/20'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <Users className="w-4 h-4" />
+              <span>Quản Lý Lớp Học &amp; Giao Bài</span>
+            </button>
+
+            <button
+              onClick={() => { setActiveSection('shuffler'); setSelectedClassWorkspace(null); setActiveTakingAssignment(null); }}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-extrabold transition cursor-pointer ${
+                activeSection === 'shuffler'
+                  ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-black shadow-lg shadow-amber-500/20'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <Shuffle className="w-4 h-4" />
+              <span>Công Cụ Xáo Đề Thi</span>
+            </button>
+
+            <button
+              onClick={() => { setActiveSection('weekly-topic'); setSelectedClassWorkspace(null); setActiveTakingAssignment(null); }}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-extrabold transition cursor-pointer ${
+                activeSection === 'weekly-topic'
+                  ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/20'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <Edit3 className="w-4 h-4" />
+              <span>Thử Thách Tuần: Từ Vựng &amp; Viết Đoạn Văn AI</span>
+            </button>
+          </div>
+        </>
+      )}
 
       {/* ═══════════════════════════════════════════════════════════════════════ */}
       {/* SECTION 1: QUẢN LÝ LỚP HỌC & GIAO ĐỀ CỦA GIÁO VIÊN                      */}
@@ -1678,28 +2113,61 @@ Trả về định dạng JSON thuần túy:
                           />
                         </div>
 
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <label className="text-[11px] text-gray-300 font-bold block mb-1">Hạn Nộp Bài:</label>
-                            <input
-                              type="date"
-                              value={newAssignmentDeadline}
-                              onChange={(e) => setNewAssignmentDeadline(e.target.value)}
-                              className="w-full bg-black/60 border border-white/10 rounded-xl px-2 py-2 text-xs text-white focus:outline-none"
-                            />
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <label className="text-[11px] text-gray-300 font-bold block">Hạn Nộp Bài:</label>
+                            <div className="flex items-center gap-3 text-xs">
+                              <label className="flex items-center gap-1.5 cursor-pointer text-slate-300">
+                                <input
+                                  type="radio"
+                                  name="deadlineType"
+                                  checked={newAssignmentDeadlineType === 'unlimited'}
+                                  onChange={() => setNewAssignmentDeadlineType('unlimited')}
+                                  className="accent-indigo-500"
+                                />
+                                <span>Không giới hạn (Vô thời hạn)</span>
+                              </label>
+                              <label className="flex items-center gap-1.5 cursor-pointer text-slate-300">
+                                <input
+                                  type="radio"
+                                  name="deadlineType"
+                                  checked={newAssignmentDeadlineType === 'date'}
+                                  onChange={() => setNewAssignmentDeadlineType('date')}
+                                  className="accent-indigo-500"
+                                />
+                                <span>Có hạn nộp</span>
+                              </label>
+                            </div>
                           </div>
-                          <div>
-                            <label className="text-[11px] text-gray-300 font-bold block mb-1">Thời Gian Làm:</label>
-                            <select
-                              value={newAssignmentTimeLimit}
-                              onChange={(e) => setNewAssignmentTimeLimit(e.target.value)}
-                              className="w-full bg-black/60 border border-white/10 rounded-xl px-2 py-2 text-xs text-white focus:outline-none"
-                            >
-                              <option value={15}>15 Phút</option>
-                              <option value={45}>45 Phút</option>
-                              <option value={50}>50 Phút</option>
-                              <option value={60}>60 Phút</option>
-                            </select>
+
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              {newAssignmentDeadlineType === 'date' ? (
+                                <input
+                                  type="date"
+                                  value={newAssignmentDeadline}
+                                  onChange={(e) => setNewAssignmentDeadline(e.target.value)}
+                                  className="w-full bg-black/60 border border-white/10 rounded-xl px-2.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-400"
+                                />
+                              ) : (
+                                <div className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-emerald-400 font-bold text-center">
+                                  ✓ Không giới hạn thời gian nộp
+                                </div>
+                              )}
+                            </div>
+                            <div>
+                              <select
+                                value={newAssignmentTimeLimit}
+                                onChange={(e) => setNewAssignmentTimeLimit(e.target.value)}
+                                className="w-full bg-black/60 border border-white/10 rounded-xl px-2.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-400"
+                              >
+                                <option value={15}>⏱️ 15 Phút</option>
+                                <option value={45}>⏱️ 45 Phút</option>
+                                <option value={50}>⏱️ 50 Phút</option>
+                                <option value={60}>⏱️ 60 Phút</option>
+                                <option value={90}>⏱️ 90 Phút</option>
+                              </select>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -2081,29 +2549,49 @@ Trả về định dạng JSON thuần túy:
         <div className="space-y-6">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <h2 className="text-lg font-extrabold text-white font-outfit flex items-center gap-2">
-                <Shuffle className="w-5 h-5 text-amber-400" />
-                <span>Công Cụ Xáo Đề Thi &amp; Xuất File Word / In PDF</span>
-              </h2>
-              <p className="text-xs text-gray-400 mt-0.5">
-                Tải file Word (.docx / .doc) hoặc dán đề gốc $\rightarrow$ Hệ thống tự động đảo câu hỏi &amp; đáp án để tạo các mã đề kèm bảng đáp án. Xuất file Word (.doc) và in PDF chuẩn UTF-8 không lỗi font!
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className={`text-lg font-extrabold font-outfit flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                  <Shuffle className="w-5 h-5 text-amber-500 animate-spin-slow" />
+                  <span>Công Cụ Xáo Đề Thi &amp; Xuất File Word / In PDF</span>
+                </h2>
+                <span className={`px-2.5 py-0.5 text-[9px] font-black rounded-md uppercase tracking-wider shadow-xs ${
+                  isLight
+                    ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                    : 'bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 shadow-emerald-500/20'
+                }`}>
+                  Miễn phí 100% trọn đời
+                </span>
+              </div>
+              <p className={`text-xs mt-1.5 ${isLight ? 'text-slate-600' : 'text-gray-400'}`}>
+                Tải file Word (.docx / .doc) hoặc dán đề gốc &rarr; Hệ thống tự động đảo câu hỏi &amp; đáp án để tạo các mã đề kèm bảng đáp án. Xuất file Word (.doc) và in PDF chuẩn UTF-8 không lỗi font!
               </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
               {shuffledExams && (
-                <button
-                  onClick={handleExportAllWord}
-                  className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs shadow-lg shadow-indigo-500/20 transition cursor-pointer flex items-center gap-2"
-                >
-                  <Download className="w-4 h-4" />
-                  <span>Tải Trọn Bộ Tất Cả Mã Đề Word</span>
-                </button>
+                <>
+                  <button
+                    onClick={() => setShowMasterMatrix(true)}
+                    className="px-4 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-extrabold text-xs shadow-lg shadow-cyan-500/20 transition cursor-pointer flex items-center gap-2"
+                    title="Mở bảng ma trận đáp án đối chiếu tất cả mã đề để chấm điểm nhanh"
+                  >
+                    <FileSpreadsheet className="w-4 h-4" />
+                    <span>📊 Ma Trận Đáp Án</span>
+                  </button>
+
+                  <button
+                    onClick={handleExportAllWord}
+                    className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs shadow-lg shadow-indigo-500/20 transition cursor-pointer flex items-center gap-2"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>Tải Trọn Bộ Word</span>
+                  </button>
+                </>
               )}
 
               <button
                 onClick={handleShuffleExam}
-                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-extrabold text-xs shadow-lg shadow-orange-500/25 transition cursor-pointer flex items-center gap-2"
+                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-xs shadow-lg shadow-orange-500/25 transition cursor-pointer flex items-center gap-2"
               >
                 <Shuffle className="w-4 h-4" />
                 <span>Xáo Đề &amp; Sinh {numVariants} Mã Đề Ngay</span>
@@ -2114,35 +2602,62 @@ Trả về định dạng JSON thuần túy:
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Cột Trái: Tải File Lên Hoặc Dán Đề Gốc */}
             <div className="lg:col-span-5 space-y-4">
-              <div className="glass p-5 rounded-2xl border border-white/10 space-y-3.5">
+              <div className={`p-5 rounded-2xl border space-y-3.5 ${
+                isLight ? 'bg-white border-slate-200 shadow-sm text-slate-900' : 'glass border-white/10 text-white'
+              }`}>
                 
                 {/* Thanh Tiêu Đề & Nút Tải File */}
-                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
-                  <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                    <FileText className="w-4 h-4 text-amber-400" /> Đề Thi Gốc Của Giáo Viên:
+                <div className={`flex flex-wrap items-center justify-between gap-2 pb-3 border-b ${
+                  isLight ? 'border-slate-200' : 'border-white/10'
+                }`}>
+                  <span className={`text-xs font-bold flex items-center gap-1.5 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                    <FileText className="w-4 h-4 text-amber-500" /> Đề Thi Gốc Của Giáo Viên:
                   </span>
 
-                  {/* NÚT TẢI FILE WORD (.DOCX / .DOC / .TXT) NỔI BẬT */}
-                  <label className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-black text-xs transition flex items-center gap-1.5 cursor-pointer shadow-md shadow-orange-500/20">
-                    <Upload className="w-3.5 h-3.5" />
-                    <span>{isLoadingFile ? 'Đang Đọc File...' : '📁 Tải File Đề (.docx / .doc / .txt)'}</span>
-                    <input 
-                      ref={fileInputRef}
-                      type="file" 
-                      accept=".docx,.doc,.txt" 
-                      onChange={handleUploadExamFile} 
-                      className="hidden" 
-                    />
-                  </label>
+                  <div className="flex items-center gap-2">
+                    {/* NÚT CHUẨN HÓA ĐỊNH DẠNG ĐỀ TỰ ĐỘNG */}
+                    <button
+                      type="button"
+                      onClick={handleAutoCleanExam}
+                      className={`px-2.5 py-1.5 rounded-xl font-bold text-[11px] transition flex items-center gap-1.5 cursor-pointer border shadow-xs ${
+                        isLight
+                          ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-200'
+                          : 'bg-white/10 hover:bg-white/15 text-slate-200 hover:text-white border-white/10'
+                      }`}
+                      title="Tự động chuẩn hóa số thứ tự câu hỏi và tách dòng đáp án A B C D"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-cyan-500" />
+                      <span>🧹 Chuẩn Hóa Đề</span>
+                    </button>
+
+                    {/* NÚT TẢI FILE WORD (.DOCX / .DOC / .TXT) NỔI BẬT */}
+                    <label className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-xs transition flex items-center gap-1.5 cursor-pointer shadow-md shadow-orange-500/20">
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>{isLoadingFile ? 'Đang Đọc File...' : '📁 Tải File Đề'}</span>
+                      <input 
+                        ref={fileInputRef}
+                        type="file" 
+                        accept=".docx,.doc,.txt" 
+                        onChange={handleUploadExamFile} 
+                        className="hidden" 
+                      />
+                    </label>
+                  </div>
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-400">Số mã đề cần sinh:</span>
+                <div className={`space-y-3 p-3 rounded-xl border ${
+                  isLight ? 'bg-slate-50 border-slate-200' : 'bg-white/[0.02] border-white/5'
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <span className={`text-xs font-semibold ${isLight ? 'text-slate-800 font-bold' : 'text-slate-300'}`}>Số mã đề cần sinh:</span>
                     <select
                       value={numVariants}
                       onChange={(e) => setNumVariants(Number(e.target.value))}
-                      className="bg-black/50 border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none"
+                      className={`rounded-lg px-2.5 py-1 text-xs focus:outline-none border ${
+                        isLight
+                          ? 'bg-white border-slate-300 text-slate-900 shadow-xs'
+                          : 'bg-black/50 border-white/10 text-white'
+                      }`}
                     >
                       <option value={2}>2 Mã Đề (101, 102)</option>
                       <option value={4}>4 Mã Đề (101, 102, 103, 104)</option>
@@ -2151,7 +2666,62 @@ Trả về định dạng JSON thuần túy:
                     </select>
                   </div>
 
-                  <span className="text-[11px] font-mono font-bold text-emerald-400">
+                  <div className={`flex flex-wrap items-center gap-4 pt-2 border-t ${
+                    isLight ? 'border-slate-200' : 'border-white/5'
+                  }`}>
+                    <label className={`flex items-center gap-1.5 text-[11px] cursor-pointer select-none font-medium ${
+                      isLight ? 'text-slate-700 hover:text-slate-900' : 'text-slate-400 hover:text-white'
+                    }`}>
+                      <input
+                        type="checkbox"
+                        checked={shuffleQuestions}
+                        onChange={(e) => setShuffleQuestions(e.target.checked)}
+                        className={`w-3.5 h-3.5 rounded cursor-pointer ${
+                          isLight
+                            ? 'border-slate-300 bg-white text-amber-600 focus:ring-0'
+                            : 'border-white/10 bg-black text-amber-500 focus:ring-0'
+                        }`}
+                      />
+                      <span>Xáo thứ tự câu hỏi</span>
+                    </label>
+
+                    <label className={`flex items-center gap-1.5 text-[11px] cursor-pointer select-none font-medium ${
+                      isLight ? 'text-slate-700 hover:text-slate-900' : 'text-slate-400 hover:text-white'
+                    }`}>
+                      <input
+                        type="checkbox"
+                        checked={shuffleOptions}
+                        onChange={(e) => setShuffleOptions(e.target.checked)}
+                        className={`w-3.5 h-3.5 rounded cursor-pointer ${
+                          isLight
+                            ? 'border-slate-300 bg-white text-amber-600 focus:ring-0'
+                            : 'border-white/10 bg-black text-amber-500 focus:ring-0'
+                        }`}
+                      />
+                      <span>Xáo phương án (A, B, C, D)</span>
+                    </label>
+
+                    <label className={`flex items-center gap-1.5 text-[11px] cursor-pointer select-none font-bold ${
+                      isLight ? 'text-cyan-800 hover:text-cyan-900' : 'text-cyan-300 hover:text-cyan-200'
+                    }`}>
+                      <input
+                        type="checkbox"
+                        checked={preservePassages}
+                        onChange={(e) => setPreservePassages(e.target.checked)}
+                        className={`w-3.5 h-3.5 rounded cursor-pointer ${
+                          isLight
+                            ? 'border-cyan-300 bg-white text-cyan-600 focus:ring-0'
+                            : 'border-cyan-500/40 bg-black text-cyan-500 focus:ring-0'
+                        }`}
+                      />
+                      <span>Giữ cụm bài đọc hiểu (không xé lẻ)</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className={`text-xs ${isLight ? 'text-slate-500 font-medium' : 'text-gray-400'}`}>Trạng thái:</span>
+                  <span className={`text-[11px] font-mono font-bold ${isLight ? 'text-emerald-800' : 'text-emerald-400'}`}>
                     ✓ Nhận diện được: {parseExamTextToQuestions(rawExamInput).length} câu hỏi
                   </span>
                 </div>
@@ -2161,20 +2731,28 @@ Trả về định dạng JSON thuần túy:
                   value={rawExamInput}
                   onChange={(e) => setRawExamInput(e.target.value)}
                   placeholder="Dán đề thi của Thầy/Cô vào đây hoặc bấm nút 'Tải File Đề' ở trên..."
-                  className="w-full bg-black/50 border border-white/10 rounded-xl p-3.5 text-xs text-slate-200 font-mono focus:outline-none focus:border-amber-500/50 resize-none leading-relaxed"
+                  className={`w-full rounded-xl p-3.5 text-xs font-mono focus:outline-none resize-none leading-relaxed border ${
+                    isLight
+                      ? 'bg-slate-50/70 border-slate-300 text-slate-900 focus:bg-white focus:border-amber-500 focus:ring-1 focus:ring-amber-500'
+                      : 'bg-black/50 border-white/10 text-slate-200 focus:border-amber-500/50'
+                  }`}
                 />
 
-                <div className="flex justify-between items-center text-[11px] text-gray-400 pt-1">
+                <div className="flex justify-between items-center text-[11px] pt-1">
                   <button
                     onClick={() => setRawExamInput(SAMPLE_TEACHER_EXAM)}
-                    className="text-amber-400 hover:underline cursor-pointer font-semibold"
+                    className={`cursor-pointer font-bold ${
+                      isLight ? 'text-amber-800 hover:text-amber-900 hover:underline' : 'text-amber-400 hover:underline'
+                    }`}
                   >
                     Dán Đề Mẫu Chuẩn
                   </button>
 
                   <button
                     onClick={() => setRawExamInput('')}
-                    className="text-red-400 hover:underline cursor-pointer font-semibold"
+                    className={`cursor-pointer font-bold ${
+                      isLight ? 'text-red-700 hover:text-red-800 hover:underline' : 'text-red-400 hover:underline'
+                    }`}
                   >
                     Xóa Sạch Nội Dung
                   </button>
@@ -2185,10 +2763,14 @@ Trả về định dạng JSON thuần túy:
             {/* Cột Phải: Xem Mã Đề Đã Sinh & Tải Word / In PDF */}
             <div className="lg:col-span-7 space-y-4">
               {shuffledExams ? (
-                <div className="glass p-5 rounded-2xl border border-white/10 space-y-5">
-                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-4">
+                <div className={`p-5 rounded-2xl border space-y-5 ${
+                  isLight ? 'bg-white border-slate-200 shadow-sm text-slate-900' : 'glass border-white/10 text-white'
+                }`}>
+                  <div className={`flex flex-wrap items-center justify-between gap-3 pb-4 border-b ${
+                    isLight ? 'border-slate-200' : 'border-white/10'
+                  }`}>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-gray-400">Xem mã đề:</span>
+                      <span className={`text-xs font-bold ${isLight ? 'text-slate-600' : 'text-gray-400'}`}>Xem mã đề:</span>
                       <div className="flex gap-1.5">
                         {shuffledExams.map(ex => (
                           <button
@@ -2196,8 +2778,10 @@ Trả về định dạng JSON thuần túy:
                             onClick={() => setSelectedExamCode(ex.examCode)}
                             className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition cursor-pointer ${
                               selectedExamCode === ex.examCode
-                                ? 'bg-amber-500 text-black font-extrabold'
-                                : 'bg-white/5 text-gray-400 hover:text-white'
+                                ? 'bg-amber-500 text-slate-950 font-black shadow-xs'
+                                : isLight
+                                  ? 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                                  : 'bg-white/5 text-gray-400 hover:text-white'
                             }`}
                           >
                             Mã {ex.examCode}
@@ -2209,19 +2793,27 @@ Trả về định dạng JSON thuần túy:
                     <div className="flex flex-wrap items-center gap-2">
                       <button
                         onClick={() => handleExportWord(selectedExamCode)}
-                        className="px-3 py-1.5 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 text-xs font-bold border border-blue-500/40 transition flex items-center gap-1.5 cursor-pointer"
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition flex items-center gap-1.5 cursor-pointer shadow-xs ${
+                          isLight
+                            ? 'bg-blue-50 hover:bg-blue-100 text-blue-800 border-blue-200'
+                            : 'bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border-blue-500/40'
+                        }`}
                         title="Tải đề thi về dưới dạng file Microsoft Word (.doc) chuẩn tiếng Việt UTF-8"
                       >
-                        <FileText className="w-3.5 h-3.5 text-blue-400" />
+                        <FileText className={`w-3.5 h-3.5 ${isLight ? 'text-blue-600' : 'text-blue-400'}`} />
                         <span>Tải Word (.doc)</span>
                       </button>
 
                       <button
                         onClick={() => handlePrintExam(selectedExamCode)}
-                        className="px-3 py-1.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 text-xs font-bold border border-emerald-500/40 transition flex items-center gap-1.5 cursor-pointer"
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition flex items-center gap-1.5 cursor-pointer shadow-xs ${
+                          isLight
+                            ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-200'
+                            : 'bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border-emerald-500/40'
+                        }`}
                         title="In hoặc lưu file PDF đề thi này"
                       >
-                        <Printer className="w-3.5 h-3.5 text-emerald-400" />
+                        <Printer className={`w-3.5 h-3.5 ${isLight ? 'text-emerald-600' : 'text-emerald-400'}`} />
                         <span>In / PDF</span>
                       </button>
 
@@ -2237,9 +2829,13 @@ Trả về định dạng JSON thuần túy:
                           });
                           copyToClipboard(text);
                         }}
-                        className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 text-xs font-bold border border-white/10 transition flex items-center gap-1 cursor-pointer"
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition flex items-center gap-1 cursor-pointer shadow-xs ${
+                          isLight
+                            ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+                            : 'bg-white/5 hover:bg-white/10 text-gray-300 border-white/10'
+                        }`}
                       >
-                        <Copy className="w-3.5 h-3.5 text-amber-400" />
+                        <Copy className={`w-3.5 h-3.5 ${isLight ? 'text-amber-600' : 'text-amber-400'}`} />
                         <span>{copiedKey ? 'Đã Copy!' : 'Copy'}</span>
                       </button>
                     </div>
@@ -2247,13 +2843,26 @@ Trả về định dạng JSON thuần túy:
 
                   {/* Hiển thị đề thi của mã được chọn */}
                   {selectedExamCode && (
-                    <div className="max-h-[380px] overflow-y-auto space-y-4 pr-2 divide-y divide-white/5">
+                    <div className={`max-h-[380px] overflow-y-auto space-y-4 pr-2 divide-y ${
+                      isLight ? 'divide-slate-100' : 'divide-white/5'
+                    }`}>
                       {shuffledExams.find(e => e.examCode === selectedExamCode)?.questions.map((q) => (
                         <div key={q.questionNumber} className="pt-3 space-y-2 text-xs">
-                          <div className="font-bold text-white leading-relaxed">{q.questionText}</div>
-                          <div className="grid grid-cols-2 gap-2 text-slate-300">
+                          <div className={`font-bold leading-relaxed ${isLight ? 'text-slate-900' : 'text-white'}`}>{q.questionText}</div>
+                          <div className="grid grid-cols-2 gap-2">
                             {q.options.map(opt => (
-                              <div key={opt.key} className={`p-2 rounded-lg border ${opt.key === q.correctKey ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300 font-bold' : 'bg-black/30 border-white/5'}`}>
+                              <div 
+                                key={opt.key} 
+                                className={`p-2 rounded-lg border ${
+                                  opt.key === q.correctKey 
+                                    ? isLight
+                                      ? 'bg-emerald-50 border-emerald-300 text-emerald-950 font-bold shadow-xs'
+                                      : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300 font-bold'
+                                    : isLight
+                                      ? 'bg-slate-50/70 border-slate-200 text-slate-800'
+                                      : 'bg-black/30 border-white/5 text-slate-300'
+                                }`}
+                              >
                                 <span className="font-mono font-bold mr-1.5">{opt.key}.</span>
                                 <span>{opt.text}</span>
                               </div>
@@ -2265,14 +2874,18 @@ Trả về định dạng JSON thuần túy:
                   )}
                 </div>
               ) : (
-                <div className="glass p-12 rounded-2xl border border-white/10 text-center space-y-4 flex flex-col items-center justify-center min-h-[350px]">
-                  <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+                <div className={`p-12 rounded-2xl border text-center space-y-4 flex flex-col items-center justify-center min-h-[350px] ${
+                  isLight ? 'bg-white border-slate-200 shadow-sm text-slate-900' : 'glass border-white/10 text-white'
+                }`}>
+                  <div className={`w-16 h-16 rounded-2xl border flex items-center justify-center ${
+                    isLight ? 'bg-amber-100 border-amber-300 text-amber-700' : 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+                  }`}>
                     <Shuffle className="w-8 h-8" />
                   </div>
                   <div>
-                    <h4 className="font-extrabold text-base text-white">Chưa Có Mã Đề Nào Được Sinh</h4>
-                    <p className="text-xs text-gray-400 mt-1 max-w-md">
-                      Bấm nút <strong>"📁 Tải File Đề (.docx / .doc / .txt)"</strong> hoặc dán đề thi ở cột bên trái $\rightarrow$ Bấm <strong>"Xáo Đề &amp; Sinh Mã Đề"</strong> để tải file Word và in PDF tự động!
+                    <h4 className={`font-extrabold text-base ${isLight ? 'text-slate-900' : 'text-white'}`}>Chưa Có Mã Đề Nào Được Sinh</h4>
+                    <p className={`text-xs mt-1 max-w-md ${isLight ? 'text-slate-600' : 'text-gray-400'}`}>
+                      Bấm nút <strong>"📁 Tải File Đề (.docx / .doc / .txt)"</strong> hoặc dán đề thi ở cột bên trái &rarr; Bấm <strong>"Xáo Đề &amp; Sinh Mã Đề"</strong> để tải file Word và in PDF tự động!
                     </p>
                   </div>
                 </div>
@@ -2657,6 +3270,141 @@ Trả về định dạng JSON thuần túy:
         </div>
       )}
 
-</div>
+      {/* MODAL 1: BẢNG MA TRẬN ĐÁP ÁN ĐỐI CHIẾU CÁC MÃ ĐỀ */}
+      {showMasterMatrix && shuffledExams && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
+          <div className={`w-full max-w-4xl rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl relative max-h-[90vh] flex flex-col transition-colors duration-200 ${
+            isLight
+              ? 'bg-white text-slate-900 border border-slate-200 shadow-xl'
+              : 'glass-card border border-cyan-500/40 bg-[#090f26] text-white shadow-2xl'
+          }`}>
+            <div className={`flex items-center justify-between pb-4 shrink-0 border-b ${
+              isLight ? 'border-slate-200' : 'border-white/10'
+            }`}>
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${
+                  isLight ? 'bg-indigo-50 border border-indigo-200 text-indigo-600' : 'bg-cyan-500/20 border border-cyan-500/40 text-cyan-400'
+                }`}>
+                  <FileSpreadsheet className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className={`font-extrabold text-base md:text-lg font-outfit ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                    Bảng Ma Trận Đáp Án Đối Chiếu ({shuffledExams.length} Mã Đề)
+                  </h3>
+                  <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                    Đối chiếu đáp án tất cả các mã đề theo từng câu hỏi để chấm bài nhanh nhất
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowMasterMatrix(false)}
+                className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-sm cursor-pointer ${
+                  isLight ? 'bg-slate-100 hover:bg-slate-200 text-slate-600' : 'bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white'
+                }`}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Bảng dữ liệu ma trận cuộn được */}
+            <div className={`overflow-auto flex-1 rounded-2xl border ${
+              isLight ? 'border-slate-200 bg-white' : 'border-white/10 bg-black/40'
+            }`}>
+              <table className="w-full text-center border-collapse text-xs">
+                <thead className={`sticky top-0 font-bold border-b ${
+                  isLight ? 'bg-slate-100 text-slate-900 border-slate-200' : 'bg-[#0c1633] text-cyan-300 border-white/10'
+                }`}>
+                  <tr>
+                    <th className={`p-3 border-r ${isLight ? 'border-slate-200' : 'border-white/10'}`}>Câu</th>
+                    {shuffledExams.map(ex => (
+                      <th key={ex.examCode} className={`p-3 border-r font-mono ${isLight ? 'border-slate-200 text-amber-800' : 'border-white/10 text-amber-300'}`}>
+                        Mã {ex.examCode}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className={`divide-y ${isLight ? 'divide-slate-200 text-slate-800' : 'divide-white/5 text-slate-200'}`}>
+                  {Array.from({ length: shuffledExams[0]?.questions?.length || 0 }, (_, i) => {
+                    const qNum = i + 1;
+                    return (
+                      <tr key={qNum} className={`transition ${isLight ? 'hover:bg-slate-50' : 'hover:bg-white/[0.03]'}`}>
+                        <td className={`p-2.5 font-bold border-r ${isLight ? 'border-slate-200 text-slate-700' : 'border-white/10 text-slate-300'}`}>
+                          Câu {qNum}
+                        </td>
+                        {shuffledExams.map(ex => {
+                          const ans = ex.answerKey.find(a => a.qNum === qNum)?.ans || '-';
+                          return (
+                            <td key={ex.examCode} className={`p-2.5 border-r font-mono font-extrabold text-sm ${
+                              isLight ? 'border-slate-200 text-indigo-700 bg-indigo-50/40' : 'border-white/10 text-cyan-300'
+                            }`}>
+                              {ans}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Nút hành động */}
+            <div className={`flex flex-wrap items-center justify-between gap-3 pt-2 border-t shrink-0 ${
+              isLight ? 'border-slate-200' : 'border-white/10'
+            }`}>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    // Copy dạng TSV cho Excel
+                    const totalQ = shuffledExams[0]?.questions?.length || 0;
+                    let tsv = 'Câu\t' + shuffledExams.map(e => `Mã ${e.examCode}`).join('\t') + '\n';
+                    for (let q = 1; q <= totalQ; q++) {
+                      tsv += `${q}\t` + shuffledExams.map(e => e.answerKey.find(a => a.qNum === q)?.ans || '-').join('\t') + '\n';
+                    }
+                    navigator.clipboard.writeText(tsv);
+                    setCopiedMatrix(true);
+                    setTimeout(() => setCopiedMatrix(false), 2000);
+                  }}
+                  className={`px-4 py-2 rounded-xl font-bold text-xs transition flex items-center gap-2 cursor-pointer border ${
+                    isLight
+                      ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-200'
+                      : 'bg-white/10 hover:bg-white/15 text-white border-white/10'
+                  }`}
+                >
+                  <Copy className="w-3.5 h-3.5 text-amber-500" />
+                  <span>{copiedMatrix ? '✓ Đã Copy Cho Excel!' : '📋 Copy Bảng Cho Excel'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleExportMasterMatrixWord}
+                  className={`px-4 py-2 rounded-xl font-bold text-xs transition flex items-center gap-2 cursor-pointer border ${
+                    isLight
+                      ? 'bg-blue-50 hover:bg-blue-100 text-blue-800 border-blue-200'
+                      : 'bg-blue-600/30 hover:bg-blue-600/40 text-blue-300 border-blue-500/40'
+                  }`}
+                >
+                  <FileText className={`w-3.5 h-3.5 ${isLight ? 'text-blue-600' : 'text-blue-400'}`} />
+                  <span>Tải Bảng Word (.doc)</span>
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowMasterMatrix(false)}
+                className={`px-5 py-2 rounded-xl font-bold text-xs transition cursor-pointer ${
+                  isLight ? 'bg-slate-100 hover:bg-slate-200 text-slate-700' : 'bg-white/10 hover:bg-white/15 text-gray-300'
+                }`}
+              >
+                Đóng Bảng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+    </div>
   );
 }
+

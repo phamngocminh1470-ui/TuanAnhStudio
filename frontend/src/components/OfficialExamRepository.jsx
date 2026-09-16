@@ -9,7 +9,10 @@ import { COMPREHENSIVE_EXAMS_DATABASE } from '../data/officialExamsData';
 export { COMPREHENSIVE_EXAMS_DATABASE };
 export const OFFICIAL_EXAM_LIST = COMPREHENSIVE_EXAMS_DATABASE;
 
-export default function OfficialExamRepository({ onStartExam }) {
+export default function OfficialExamRepository({ onStartExam, selectedGrade = '12', currentUser }) {
+  const isStudent = currentUser && currentUser.role === 'student';
+  const effectiveGrade = isStudent ? (currentUser.grade || selectedGrade || '11') : selectedGrade;
+
   const [activeCategory, setActiveCategory] = useState('all');
   const [selectedProvince, setSelectedProvince] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -19,7 +22,20 @@ export default function OfficialExamRepository({ onStartExam }) {
   const [expandedExplanations, setExpandedExplanations] = useState({});
   const [examSubmitted, setExamSubmitted] = useState(false);
 
-  const categories = [
+  const categories = isStudent ? (
+    effectiveGrade === '11' ? [
+      { id: 'all', label: 'Tất Cả Đề Khối 11' },
+      { id: 'lop10_11', label: 'Đề Định Kỳ & Học Kỳ 11 (GDPT 2018)' },
+    ] : effectiveGrade === '10' ? [
+      { id: 'all', label: 'Tất Cả Đề Khối 10' },
+      { id: 'lop10_11', label: 'Đề Định Kỳ Lớp 10 (GDPT 2018)' },
+    ] : [
+      { id: 'all', label: 'Tất Cả Đề THPT 12' },
+      { id: 'tnthpt', label: 'Đề Bộ GD&ĐT (TN THPT)' },
+      { id: 'so_gddt', label: 'Khảo Sát Sở GD&ĐT (Lớp 12)' },
+      { id: 'dgnl', label: 'Đánh Giá Năng Lực (HSA)' }
+    ]
+  ) : [
     { id: 'all', label: 'Tất Cả Đề THPT' },
     { id: 'tnthpt', label: 'Đề Bộ GD&ĐT (TN THPT)' },
     { id: 'so_gddt', label: 'Khảo Sát Sở GD&ĐT (Lớp 12)' },
@@ -38,6 +54,12 @@ export default function OfficialExamRepository({ onStartExam }) {
   ];
 
   const filteredExams = COMPREHENSIVE_EXAMS_DATABASE.filter(item => {
+    // Nếu là học sinh, cố định chỉ xuất đề thuộc khối của học sinh đó
+    if (isStudent && effectiveGrade) {
+      if (effectiveGrade === '11' && item.grade !== '11') return false;
+      if (effectiveGrade === '10' && item.grade !== '10') return false;
+      if (effectiveGrade === '12' && item.grade && item.grade !== '12') return false;
+    }
     const matchCategory = activeCategory === 'all' || item.category === activeCategory;
     const matchProvince = selectedProvince === 'all' || item.province === selectedProvince;
     const matchQuery = item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -157,13 +179,14 @@ export default function OfficialExamRepository({ onStartExam }) {
                       Đã làm: {Object.keys(userAnswers).length} / {activeViewingExam.questions.length} câu
                     </span>
                     <button
-                      onClick={() => {
+                      onClick={async () => {
                         const answeredCount = Object.keys(userAnswers).length;
                         const totalCount = activeViewingExam.questions.length;
                         if (answeredCount < totalCount) {
-                          if (!window.confirm(`Bạn mới hoàn thành ${answeredCount}/${totalCount} câu hỏi. Bạn có chắc chắn muốn nộp bài để xem điểm và lời giải không?`)) {
-                            return;
-                          }
+                          const ok = window.appConfirm
+                            ? await window.appConfirm(`Bạn mới hoàn thành ${answeredCount}/${totalCount} câu hỏi. Bạn có chắc chắn muốn nộp bài sớm để xem điểm và lời giải chi tiết không?`, "Xác Nhận Nộp Bài Thi", { type: 'warning', confirmText: 'Nộp Bài Luôn' })
+                            : window.confirm(`Bạn mới hoàn thành ${answeredCount}/${totalCount} câu hỏi. Bạn có chắc chắn muốn nộp bài để xem điểm và lời giải không?`);
+                          if (!ok) return;
                         }
                         setExamSubmitted(true);
                         setShowAllSolutions(true);

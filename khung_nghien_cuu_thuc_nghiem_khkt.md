@@ -1,5 +1,5 @@
 # TÀI LIỆU KHUNG NGHIÊN CỨU THỰC NGHIỆM SƯ PHẠM KHKT
-**DỰ ÁN: Nền tảng Ôn Thi Tốt Nghiệp THPT Môn Tiếng Anh Thích Ứng AI (AI English Mentor 2.0)**
+**DỰ ÁN: Nền tảng Ôn Thi Tốt Nghiệp THPT Môn Tiếng Anh Thích Ứng AI (Examora AI 2.0)**
 
 ---
 
@@ -13,7 +13,7 @@
 ### 1.1. Thiết kế nghiên cứu (Research Design)
 Nghiên cứu sử dụng phương pháp **Thực nghiệm Sư phạm đối chiếu (Quasi-experimental Design)** với nhóm đối chứng và nhóm thực nghiệm độc lập.
 
-*   **Nhóm Thực nghiệm (Group A - Experimental):** Học tập và ôn luyện ngữ pháp, nghe, nói thông qua hệ thống thích ứng AI (*AI English Mentor 2.0*) 20 phút mỗi ngày, 5 ngày/tuần.
+*   **Nhóm Thực nghiệm (Group A - Experimental):** Học tập và ôn luyện ngữ pháp, nghe, nói thông qua hệ thống thích ứng AI (*Examora AI 2.0*) 20 phút mỗi ngày, 5 ngày/tuần.
 *   **Nhóm Đối chứng (Group B - Control):** Ôn tập theo phương pháp truyền thống (luyện đề trên giấy, giáo viên chữa bài trên lớp, tự học không có AI cá nhân hóa hỗ trợ) với cùng thời lượng.
 
 ### 1.2. Tiến trình thực nghiệm (8 tuần)

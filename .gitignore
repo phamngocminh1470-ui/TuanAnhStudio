@@ -48,3 +48,9 @@ yarn-error.log*
 task.md
 implementation_plan.md
 walkthrough.md
+
+# Temp / Lock files & Scratch
+~$*
+*.tmp
+*.log
+scratch/

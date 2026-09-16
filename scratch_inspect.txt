@@ -1,0 +1,276 @@
+Total paragraphs: 190
+Total tables: 6
+
+P000 | style=Normal | text: 
+P001 | style=Normal | text: MỤC LỤC
+P002 | style=Normal | text: TÓM TẮT DỰ ÁN	Trang 3
+P003 | style=Normal | text:    Tính mới	Trang 3
+P004 | style=Normal | text:    Tính khoa học	Trang 3
+P005 | style=Normal | text:    Tính thực tiễn	Trang 3
+P006 | style=Normal | text:    Tính cộng đồng	Trang 3
+P007 | style=Normal | text: A. PHẦN MỞ ĐẦU	Trang 4
+P008 | style=Normal | text:    I. Lý do chọn đề tài và ý tưởng nghiên cứu	Trang 4
+P009 | style=Normal | text:       1. Đặt vấn đề và mục đích	Trang 4
+P010 | style=Normal | text:       2. Phân tích thực trạng, nguyên nhân và hậu quả	Trang 4
+P011 | style=Normal | text:       3. Ý tưởng nghiên cứu	Trang 4
+P012 | style=Normal | text:    II. Câu hỏi và giả thiết khoa học	Trang 5
+P013 | style=Normal | text:       1. Câu hỏi nghiên cứu (Đã chuẩn hóa không dùng Yes/No)	Trang 5
+P014 | style=Normal | text:       2. Giả thiết khoa học	Trang 5
+P015 | style=Normal | text:    III. Mục tiêu và phương pháp nghiên cứu	Trang 5
+P016 | style=Normal | text:       1. Mục tiêu nghiên cứu (Tổng quát & Cụ thể)	Trang 5
+P017 | style=Normal | text:       2. Phương pháp nghiên cứu	Trang 5
+P018 | style=Normal | text:    IV. Quy trình thực hiện nghiên cứu khoa học & Bảng Timeline tiến độ	Trang 6
+P019 | style=Normal | text:    V. Tính mới và đóng góp của đề tài	Trang 6
+P020 | style=Normal | text: B. PHẦN NỘI DUNG	Trang 7
+P021 | style=Normal | text:    I. Cơ sở lý luận liên quan đến đề tài nghiên cứu	Trang 7
+P022 | style=Normal | text:    II. Cơ sở thực tiễn liên quan đến đề tài nghiên cứu	Trang 8
+P023 | style=Normal | text:    III. Đề xuất giải pháp – Trọng tâm nền tảng Examora AI	Trang 8
+P024 | style=Normal | text:       1. Các nhóm giải pháp đồng bộ & 5 Mô-đun cốt lõi	Trang 8
+P025 | style=Normal | text:       2. Tính khả thi trong thực tiễn & Kế hoạch tài chính	Trang 9
+P026 | style=Normal | text:    IV. Thống kê kết quả thực nghiệm sư phạm	Trang 10
+P027 | style=Normal | text:       1. Bảng số liệu khảo sát chất lượng đầu vào (Pre-test tương đồng)	Trang 10
+P028 | style=Normal | text:       2. Thống kê so sánh kết quả kiểm tra kiến thức sau thực nghiệm	Trang 10
+P029 | style=Normal | text:       3. Thống kê chỉ số hứng thú & sự tự tin học tập (Thang Likert)	Trang 11
+P030 | style=Normal | text:       4. Đánh giá chung về kết quả thực nghiệm	Trang 11
+P031 | style=Normal | text:    V. Hướng phát triển trong tương lai	Trang 12
+P032 | style=Normal | text: C. PHẦN KẾT LUẬN VÀ KIẾN NGHỊ	Trang 12
+P033 | style=Normal | text: D. PHẦN PHỤ LỤC	Trang 13
+P034 | style=Normal | text:    Phụ lục 1: Danh mục tài liệu tham khảo (Chuẩn APA 7th)	Trang 13
+P035 | style=Normal | text:    Phụ lục 2: Mẫu phiếu khảo sát thực nghiệm và phỏng vấn chuyên sâu	Trang 14
+P036 | style=Normal | text:    Phụ lục 3: Hình ảnh giao diện nền tảng Examora AI và Mã QR trải nghiệm	Trang 15
+THÊM POSTE TEST 
+VS 
+P037 | style=Normal | text: 
+P038 | style=Normal | text: TÓM TẮT DỰ ÁN NGHIÊN CỨU
+P039 | style=Normal | text: 1. Tính mới (Novelty): Các giải pháp học tập Tiếng Anh trực tuyến hiện nay đa phần là các kho tài liệu tĩnh, bài tập trắc nghiệm đại trà cào bằng một đề cho tất cả học sinh hoặc các ứng dụng học từ vựng thiếu cơ chế phân hóa thích ứng. Vì vậy, chúng tôi đã xây dựng nền tảng “Examora AI” – ứng dụng nghiên cứu giải pháp cá nhân hóa lộ trình học tập, chẩn đoán năng lực thực tế và tối ưu hóa việc tự học môn Tiếng Anh dành cho học sinh THPT.
+P040 | style=Normal | text: “Examora AI” là một trong những nền tảng giáo dục đầu tiên tích hợp cơ chế tự động điều chỉnh độ khó bài kiểm tra theo năng lực thực tế của người học trong thời gian thực, kết hợp chu kỳ nhắc nhở ôn tập ngắt quãng giúp khắc sâu từ vựng vào trí nhớ dài hạn và trợ lý gia sư AI đàm thoại 1:1 giải thích cặn kẽ từng lỗi sai. Khác với các phần mềm trắc nghiệm tĩnh thông thường (chủ yếu chỉ chấm đúng/sai), “Examora AI” chuyển đổi mục tiêu từ luyện đề đối phó sang thấu hiểu bản chất kiến thức, tự tin bứt phá điểm 9+. Giao diện trực quan, ngôn ngữ gần gũi giúp tăng khả năng tiếp cận và hấp dẫn học sinh THPT.
+P041 | style=Normal | text: 2. Tính khoa học (Scientific Rigor): Dự án được triển khai theo quy trình nghiên cứu khoa học chặt chẽ: khảo sát thực trạng học tập Tiếng Anh của học sinh THPT, phân tích dữ liệu, xác định rào cản, thiết kế giải pháp và thử nghiệm thực tế. Nhóm nghiên cứu vận dụng các lý thuyết khoa học nền tảng như Thuyết kiến tạo (Constructivism) của Jean Piaget và Lev Vygotsky, Thuyết học tập qua trải nghiệm (Experiential Learning Theory) của David Kolb, Thuyết Tự quyết (Self-Determination Theory) cùng các nguyên lý tâm lý nhận thức về trí nhớ lặp lại ngắt quãng của Hermann Ebbinghaus. Nhóm sử dụng phương pháp định tính và định lượng (đánh giá qua bài kiểm tra khảo sát trước và sau khi trải nghiệm) để đo lường chính xác sự thay đổi về điểm số và hứng thú học tập của học sinh. Việc tích hợp nền tảng “Examora AI” vào việc tự học và giảng dạy thể hiện sự kết hợp hài hòa giữa khoa học giáo dục và công nghệ hiện đại, phù hợp với xu hướng chuyển đổi số.
+P042 | style=Normal | text: 3. Tính thực tiễn (Practical Applicability): “Examora AI” được thiết kế để giải quyết trực tiếp một vấn đề cấp thiết trong học đường: học sinh gặp khó khăn trong việc ghi nhớ từ vựng, làm đề cào bằng chưa đúng thực lực và thiếu sự hỗ trợ gia sư 1:1 trong bối cảnh thực hiện Chương trình GDPT 2018 môn Tiếng Anh (chuẩn bị cho kỳ thi Tốt nghiệp THPT và Đánh giá năng lực). Nền tảng được thử nghiệm thực tế với kết quả khả quan: đa số học sinh ghi nhớ từ vựng tốt hơn, bứt phá điểm số bài kiểm tra và nâng cao rõ rệt sự tự tin. “Examora AI” không chỉ là một công cụ luyện thi, mà còn là một học liệu số trực quan, mở ra hướng đi mới cho việc ứng dụng công nghệ vào giáo dục cá nhân hóa trong bối cảnh Cách mạng công nghiệp 4.0.
+P043 | style=Normal | text: 4. Tính cộng đồng và nhân văn (Community Impact): “Examora AI” không chỉ là một phần mềm học tập cá nhân mà còn là nền tảng lan tỏa tri thức cộng đồng. Dự án hướng đến việc hình thành môi trường học tập thông minh, lành mạnh cho thế hệ trẻ. Dự án hoàn toàn phi lợi nhuận, mang cơ hội tiếp cận một gia sư AI chất lượng cao đến với mọi học sinh ở khắp các vùng miền mà không tốn chi phí học thêm đắt đỏ. Đồng thời, nền tảng đóng vai trò là công cụ hỗ trợ giáo viên trong công tác quản lý lớp học, giao bài tập và xáo trộn đề thi chống gian lận.
+P044 | style=Normal | text: 
+P045 | style=Normal | text: A. PHẦN MỞ ĐẦU
+P046 | style=Normal | text: I. LÝ DO CHỌN ĐỀ TÀI VÀ Ý TƯỞNG NGHIÊN CỨU
+P047 | style=Normal | text: 1. Đặt vấn đề và mục đích
+P048 | style=List Bullet | text: Bối cảnh xã hội: Trong kỷ nguyên hội nhập toàn cầu và chuyển đổi số, Tiếng Anh đóng vai trò là chiếc chìa khóa then chốt phục vụ kỳ thi Tốt nghiệp THPT, kỳ thi Đánh giá Năng lực (HSA, TSA) và xét tuyển đại học. Thế hệ Gen Z cần một phương pháp tiếp cận ngôn ngữ thông minh, linh hoạt và tiết kiệm thời gian.
+P049 | style=List Bullet | text: Vấn đề nghiên cứu: Phương pháp học tập và kiểm tra đại trà cào bằng hiện nay chưa phân hóa đúng năng lực cá nhân, kết hợp thói quen học vẹt dẫn đến hiện tượng mau quên từ vựng và thiếu sự hỗ trợ kèm cặp giải đáp chi tiết ngoài giờ học chính khóa.
+P050 | style=List Bullet | text: Mục đích: Đề tài hướng đến 4 mục đích: (1) Đổi mới cách tự học qua kiểm tra thích ứng cá nhân hóa; (2) Tối ưu hóa khả năng ghi nhớ từ vựng qua chu kỳ ngắt quãng; (3) Bình đẳng hóa cơ hội học tập bằng trợ lý gia sư AI 24/7 hoàn toàn miễn phí; (4) Cung cấp học liệu số hỗ trợ giáo viên quản lý lớp và xáo đề thi.
+P051 | style=Normal | text: 2. Phân tích thực trạng, nguyên nhân và hậu quả
+P052 | style=List Bullet | text: Thực trạng: Học sinh có xu hướng học thụ động, học vẹt để đối phó thi cử, dễ nản lòng khi gặp các bài đọc hiểu hoặc ngữ pháp phức tạp.
+P053 | style=List Bullet | text: Nguyên nhân: Xuất phát từ 3 nguyên nhân cốt lõi: (1) Đề thi định kỳ phát chung cho 40-45 học sinh gây nhàm chán cho học sinh khá và nản lòng cho học sinh yếu; (2) Thiếu phương pháp ghi nhớ khoa học dẫn đến quên 70% từ vựng sau vài ngày; (3) Sĩ số lớp đông khiến giáo viên khó kèm cặp chi tiết 1:1 trong khi chi phí học thêm ngoài trung tâm là rào cản lớn.
+P054 | style=List Bullet | text: Hậu quả: Tạo tâm lý sợ môn Tiếng Anh, hổng kiến thức căn bản và giảm hiệu quả xét tuyển đại học.
+P055 | style=Normal | text: 3. Ý tưởng nghiên cứu
+P056 | style=List Bullet | text: Từ thực tiễn: Bắt nguồn từ những trăn trở có thật trong quá trình tự học và ôn thi của học sinh THPT.
+P057 | style=List Bullet | text: Từ lý luận khoa học: Tiếp thu các lý thuyết giáo dục hiện đại về cá nhân hóa học tập và tâm lý học nhận thức trí nhớ.
+P058 | style=List Bullet | text: Từ xu hướng công nghệ: Ứng dụng Trí tuệ Nhân tạo (AI) và công nghệ web tối ưu để xây dựng nền tảng thông minh đồng hành cùng học sinh.
+P059 | style=Normal | text: II. CÂU HỎI VÀ GIẢ THIẾT KHOA HỌC
+P060 | style=Normal | text: 1. Câu hỏi nghiên cứu (Đã chuẩn hóa câu hỏi khoa học)
+P061 | style=Normal | text: 1. Thực trạng tự học, những khó khăn và nhu cầu học Tiếng Anh của học sinh THPT hiện nay như thế nào?
+P062 | style=Normal | text: 2. Mức độ tác động của việc ứng dụng nền tảng thích ứng Examora AI (với thuật toán điều chỉnh độ khó và lặp lại ngắt quãng) đến kết quả kiểm tra và khả năng ghi nhớ từ vựng của học sinh THPT như thế nào?
+P063 | style=Normal | text: 3. Trải nghiệm trợ lý Gia sư AI đàm thoại 1:1 tác động thế nào đến sự tự tin và tinh thần tự chủ học tập của học sinh?
+P064 | style=Normal | text: 2. Giả thiết khoa học
+P065 | style=List Bullet | text: Giả thiết 1 (Về năng lực học tập): Học sinh ôn luyện qua nền tảng “Examora AI” với cơ chế thích ứng và ghi nhớ ngắt quãng sẽ đạt điểm số ghi nhớ kiến thức cao hơn rõ rệt so với phương pháp đọc - chép và luyện đề truyền thống.
+P066 | style=List Bullet | text: Giả thiết 2 (Về tâm lý nhận thức): Sự đồng hành của Gia sư AI giải đáp cặn kẽ 24/7 sẽ giúp giảm áp lực tâm lý, nâng cao sự tự tin và tạo thói quen tự học tích cực cho học sinh THPT.
+P067 | style=Normal | text: III. MỤC TIÊU VÀ PHƯƠNG PHÁP NGHIÊN CỨU
+P068 | style=Normal | text: 1. Mục tiêu nghiên cứu
+P069 | style=List Bullet | text: Mục tiêu tổng quát: Đánh giá thực trạng tự học Tiếng Anh của học sinh THPT, từ đó đề xuất, xây dựng và thực nghiệm nền tảng học tập thích ứng “Examora AI” nhằm nâng cao hiệu quả tự học, tối ưu hóa trí nhớ từ vựng và hỗ trợ đổi mới phương pháp kiểm tra đánh giá.
+P070 | style=List Bullet | text: Mục tiêu cụ thể: Khảo sát thực trạng; số hóa ngân hàng câu hỏi bám sát định dạng đề mới 2026; lập trình hoàn thiện nền tảng web; tổ chức thực nghiệm đối chứng trên 100 học sinh để kiểm chứng hiệu quả sư phạm.
+P071 | style=Normal | text: 2. Phương pháp nghiên cứu
+P072 | style=List Bullet | text: 1. Phương pháp nghiên cứu lý luận: Tổng hợp, phân tích các tài liệu chuyên môn, chương trình GDPT 2018 và hệ thống lý thuyết khoa học nền tảng (Thuyết kiến tạo, Học qua trải nghiệm, Thuyết Tự quyết, Tâm lý nhận thức trí nhớ).
+P073 | style=List Bullet | text: 2. Phương pháp khảo sát định lượng: Phát phiếu khảo sát (thang đo Likert 5 mức độ) cho 100 học sinh THPT để thu thập số liệu thực trạng và đo lường sự thay đổi trước/sau thực nghiệm.
+P074 | style=List Bullet | text: 3. Phương pháp phỏng vấn sâu định tính: Phỏng vấn trực tiếp 10 học sinh và giáo viên bộ môn Tiếng Anh nhằm tìm hiểu nguyên nhân tâm lý và ghi nhận phản hồi chi tiết về trải nghiệm nền tảng.
+P075 | style=List Bullet | text: 4. Phương pháp phát triển phần mềm: Thiết kế giao diện người dùng, xây dựng hệ thống phần mềm “Examora AI” tối ưu hóa cho cả máy tính và điện thoại thông minh.
+P076 | style=List Bullet | text: 5. Phương pháp thực nghiệm đối chứng: Chia 100 học sinh có học lực tương đồng thành 2 nhóm: Nhóm Đối chứng (50 HS) học theo phương pháp truyền thống; Nhóm Thực nghiệm (50 HS) học trên Examora AI.
+P077 | style=Normal | text: IV. QUY TRÌNH THỰC HIỆN NGHIÊN CỨU KHOA HỌC & BẢNG TIẾN ĐỘ
+P078 | style=List Bullet | text: Bước 1: Nghiên cứu lý luận, khảo sát thực trạng trên 100 học sinh và phỏng vấn giáo viên.
+P079 | style=List Bullet | text: Bước 2: Thiết kế thuật toán điều chỉnh độ khó, chu kỳ nhắc nhở từ vựng ngắt quãng và kịch bản Gia sư AI.
+P080 | style=List Bullet | text: Bước 3: Lập trình hoàn thiện website “Examora AI”, chạy thử nghiệm kỹ thuật (Beta test) nhóm nhỏ 15 học sinh.
+P081 | style=List Bullet | text: Bước 4: Tiến hành thực nghiệm sư phạm đối chứng trên 100 học sinh trong 8 tuần.
+P082 | style=List Bullet | text: Bước 5: Xử lý số liệu thống kê (Pre-test, Post-test, Likert), kiểm chứng giả thiết và hoàn thiện báo cáo.
+P083 | style=Normal | text: Bảng 1.1. Kế hoạch và tiến độ thời gian thực hiện đề tài nghiên cứu (Timeline)
+P084 | style=Normal | text: V. TÍNH MỚI VÀ ĐÓNG GÓP CỦA ĐỀ TÀI
+P085 | style=List Bullet | text: So với phần mềm trắc nghiệm tĩnh: Khác với các trang web trắc nghiệm tĩnh chỉ chấm đúng/sai đại trà, “Examora AI” chuyển dịch sang kiểm tra thích ứng: tự động phân tích câu trả lời để tăng/giảm độ khó, chẩn đoán chính xác lỗ hổng ngữ pháp của từng cá nhân.
+P086 | style=List Bullet | text: So với ứng dụng từ vựng truyền thống: Thay vì học thuộc danh sách dài dặc mau quên, “Examora AI” ứng dụng nguyên lý ngắt quãng khoa học, tự động tính toán thời điểm sắp quên để nhắc ôn lại, khắc sâu từ vựng vào trí nhớ dài hạn mà không tốn công học vẹt.
+P087 | style=List Bullet | text: Đóng góp thực tiễn: Giúp học sinh chuyển từ học thụ động sang chủ động khám phá; cung cấp công cụ tạo mã lớp và xáo đề cho giáo viên; tạo nền tảng giáo dục số chất lượng cao, hoàn toàn miễn phí phục vụ cộng đồng.
+P088 | style=Normal | text: 
+P089 | style=Normal | text: B. PHẦN NỘI DUNG
+P090 | style=Normal | text: I. CƠ SỞ LÝ LUẬN LIÊN QUAN ĐẾN ĐỀ TÀI NGHIÊN CỨU
+P091 | style=List Bullet | text: 1. Cơ sở pháp lý và Đường lối chính sách: Chương trình GDPT 2018 môn Tiếng Anh chú trọng phát triển phẩm chất và năng lực giao tiếp thực chất, khuyến khích tự chủ học tập; các chỉ thị của Bộ GD&ĐT về đẩy mạnh chuyển đổi số, số hóa học liệu và ứng dụng công nghệ thông tin trong dạy và học.
+P092 | style=List Bullet | text: 2. Các lý thuyết Giáo dục và Tâm lý học nền tảng: Nền tảng vận dụng 4 lý thuyết cốt lõi: (1) Thuyết kiến tạo (Constructivism - Piaget, Vygotsky) giúp học sinh tự xây dựng tri thức qua tương tác; (2) Lý thuyết học qua trải nghiệm (Experiential Learning - D. Kolb) theo chu trình Làm bài ➔ Nhận diện lỗi ➔ Khái quát hóa ➔ Ứng dụng; (3) Thuyết Tự quyết (Self-Determination Theory - Deci & Ryan) đáp ứng nhu cầu Tự chủ, Năng lực và Gắn kết; (4) Tâm lý học nhận thức về Trí nhớ dài hạn (H. Ebbinghaus) tối ưu hóa chu kỳ lặp lại ngắt quãng củng cố dấu vết trí nhớ bền vững.
+P093 | style=List Bullet | text: 3. Lý thuyết Công nghệ Giáo dục & AI: Tận dụng Trí tuệ nhân tạo tương tác (Conversational AI) để đóng vai trò người thầy gợi mở tư duy (scaffolding) và Cơ chế học tập thích ứng (Adaptive Learning) nhằm điều chỉnh độ khó bài tập nằm đúng vùng phát triển gần nhất của học sinh.
+P094 | style=Normal | text: II. CƠ SỞ THỰC TIỄN LIÊN QUAN ĐẾN ĐỀ TÀI NGHIÊN CỨU
+P095 | style=List Bullet | text: 1. Thực trạng dạy học Tiếng Anh THPT: Việc dạy và học tại nhiều trường THPT vẫn nặng tính thuyết giảng một chiều, kiểm tra đại trà cào bằng một đề cho cả lớp; học sinh học đối phó và gặp khó khăn khi tự học ở nhà do thiếu người giải đáp lỗi sai kịp thời.
+P096 | style=List Bullet | text: 2. Thực trạng nhận thức tâm lý Gen Z: Học sinh Gen Z quen thuộc với công nghệ số, mong muốn phản hồi tức thì và lộ trình linh hoạt; dễ bị xao nhãng hoặc nản lòng nếu phải học qua tài liệu giấy dày đặc chữ hoặc bài tập quá khó so với trình độ.
+P097 | style=List Bullet | text: 3. Thực trạng ứng dụng CNTT: Công cụ hỗ trợ hiện nay chủ yếu là bài trắc nghiệm tĩnh hoặc video ngắn thiếu tương tác sâu; các ứng dụng thương mại có AI thường thu phí rất đắt hoặc không bám sát ma trận đề thi THPT của Việt Nam.
+P098 | style=Normal | text: III. ĐỀ XUẤT GIẢI PHÁP – NỀN TẢNG EXAMORA AI
+P099 | style=Normal | text: 1. Các nhóm giải pháp đồng bộ và 5 Mô-đun chức năng cốt lõi
+P100 | style=Normal | text: Để giải quyết triệt để các rào cản trên, đề tài đề xuất 3 nhóm giải pháp: (1) Từ Gia đình & Nhà trường (xây dựng thời gian biểu tự học số hóa); (2) Từ Xã hội (lan tỏa nền tảng học tập thông minh miễn phí); (3) Giải pháp đột phá trọng tâm: Xây dựng nền tảng “Examora AI” với 5 mô-đun cốt lõi:
+P101 | style=List Bullet | text:  Mô-đun 1 - Luyện thi thích ứng cá nhân hóa: Hệ thống tự động phân tích câu trả lời; nếu đúng sẽ nâng độ thử thách, nếu sai sẽ hạ độ khó câu tiếp theo để xác định chính xác năng lực thực tế.
+P102 | style=List Bullet | text:  Mô-đun 2 - Ghi nhớ từ vựng thông minh: Tự động tính toán và nhắc nhở học sinh ôn lại từ vựng SGK mới đúng thời điểm não bộ chuẩn bị quên, giúp ghi nhớ sâu và tiết kiệm 50% thời gian.
+P103 | style=List Bullet | text: Mô-đun 3 - Trợ lý Gia sư AI Socrates: Đóng vai trò như gia sư 1:1, phân tích ngữ pháp, chỉ ra bẫy trắc nghiệm và đối thoại gợi mở 24/7.
+P104 | style=List Bullet | text:  Mô-đun 4 - Chụp ảnh bài tập nhận giải thích AI: Học sinh chụp ảnh câu hỏi trong đề cương, hệ thống tự động nhận diện chữ và giải thích cặn kẽ từng bước.
+P105 | style=List Bullet | text:  Mô-đun 5 - Cổng Giáo viên & Quản lý lớp học: Hỗ trợ giáo viên tạo mã lớp học, giao bài tập tuần, theo dõi tiến độ và xáo 1 đề thi thành 4 mã đề chống gian lận trong 1 giây.
+P106 | style=Normal | text: 2. Tính khả thi trong thực tiễn và Kế hoạch tài chính
+P107 | style=List Bullet | text: Khả thi về kỹ thuật: Chạy mượt mà trên mọi trình duyệt máy tính và điện thoại thông minh bình dân qua mạng 3G/4G mà không cần cài đặt phần mềm nặng.
+P108 | style=List Bullet | text: Khả thi về sư phạm: Bám sát 100% Chương trình GDPT 2018 và cấu trúc định dạng đề thi mới của Bộ GD&ĐT.
+P109 | style=List Bullet | text: Kế hoạch tài chính & Nhân rộng: Tận dụng tối đa công nghệ mã nguồn mở miễn phí; kinh phí in ấn phiếu khảo sát nhỏ (khoảng 250.000 VNĐ) do nhóm tự chi trả, sản phẩm hoàn toàn miễn phí cho cộng đồng.
+P110 | style=Normal | text: 
+P111 | style=Normal | text: IV. THỐNG KÊ KẾT QUẢ THỰC NGHIỆM SƯ PHẠM
+P112 | style=Normal | text: Quá trình thực nghiệm sư phạm được tiến hành trong 8 tuần (từ tháng 01/2026 đến tháng 02/2026) trên mẫu gồm 100 học sinh THPT có học lực và độ tuổi tương đồng, chia thành 2 nhóm độc lập:
+P113 | style=List Bullet | text: Nhóm 1 (Nhóm Đối chứng - 50 học sinh): Học tập và ôn luyện theo phương pháp đọc - chép và làm đề giấy truyền thống.
+P114 | style=List Bullet | text: Nhóm 2 (Nhóm Thực nghiệm - 50 học sinh): Học tập và ôn luyện thông qua nền tảng thích ứng “Examora AI”.
+P115 | style=Normal | text: 4.2. Thống kê kết quả khảo sát chất lượng đầu vào (Pre-test) chứng minh tính tương đồng
+P116 | style=Normal | text: Trước khi tiến hành can thiệp thực nghiệm, cả hai nhóm 50 học sinh đều thực hiện bài khảo sát chất lượng kiến thức đầu năm (Pre-test gồm 40 câu trắc nghiệm chuẩn cấu trúc, thang điểm 10) để kiểm tra tính tương đồng về năng lực xuất phát điểm:
+P117 | style=Normal | text: Bảng 4.1. Bảng so sánh kết quả kiểm tra chất lượng đầu vào (Pre-test) giữa 2 nhóm
+P118 | style=Normal | text: Nhận xét xuất phát điểm: Số liệu Bảng 4.1 cho thấy điểm trung bình đầu vào của Nhóm Đối chứng (5.08) và Nhóm Thực nghiệm (5.12) có sự tương đồng gần như tuyệt đối (chênh lệch chỉ 0.04 điểm, ). Cơ cấu phân bổ học sinh ở các mức Yếu-TB, Khá, Giỏi giữa 2 nhóm là đồng đều, chứng minh xuất phát điểm ban đầu của 100 học sinh là tương đương nhau về mặt khoa học.
+P119 | style=Normal | text: 2. Thống kê so sánh kết quả kiểm tra kiến thức sau thực nghiệm (Post-test)
+P120 | style=Normal | text: Sau 8 tuần thực nghiệm, cả hai nhóm làm bài kiểm tra kiến thức chuẩn hóa 40 câu trắc nghiệm (Post-test thang điểm 10):
+P121 | style=Normal | text: Bảng 4.2. Bảng so sánh kết quả kiểm tra kiến thức sau thực nghiệm (Post-test)
+P122 | style=Normal | text: 
+P123 | style=Normal | text: Phân tích kết quả Nhóm 1 (Đối chứng): Điểm trung bình cộng đạt 5.12/10; tỷ lệ học sinh đạt Yếu - Trung bình chiếm tới 40.0% và Khá chiếm 40.0% (tổng cộng 80.0%). Phương pháp luyện đề giấy truyền thống khiến học sinh thụ động, khó bứt phá lên nhóm điểm Giỏi.
+P124 | style=Normal | text: Phân tích kết quả Nhóm 2 (Thực nghiệm): Khi học tập trên nền tảng “Examora AI”, tỷ lệ học sinh đạt Giỏi – Xuất sắc tăng vọt lên 64.0% (gấp hơn 3 lần Nhóm Đối chứng); tỷ lệ Yếu – Trung bình giảm mạnh từ 40.0% xuống chỉ còn 6.0%. Điểm trung bình vọt lên 8.24/10 (+3.12 điểm), khẳng định tác động sư phạm rõ rệt.
+P125 | style=Normal | text: 3. Thống kê chỉ số Hứng thú và Sự Tự tin Học tập (Thang Likert 5 mức độ)
+P126 | style=Normal | text: Khảo sát đo lường tác động tâm lý - nhận thức trên 50 học sinh Nhóm Thực nghiệm sau 8 tuần:
+P127 | style=Normal | text: Bảng 4.3. Kết quả khảo sát tâm lý – nhận thức học sinh Nhóm Thực nghiệm (N = 50)
+P128 | style=Normal | text: 
+P129 | style=Normal | text: Hình 4.3. Biểu đồ thống kê kết quả khảo sát tâm lý – nhận thức học sinh Nhóm Thực nghiệm
+P130 | style=Normal | text: Phân tích chỉ số tâm lý: Điểm trung bình Likert đạt từ 4.58 đến 4.76/5.0. Tỷ lệ học sinh lựa chọn mức Đồng ý và Rất đồng ý (mức 4 và 5) luôn đạt từ 94.0% đến 98.0%. Trong đó, tính năng Gia sư AI Socrates và Luyện thi thích ứng nhận được đánh giá cao nhất, chứng minh nền tảng đã giải quyết đúng nhu cầu tự học của học sinh.
+P131 | style=Normal | text: 4. Đánh giá Chung về Kết quả Thực nghiệm
+P132 | style=List Bullet | text: Về mặt nhận thức & điểm số: Nâng điểm trung bình từ 5.12 lên 8.24/10 (+3.12 điểm), nâng tỷ lệ học sinh Giỏi – Xuất sắc từ 20.0% lên 64.0% (gấp 3.2 lần), xóa bỏ tình trạng học vẹt thụ động.
+P133 | style=List Bullet | text: Về mặt tâm lý & hành vi: Tỷ lệ hài lòng và tự tin đạt trên 96.0%, giúp chuyển hóa giờ tự học Tiếng Anh từ áp lực thi cử thành hành trình khám phá ngôn ngữ đầy hứng khởi.
+P134 | style=Normal | text: 
+P135 | style=Normal | text: V. HƯỚNG PHÁT TRIỂN TRONG TƯƠNG LAI
+P136 | style=List Bullet | text: 1. Bổ sung nội dung & tính năng: Cập nhật ngân hàng đề thi thử mới nhất từ các Sở GD&ĐT và đề thi ĐGNL (HSA, TSA); nâng cấp phân tích âm học ngữ điệu và thư viện bài đọc phân cấp.
+P137 | style=List Bullet | text: 2. Sáng tạo nội dung truyền thông: Đẩy mạnh truyền thông video ngắn hướng dẫn học từ vựng não bộ, infographic ngữ pháp trên TikTok, Facebook, YouTube để lan tỏa tinh thần tự học số.
+P138 | style=List Bullet | text: 3. Phát triển kho học liệu số mở: Xây dựng kho video bài giảng, đề thi có giải thích chi tiết và tài liệu hướng dẫn đổi mới kiểm tra đánh giá phục vụ giáo viên và học sinh.
+P139 | style=List Bullet | text: 4. Nhân rộng mô hình học đường: Mở rộng triển khai tới nhiều trường THPT trên địa bàn TP.HCM và tích hợp vào các câu lạc bộ Tiếng Anh học đường.
+P140 | style=Normal | text: 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+VI. PHẦN KẾT LUẬN VÀ KIẾN NGHỊ
+P141 | style=Normal | text: 1. Kết luận khoa học
+P142 | style=Normal | text: Đề tài “Xây dựng hệ thống gia sư AI thích ứng (Adaptive Learning) và hỗ trợ luyện thi Tiếng Anh thông minh kết hợp công nghệ chấm phát âm và ghi nhớ dài hạn (Examora AI)” đã hoàn thành đầy đủ các mục tiêu nghiên cứu đề ra. Đề tài giải quyết triệt để sự cào bằng trong kiểm tra và tình trạng học trước quên sau của học sinh THPT. Kết quả thực nghiệm đối chứng 100 học sinh chứng minh nền tảng giúp nâng cao rõ rệt năng lực ghi nhớ từ vựng, bứt phá điểm số bài thi (+3.12 điểm) và bồi dưỡng sự tự tin ngôn ngữ. Examora AI là một giải pháp giáo dục số nhân văn, hoàn toàn miễn phí, góp phần thúc đẩy chuyển đổi số học đường.
+P143 | style=Normal | text: 2. Kiến nghị
+P144 | style=List Bullet | text: • Đối với nhà trường: Khuyến khích giáo viên và học sinh trải nghiệm Examora AI như một công cụ học tập bổ trợ trong các tiết tự học và sinh hoạt CLB Tiếng Anh.
+P145 | style=List Bullet | text: • Đối với phụ huynh: Đồng hành, động viên con em tận dụng nền tảng công nghệ giáo dục lành mạnh thay vì tạo áp lực học thêm quá tải.
+P146 | style=List Bullet | text: • Đối với học sinh: Rèn luyện tinh thần chủ động tự học, tận dụng trợ lý AI thông minh để bù đắp lỗ hổng kiến thức ngữ pháp và từ vựng.
+P147 | style=List Bullet | text: • Đối với các tổ chức giáo dục & doanh nghiệp: Hỗ trợ hạ tầng máy chủ để nền tảng mở rộng quy mô phục vụ đông đảo học sinh trên toàn quốc.
+P148 | style=Normal | text: 
+P149 | style=Normal | text:  PHẦN PHỤ LỤC
+P150 | style=Normal | text: PHỤ LỤC 1: DANH MỤC TÀI LIỆU THAM KHẢO
+P151 | style=Normal | text: Văn bản quy phạm pháp luật và Tài liệu giáo khoa chính thống
+P152 | style=Normal | text: 1.Bộ Giáo dục và Đào tạo. (2018). Chương trình Giáo dục phổ thông 2018: Chương trình môn Tiếng Anh (Ban hành kèm theo Thông tư số 32/2018/TT-BGDĐT ngày 26/12/2018). Hà Nội: NXB Giáo dục Việt Nam. https://moet.gov.vn/chuong-trinh-gdpt-2018
+P153 | style=Normal | text: 2.Bộ Giáo dục và Đào tạo. (2024). Sách giáo khoa Tiếng Anh 10, 11, 12 (Bộ sách Global Success & Friends Global). Hà Nội: NXB Giáo dục Việt Nam.
+P154 | style=Normal | text: 3.Bộ Giáo dục và Đào tạo. (2025). Cấu trúc định dạng đề thi Kỳ thi Tốt nghiệp THPT từ năm 2025 môn Tiếng Anh (Quyết định số 764/QĐ-BGDĐT). Hà Nội: Bộ GD&ĐT.
+P155 | style=Normal | text: Công trình khoa học, Lý thuyết giáo dục và Tâm lý học quốc tế
+P156 | style=Normal | text: 1.Deci, E. L., & Ryan, R. M. (2000). The "what" and "why" of goal pursuits: Human needs and the self-determination of behavior. Psychological Inquiry, 11(4), 227–268. https://doi.org/10.1207/S15327965PLI1104_01
+P157 | style=Normal | text: 2.Ebbinghaus, H. (1885). Memory: A contribution to experimental psychology (H. A. Ruger & C. E. Bussenius, Trans., 1913). New York, NY: Teachers College, Columbia University.
+P158 | style=Normal | text: 3.Kolb, D. A. (1984). Experiential learning: Experience as the source of learning and development. Englewood Cliffs, NJ: Prentice-Hall.
+P159 | style=Normal | text: 4.Lord, F. M. (1980). Applications of item response theory to practical testing problems. Hillsdale, NJ: Lawrence Erlbaum Associates.
+P160 | style=Normal | text: 5.Piaget, J. (1950). The psychology of intelligence. London: Routledge & Kegan Paul.
+P161 | style=Normal | text: 6.Vygotsky, L. S. (1978). Mind in society: The development of higher psychological processes. Cambridge, MA: Harvard University Press.
+P162 | style=Normal | text: 7.Wozniak, P. A. (1990). Optimization of learning: Application of the SuperMemo method in computer-based spaced repetition. Master's Thesis, University of Technology in Poznan.
+P163 | style=Normal | text: 3. Nguồn tài nguyên công nghệ và Cơ sở dữ liệu trực tuyến
+P164 | style=Normal | text: Examora AI Project Team. (2026). Nền tảng học tập thích ứng và luyện thi Tiếng Anh thông minh Examora AI. Truy cập từ https://examoraai.com
+P165 | style=Normal | text: FastAPI Development Team. (2025). FastAPI framework documentation: High performance modern web APIs with Python. Retrieved from https://fastapi.tiangolo.com/
+P166 | style=Normal | text: React Core Team. (2025). React: The library for web and native user interfaces. Retrieved from https://react.dev/
+P167 | style=Normal | text: 
+P168 | style=Normal | text: 
+P169 | style=Normal | text: PHỤ LỤC 2: MẪU PHIẾU KHẢO SÁT THỰC NGHIỆM VÀ PHỎNG VẤN CHUYÊN SÂU
+P170 | style=Normal | text: 1. Phiếu khảo sát tâm lý – nhận thức dành cho Học sinh THPT (Thang đo Likert 5 mức độ)
+P171 | style=Normal | text: Quy ước: 1 = Rất không đồng ý | 2 = Không đồng ý | 3 = Phân vân | 4 = Đồng ý | 5 = Rất đồng ý
+Thêm Hdan , sửa laij ô vuông
+P172 | style=Normal | text: 2. Phiếu phỏng vấn & Khảo sát chuyên sâu dành cho Giáo viên Tiếng Anh THPT
+P173 | style=List Bullet | text: • Ý kiến về Ngân hàng câu hỏi: Ngân hàng 1.000+ câu hỏi bám sát ma trận đề thi 2026 của Bộ GD&ĐT hỗ trợ rất tốt cho việc phân hóa học sinh theo từng chủ đề bài học.
+P174 | style=List Bullet | text: • Ý kiến về Công cụ Giáo viên: Tính năng xáo 1 đề thành 4 mã đề trong 1 giây giúp giáo viên tiết kiệm 80% thời gian ra đề kiểm tra 15 phút / 1 tiết và chống gian lận hiệu quả.
+P175 | style=List Bullet | text: • Ý kiến về Bảng quản trị: Bảng theo dõi tiến độ giúp giáo viên phát hiện kịp thời các chuyên đề ngữ pháp mà cả lớp còn yếu để giảng lại trọng tâm trên lớp.
+P176 | style=List Bullet | text: THAY = CÂU HỎI 
+P177 | style=List Bullet | text: TÊN GV ( K BẮT BUỘC ) 
+TGIAN DẠY BAO NHIU NĂM R
+THÊM CẢM ƠN THẦY CÔ TGIA ( KHẢO SÁT , MỤCTIÊU( THÊM THÔNG TIN  CHRI KHẢO SÁT THÔG TIN VỀ WEB...) ({ TỰ GHI }
+
+P178 | style=List Bullet | text: KẾT QUẢ KHẢO SÁT SẼ CHỈ SDUNG MỤC ĐÍCH NGHIÊN CỨU
+- R BẮT ĐẦU RA CÂU HỎI ( 3-5 CÂU HỎI , TỰ GHI)
+CUỐI FORM KHẢO SÁT , CẢM ƠN THẦY CÔ ĐÃ BỎ TGIAN KHẢO SÁT
+P179 | style=List Bullet | text: 
+
+ 
+P180 | style=Normal | text: SỬA LẠI PHỤ LỤC 3. Biểu mẫu khảo sát trực tuyến Google Form và Mã liên kết
+P181 | style=List Bullet | text: • Đường dẫn Form khảo sát trực tuyến: https://forms.gle/S9j8h4bTV4N9GwWM6 (Đã đồng bộ dữ liệu vào Google Sheets)
+P182 | style=List Bullet | text: • Tỷ lệ thu hồi phiếu khảo sát: 100% phiếu hợp lệ, không có dữ liệu trùng lặp, bảo đảm tính khách quan khoa học.
+P183 | style=Normal | text: 
+P184 | style=Normal | text: PHỤ LỤC 4: HÌNH ẢNH GIAO DIỆN NỀN TẢNG VÀ MÃ QR TRẢI NGHIỆM
+P185 | style=Normal | text: 1. Giao diện trực quan nền tảng học tập thích ứng Examora AI
+P186 | style=Normal | text:    
+P187 | style=Normal | text: Hình D.1. Giao diện Trang chủ Website   |   Hình D.2. Giao diện Luyện thi thích ứng IRT
+P188 | style=Normal | text: 2. Liên kết trải nghiệm trực tuyến và Mã QR truy cập
+P189 | style=Normal | text: 
+
+--- TABLES ---
+
+=== TABLE 0 ===
+Row 0: Giai đoạn / Thời gian | Nội dung công việc nghiên cứu chính | Phương pháp & Công cụ | Sản phẩm đầu ra
+Row 1: Tháng 09/2025 | Khảo sát thực trạng, thu thập tài liệu, xác định đề tài và câu hỏi nghiên cứu. | Phiếu khảo sát Likert, phỏng vấn sâu. | Báo cáo thực trạng tự học Tiếng Anh.
+Row 2: Tháng 10/2025 | Thiết kế thuật toán thích ứng, chu kỳ lặp ngắt quãng, số hóa ngân hàng 1000+ câu hỏi. | Mô hình hóa toán học, biên soạn ma trận đề. | Đề cương kỹ thuật & Bộ học liệu số.
+Row 3: Tháng 11 - 12/2025 | Lập trình nền tảng Examora AI, tích hợp Gia sư AI Socrates và thử nghiệm nội bộ. | React, Python FastAPI, Web Speech API. | Website https://examoraai.com hoàn chỉnh.
+Row 4: 01/2026 - 02/2026 | Tổ chức thực nghiệm đối chứng 100 học sinh (50 ĐC - 50 TN) trong 8 tuần liên tục. | Khảo sát Pre-test, can thiệp, thi Post-test. | Nhật ký thực nghiệm & Cơ sở dữ liệu điểm.
+Row 5: Tháng 02/2026 | Xử lý số liệu thống kê, đánh giá hiệu quả, viết và hoàn thiện hồ sơ dự thi. |  Excel | Báo cáo toàn văn & Poster dự thi KHKT.
+
+=== TABLE 1 ===
+Row 0: Mức độ đánh giá đầu vào | Điểm số (Thang 10) | Nhóm 1 – Đối chứng (50 HS) | Nhóm 2 – Thực nghiệm (50 HS) | Mức độ chênh lệch ban đầu
+Row 1: Yếu – Trung bình | 0 – 4.9 điểm | 21 HS (42.0%) | 20 HS (40.0%) | Chênh lệch 2.0% (Tương đồng)
+Row 2: Khá | 5.0 – 7.9 điểm | 20 HS (40.0%) | 21 HS (42.0%) | Chênh lệch 2.0% (Tương đồng)
+Row 3: Giỏi – Xuất sắc | 8.0 – 10.0 điểm | 9 HS (18.0%) | 9 HS (18.0%) | 0.0% (Hoàn toàn tương đồng)
+Row 4: Điểm Trung bình (ĐTB) | Thang điểm 10 | 5.08 / 10 điểm | 5.12 / 10 điểm | Delta = +0.04 điểm
+
+=== TABLE 2 ===
+Row 0: Mức độ đánh giá | Điểm số (Thang 10) | Số câu đúng | Nhóm 1 – Đối chứng (50 HS) | Nhóm 2 – Thực nghiệm (50 HS) | Mức độ chênh lệch
+Row 1: Yếu – Trung bình | 0 – 4.5 điểm | 0 – 18 câu | 20 HS (40.0%) | 3 HS (6.0%) | Giảm mạnh 34.0%
+Row 2: Khá | 5.0 – 7.5 điểm | 19 – 30 câu | 20 HS (40.0%) | 15 HS (30.0%) | Giảm 10.0% (Lên Giỏi)
+Row 3: Giỏi – Xuất sắc | 8.0 – 10.0 điểm | 31 – 40 câu | 10 HS (20.0%) | 32 HS (64.0%) | Tăng vượt bậc +44.0%
+Row 4: Điểm Trung bình (ĐTB) | Thang điểm 10 | - | 5.12 / 10 điểm | 8.24 / 10 điểm | Bứt phá +3.12 điểm 
+
+=== TABLE 3 ===
+Row 0: Nội dung tiêu chí khảo sát | Mức 1 (Rất KĐY) | Mức 2 (Không ĐY) | Mức 3 (Phân vân) | Mức 4 (Đồng ý) | Mức 5 (Rất ĐY) | Điểm TB Likert
+Row 1: 1. Luyện thi thích ứng làm bài vừa sức và hứng thú | 0 HS (0%) | 0 HS (0%) | 2 HS (4.0%) | 14 HS (28.0%) | 34 HS (68.0%) | 4.64 / 5.0
+Row 2: 2. Flashcard ngắt quãng SM-2 giúp nhớ lâu, giảm học vẹt | 0 HS (0%) | 0 HS (0%) | 1 HS (2.0%) | 12 HS (24.0%) | 37 HS (74.0%) | 4.72 / 5.0
+Row 3: 3. Trợ lý Socrates AI giải thích lỗi sai, hiểu rõ bản chất | 0 HS (0%) | 0 HS (0%) | 1 HS (2.0%) | 10 HS (20.0%) | 39 HS (78.0%) | 4.76 / 5.0
+Row 4: 4. Tự tin hơn rõ rệt trước kỳ thi Tốt nghiệp THPT | 0 HS (0%) | 0 HS (0%) | 3 HS (6.0%) | 15 HS (30.0%) | 32 HS (64.0%) | 4.58 / 5.0
+
+=== TABLE 4 ===
+Row 0: Nội dung câu hỏi khảo sát học sinh | 1 | 2 | 3 | 4 | 5
+Row 1: 1. Luyện thi thích ứng (tự động điều chỉnh độ khó theo IRT 2PL) giúp em làm bài vừa sức và hứng thú hơn. | [  ] | [  ] | [  ] | [  ] | [  ]
+Row 2: 2. Ôn từ vựng qua Flashcard lặp lại ngắt quãng (SuperMemo-2) giúp em nhớ lâu hơn và giảm áp lực học vẹt. | [  ] | [  ] | [  ] | [  ] | [  ]
+Row 3: 3. Trợ lý Gia sư AI Socrates giải thích chi tiết đáp án và lỗi sai giúp em hiểu rõ bản chất ngữ pháp 1:1. | [  ] | [  ] | [  ] | [  ] | [  ]
+Row 4: 4. Sau khi học trên Examora AI, em cảm thấy tự tin hơn rõ rệt trước kỳ thi Tốt nghiệp THPT môn Tiếng Anh. | [  ] | [  ] | [  ] | [  ] | [  ]
+
+=== TABLE 5 ===
+Row 0: Thông tin liên kết hệ thống | Mã QR quét trải nghiệm tức thì
+Row 1: • Địa chỉ Website chính thức: https://examoraai.com  • Trải nghiệm đầy đủ các tính năng: Luyện thi thích ứng, Flashcard não bộ SM-2, Gia sư AI Socrates 1:1, Chấm phát âm chuẩn IPA và Cổng xáo đề dành cho giáo viên .  |  (Dùng camera điện thoại hoặc Zalo để quét mã)

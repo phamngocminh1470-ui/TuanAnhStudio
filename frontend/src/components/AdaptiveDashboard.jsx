@@ -143,18 +143,19 @@ export default function AdaptiveDashboard({ selectedGrade, onNavigate, onOpenExp
   const badge = getProficiencyBadge(theta);
 
   return (
-    <div className="space-y-12 w-full pb-16 animate-fade-in max-w-[1600px] mx-auto">
+    <div className="space-y-12 w-full pb-16 animate-fade-in">
       
-      {/* HERO WELCOME BANNER WITH CLEAN SPACIOUS LAYOUT & SCHOOL BRANDING */}
-      <div className="glass rounded-3xl p-8 md:p-10 border border-indigo-500/25 shadow-2xl relative overflow-hidden bg-gradient-to-r from-[#0d132c] via-[#090e24] to-[#120a28]">
+      {/* HERO WELCOME BANNER WITH EXPANSIVE RADIANT GLOW (LAN TỎA RA KHÔNG GIAN) */}
+      <div className="card-3d-sapphire p-8 sm:p-12 lg:p-14 relative overflow-hidden shadow-[0_20px_60px_rgba(3,7,26,0.8),0_0_50px_rgba(6,182,212,0.2)] border border-cyan-500/30">
         
-        {/* Ambient Glow Orbs */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-600/15 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute bottom-0 left-1/3 w-80 h-80 bg-pink-600/10 rounded-full blur-3xl pointer-events-none"></div>
+        {/* Expansive Ambient Radial Glows - Tỏa ra toàn bộ không gian xung quanh */}
+        <div className="absolute -top-24 -left-24 w-[650px] h-[650px] bg-gradient-to-tr from-blue-600/35 via-cyan-500/25 to-transparent rounded-full blur-[140px] pointer-events-none -z-10" />
+        <div className="absolute -bottom-24 -right-24 w-[600px] h-[600px] bg-gradient-to-bl from-purple-600/30 via-indigo-500/20 to-transparent rounded-full blur-[140px] pointer-events-none -z-10" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-radial from-blue-500/10 via-transparent to-transparent pointer-events-none" />
 
-        <div className="space-y-4 relative z-10 max-w-4xl">
+        <div className="space-y-5 relative z-10 max-w-5xl">
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/35 text-amber-300 text-xs font-extrabold uppercase tracking-wider shadow-lg shadow-amber-500/10">
+            <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/40 text-amber-300 text-xs font-bold uppercase tracking-wider shadow-lg shadow-amber-500/15">
               <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />
               <span>Dự án Nghiên cứu Khoa học Kỹ thuật • Hệ thống Ôn thi tốt nghiệp THPT Quốc gia thích ứng AI</span>
             </div>
@@ -163,50 +164,52 @@ export default function AdaptiveDashboard({ selectedGrade, onNavigate, onOpenExp
             {onOpenExportModal && (
               <button
                 onClick={onOpenExportModal}
-                className="px-5 py-2.5 rounded-2xl bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/40 font-extrabold text-xs transition cursor-pointer flex items-center gap-2 shadow-lg"
+                className="btn-3d-secondary px-5 py-2.5 rounded-xl text-cyan-200 border-cyan-400/40 font-bold text-xs cursor-pointer flex items-center gap-2"
               >
-                <Printer className="w-4 h-4 text-indigo-400" />
+                <Printer className="w-4 h-4 text-cyan-400" />
                 <span>Xuất Báo Cáo Học Tập (PDF/In)</span>
               </button>
             )}
           </div>
 
-          <h1 className="text-3xl md:text-5xl font-black text-white font-outfit tracking-normal leading-snug drop-shadow-md">
-            Nền tảng Ôn Thi Tốt Nghiệp THPT Môn Tiếng Anh <span className="bg-gradient-to-r from-indigo-400 via-purple-300 to-pink-400 bg-clip-text text-transparent">Thích ứng AI &amp; Cá nhân hóa</span>
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black font-outfit tracking-tight leading-[1.15]">
+            <span className="text-3d-hero block">Nền tảng Ôn Thi Tốt Nghiệp THPT</span>
+            <span className="text-3d-cyan inline-block mt-1 sm:mt-2">Môn Tiếng Anh Thích Ứng AI</span>{' '}
+            <span className="text-3d-gold inline-block">&amp; Cá Nhân Hóa</span>
           </h1>
 
-          <p className="text-sm md:text-[15px] text-gray-300 leading-relaxed font-medium max-w-3xl">
+          <p className="text-sm sm:text-base md:text-lg text-slate-200 leading-relaxed font-normal max-w-4xl drop-shadow-sm">
             Hệ thống hỗ trợ cá nhân hóa lộ trình ôn tập và dự báo kết quả thi tốt nghiệp THPT Quốc gia môn Tiếng Anh dành cho học sinh phổ thông.
           </p>
 
-          <div className="flex flex-wrap gap-3.5 pt-5">
+          <div className="flex flex-wrap gap-3.5 pt-4">
             <button
               onClick={() => onNavigate('irt-test')}
-              className="px-6 py-3 rounded-2xl glow-btn-brand text-white font-extrabold text-xs shadow-xl cursor-pointer flex items-center gap-2"
+              className="btn-3d-primary px-6 py-3.5 rounded-2xl text-sm font-bold flex items-center gap-2 cursor-pointer shadow-lg"
             >
-              <Zap className="w-4 h-4" />
+              <Zap className="w-4 h-4 text-cyan-300" />
               <span>Đánh giá năng lực</span>
             </button>
 
             <button
               onClick={() => onNavigate('listening')}
-              className="px-6 py-3 rounded-2xl bg-purple-600 hover:bg-purple-500 text-white font-extrabold text-xs shadow-xl cursor-pointer flex items-center gap-2"
+              className="px-6 py-3.5 rounded-2xl bg-gradient-to-b from-purple-600 to-indigo-700 hover:from-purple-500 hover:to-indigo-600 text-white font-bold text-sm shadow-[0_4px_0_#4c1d95,0_8px_20px_rgba(147,51,234,0.4)] active:translate-y-1 active:shadow-[0_1px_0_#4c1d95] flex items-center gap-2 cursor-pointer transition-all border border-purple-400/40"
             >
-              <Headphones className="w-4 h-4" />
+              <Headphones className="w-4 h-4 text-purple-200" />
               <span>Luyện nghe AI</span>
             </button>
 
             <button
               onClick={() => onNavigate('sm2-flashcards')}
-              className="px-6 py-3 rounded-2xl glow-btn-amber text-white font-extrabold text-xs shadow-xl cursor-pointer flex items-center gap-2"
+              className="px-6 py-3.5 rounded-2xl bg-gradient-to-b from-amber-500 to-amber-700 hover:from-amber-400 hover:to-amber-600 text-white font-bold text-sm shadow-[0_4px_0_#78350f,0_8px_20px_rgba(245,158,11,0.4)] active:translate-y-1 active:shadow-[0_1px_0_#78350f] flex items-center gap-2 cursor-pointer transition-all border border-amber-400/40"
             >
-              <Clock className="w-4 h-4" />
+              <Clock className="w-4 h-4 text-amber-200" />
               <span>Học từ vựng</span>
             </button>
 
             <button
               onClick={() => onNavigate('vocab-library')}
-              className="px-6 py-3 rounded-2xl bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-200 border border-cyan-500/40 font-extrabold text-xs transition cursor-pointer flex items-center gap-2 shadow-lg"
+              className="btn-3d-secondary px-6 py-3.5 rounded-2xl font-bold text-sm flex items-center gap-2 cursor-pointer"
             >
               <BookOpen className="w-4 h-4 text-cyan-400" />
               <span>Học liệu từ vựng</span>
@@ -214,7 +217,7 @@ export default function AdaptiveDashboard({ selectedGrade, onNavigate, onOpenExp
 
             <button
               onClick={() => onNavigate('chat')}
-              className="px-6 py-3 rounded-2xl bg-purple-600/20 hover:bg-purple-600/30 text-purple-200 border border-purple-500/40 font-extrabold text-xs transition cursor-pointer flex items-center gap-2 shadow-lg"
+              className="px-6 py-3.5 rounded-2xl bg-gradient-to-b from-indigo-900 to-[#121a44] text-purple-200 hover:text-white border border-purple-500/40 shadow-[0_4px_0_#1e1b4b,0_8px_18px_rgba(147,51,234,0.25)] font-bold text-sm flex items-center gap-2 cursor-pointer transition-all"
             >
               <MessageSquare className="w-4 h-4 text-purple-400" />
               <span>Gia sư AI</span>
@@ -222,9 +225,9 @@ export default function AdaptiveDashboard({ selectedGrade, onNavigate, onOpenExp
 
             <button
               onClick={() => onNavigate('pronounce')}
-              className="px-6 py-3 rounded-2xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-200 border border-emerald-500/40 font-extrabold text-xs transition cursor-pointer flex items-center gap-2 shadow-lg"
+              className="px-6 py-3.5 rounded-2xl bg-gradient-to-b from-emerald-600 to-teal-800 hover:from-emerald-500 hover:to-teal-700 text-white font-bold text-sm shadow-[0_4px_0_#064e3b,0_8px_20px_rgba(16,185,129,0.4)] active:translate-y-1 active:shadow-[0_1px_0_#064e3b] flex items-center gap-2 cursor-pointer transition-all border border-emerald-400/40"
             >
-              <Mic className="w-4 h-4 text-emerald-400" />
+              <Mic className="w-4 h-4 text-emerald-200" />
               <span>Chấm phát âm</span>
             </button>
           </div>

@@ -1,5 +1,5 @@
 # SỔ NHẬT KÝ NGHIÊN CỨU & NHẬT KÝ SỬ DỤNG AI
-**DỰ ÁN: Nền tảng Gia sư AI Tiếng Anh Cá nhân hóa thích ứng (Adaptive AI English Mentor)**
+**DỰ ÁN: Nền tảng Gia sư AI Tiếng Anh Cá nhân hóa thích ứng (Adaptive Examora AI)**
 
 ---
 
@@ -132,10 +132,10 @@ Dự án có sử dụng mô hình trí tuệ nhân tạo tạo sinh **Antigravi
   * Sử dụng lệnh `scp` đẩy file `dist.zip` và thư mục `backend` lên VPS.
   * Đăng nhập SSH vào VPS: Giải nén code, cài đặt môi trường ảo Python `venv` và cài đặt các thư viện phụ thuộc (`requirements.txt`).
   * Khởi chạy Backend ngầm bằng Gunicorn kết hợp Uvicorn worker.
-  * Tạo cấu hình định tuyến Nginx cho tên miền `tuananhstudio.top`.
+  * Tạo cấu hình định tuyến Nginx cho tên miền `examoraai.com`.
   * Cài đặt SSL Let's Encrypt bằng Certbot.
 * **4. KẾT QUẢ & SỐ LIỆU THÔ:**
-  * Trang web chính thức hoạt động trực tuyến tại địa chỉ bảo mật: **`https://tuananhstudio.top`**.
+  * Trang web chính thức hoạt động trực tuyến tại địa chỉ bảo mật: **`https://examoraai.com`**.
   * Chạy thử tính năng ghi âm luyện nói tiếng Anh: trình duyệt yêu cầu cấp quyền micro thành công, chấm điểm phát âm phản hồi kết quả trong vòng dưới 2 giây.
 * **5. RÚT KINH NGHIỆM & LỖI SAI:**
   * *Lỗi phát sinh:* Khi đăng ký SSL bằng Certbot lần đầu bị thất bại do bản ghi A của tên miền trên Cloudflare đang bật chế độ Proxy (đám mây màu cam), khiến Let's Encrypt không thể xác thực IP gốc của VPS.

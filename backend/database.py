@@ -43,8 +43,30 @@ class User(SQLModel, table=True):
     avatar_seed: str = Field(default="")        # Seed cho DiceBear avatar
     experiment_group: str = Field(default="ADAPTIVE", max_length=20) # "ADAPTIVE", "CONTROL"
     is_active: bool = Field(default=True)
+    revoke_before_ts: Optional[str] = Field(default=None) # ISO timestamp: tokens/sessions trước thời điểm này bị hủy
+    primary_session_id: Optional[str] = Field(default=None) # session_id của máy chuẩn nhất (thiết bị tin cậy)
     created_at: str = Field(default="")
     updated_at: str = Field(default="")
+
+
+class UserSession(SQLModel, table=True):
+    """
+    Bảng quản lý phiên đăng nhập và thiết bị của người dùng.
+    Hỗ trợ giám sát thiết bị, kích đăng xuất từ xa, và cài máy chuẩn nhất.
+    """
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="user.id", index=True)
+    session_id: str = Field(unique=True, index=True, max_length=64)
+    device_name: str = Field(default="Máy tính", max_length=100)
+    browser: str = Field(default="Trình duyệt web", max_length=50)
+    os_name: str = Field(default="Hệ điều hành", max_length=50)
+    ip_address: str = Field(default="", max_length=50)
+    user_agent: str = Field(default="")
+    is_trusted: bool = Field(default=False) # Máy chuẩn nhất (thiết bị chính chủ)
+    is_active: bool = Field(default=True)   # Trạng thái đăng nhập (False nếu bị kích)
+    revoked_at: Optional[str] = Field(default=None)
+    created_at: str = Field(default="")
+    last_active_at: str = Field(default="")
 
 
 class UserProgress(SQLModel, table=True):
@@ -142,6 +164,35 @@ class PronounceSentence(SQLModel, table=True):
     is_active: bool = Field(default=True)
 
 
+class TeacherRequest(SQLModel, table=True):
+    """
+    Bảng lưu yêu cầu đăng ký cấp quyền Giáo viên / Quản trị viên trường học.
+    Admin duyệt và cấp mã key qua Zalo hoặc trực tiếp trên Admin Panel.
+    """
+    id: Optional[int] = Field(default=None, primary_key=True)
+    teacher_name: str = Field(max_length=100)
+    phone: str = Field(max_length=50, index=True)
+    school: str = Field(default="", max_length=150)
+    role_title: str = Field(default="Giáo viên", max_length=100)
+    note: str = Field(default="")
+    status: str = Field(default="pending", max_length=20)
+    created_at: str = Field(default="")
+
+
+class CanvaRequest(SQLModel, table=True):
+    """
+    Bảng lưu yêu cầu nhận Canva Pro / Canva for Education từ Học sinh & Giáo viên.
+    Admin có thể xem danh sách email để thêm vào nhóm Canva hoặc cung cấp link mời trực tiếp.
+    """
+    id: Optional[int] = Field(default=None, primary_key=True)
+    email: str = Field(index=True, max_length=150)
+    fullname: Optional[str] = Field(default="", max_length=100)
+    role_type: str = Field(default="student", max_length=50) # "student", "teacher", "other"
+    school: Optional[str] = Field(default="", max_length=150)
+    status: str = Field(default="pending", max_length=20)   # "pending", "added"
+    created_at: str = Field(default="")
+
+
 # ─── HELPER FUNCTIONS ───────────────────────────────────────────────────────
 
 def get_session():
@@ -158,9 +209,23 @@ def _today() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
 
+def _migrate_columns():
+    """Tự động bổ sung các cột mới vào bảng user nếu chưa có."""
+    try:
+        with engine.connect() as conn:
+            cols = [r[1] for r in conn.exec_driver_sql("PRAGMA table_info(user)").fetchall()]
+            if "revoke_before_ts" not in cols:
+                conn.exec_driver_sql("ALTER TABLE user ADD COLUMN revoke_before_ts TEXT DEFAULT NULL")
+            if "primary_session_id" not in cols:
+                conn.exec_driver_sql("ALTER TABLE user ADD COLUMN primary_session_id TEXT DEFAULT NULL")
+    except Exception as e:
+        print("[DB] Migration columns warning:", e)
+
+
 def create_db_and_tables():
     """Tạo toàn bộ bảng nếu chưa tồn tại. Tự động nạp dữ liệu từ vựng đồ sộ nếu kho đang rỗng/ít."""
     SQLModel.metadata.create_all(engine)
+    _migrate_columns()
     print("[DB] SQLite database initialized:", DB_PATH)
     try:
         with Session(engine) as session:
