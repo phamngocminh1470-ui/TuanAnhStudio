@@ -97,6 +97,9 @@ export default function AdaptiveReading({ selectedGrade }) {
   const [readingData, setReadingData] = useState(null);
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [showExplanations, setShowExplanations] = useState({});
+  // TÍNH MỚI KHKT: Thang giàn giáo đọc hiểu Krashen i+1 & Giải mã bẫy khảo thí
+  const [scaffoldLevel, setScaffoldLevel] = useState('original'); // 'original' | 'scaffolded' | 'collocations'
+  const [expandedTraps, setExpandedTraps] = useState({});
 
   // --- STATE FOR WRITING ---
   const [writingPrompt, setWritingPrompt] = useState('Write about your favorite hobby and explain why you enjoy it.');
@@ -578,6 +581,63 @@ In conclusion, ${topic_val} represents one of the defining forces of the twenty-
                     {readingData.title}
                   </h2>
 
+                  {/* ══════════════════════════════════════════════════════════════════════════════ */}
+                  {/* TÍNH MỚI KHKT: THANG GIÀN GIÁO ĐỌC HIỂU (KRASHEN i+1 & VYGOTSKY ZPD)          */}
+                  {/* ══════════════════════════════════════════════════════════════════════════════ */}
+                  <div className="p-4 rounded-2xl bg-gradient-to-r from-indigo-950/70 via-purple-950/50 to-slate-900/80 border border-indigo-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 rounded-xl bg-indigo-500/20 border border-indigo-400/40 flex items-center justify-center text-indigo-300 shrink-0">
+                        <Sparkles className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-black text-white uppercase tracking-wider">
+                            Thang Giàn Giáo Đọc Hiểu (Krashen i+1)
+                          </span>
+                          <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-indigo-500/25 border border-indigo-400/40 text-indigo-300 uppercase">
+                            TÍNH MỚI KHKT
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-400 mt-0.5">
+                          Hạ độ khó về B1 để hiểu cốt lõi, không bị ngợp bài đọc dài ➔ Từng bước nâng bậc thang lên B2/C1
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 p-1 bg-black/40 border border-white/10 rounded-xl shrink-0 self-start sm:self-auto">
+                      <button
+                        onClick={() => setScaffoldLevel('original')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                          scaffoldLevel === 'original' 
+                            ? 'bg-indigo-600 text-white shadow font-black' 
+                            : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        <span>Đề gốc (B2/C1)</span>
+                      </button>
+                      <button
+                        onClick={() => setScaffoldLevel('scaffolded')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1 ${
+                          scaffoldLevel === 'scaffolded' 
+                            ? 'bg-amber-500 text-slate-950 shadow font-black' 
+                            : 'text-amber-400/80 hover:text-amber-300'
+                        }`}
+                      >
+                        <span>🪜 Giàn giáo (B1)</span>
+                      </button>
+                      <button
+                        onClick={() => setScaffoldLevel('collocations')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                          scaffoldLevel === 'collocations' 
+                            ? 'bg-cyan-500 text-slate-950 shadow font-black' 
+                            : 'text-cyan-400/80 hover:text-cyan-300'
+                        }`}
+                      >
+                        <span>✨ Cụm từ ghi điểm</span>
+                      </button>
+                    </div>
+                  </div>
+
                   {/* Banner hướng dẫn tính năng SEnglish In-text Lookup */}
                   <div className="p-3.5 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-between gap-3 text-xs text-cyan-200">
                     <div className="flex items-center gap-2">
@@ -597,14 +657,101 @@ In conclusion, ${topic_val} represents one of the defining forces of the twenty-
                     </div>
                   )}
 
-                  <p 
-                    onMouseUp={handleTextSelection}
-                    onDoubleClick={handleTextSelection}
-                    onTouchEnd={handleTextSelection}
-                    className="text-gray-200 text-base md:text-lg leading-loose tracking-wide font-normal whitespace-pre-line text-justify cursor-text selection:bg-cyan-500/30 selection:text-white"
-                  >
-                    {readingData.passage}
-                  </p>
+                  {/* Hiển thị văn bản theo cấp độ Thang Giàn Giáo */}
+                  {scaffoldLevel === 'scaffolded' ? (
+                    <div className="space-y-4 animate-fade-in">
+                      <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-bold flex items-center justify-between">
+                        <span>🪜 BẬC THANG GIÀN GIÁO B1 (TỐI GIẢN CÚ PHÁP, GIỮ NGUYÊN Ý CHÍNH):</span>
+                        <span className="text-[10px] bg-amber-500/20 px-2 py-0.5 rounded">Stephen Krashen i+1</span>
+                      </div>
+                      <p 
+                        onMouseUp={handleTextSelection}
+                        onDoubleClick={handleTextSelection}
+                        onTouchEnd={handleTextSelection}
+                        className="text-gray-100 text-base md:text-lg leading-loose tracking-wide font-normal whitespace-pre-line text-justify cursor-text selection:bg-amber-500/30 selection:text-white"
+                      >
+                        {`In recent years, bringing technology into schools and local communities has changed how students learn. Modern digital platforms allow teachers to create personal lessons for each student's speed and hobbies. This change from teaching everyone the same way to individual learning is one of the most exciting events in education today.
+
+In the past, the idea of personal learning started in the early twentieth century. Progressive teachers like John Dewey believed that schools must support each child's natural curiosity. However, it was only with fast computers and smart data tools that this dream could come true. Today, schools in more than 100 countries use programs that look at student work immediately and change exercise difficulty to fit each learner.
+
+Beyond education, technology also helps doctors and hospitals. Scientists use it to find diseases much earlier and more accurately than older methods. Tests show a 35% improvement in finding sickness early, helping patients get treated at the best time.
+
+Scientists also use technology to help the environment. By studying information from satellites and ocean sensors, they can predict climate changes clearly. This helps leaders make better plans to reduce pollution and save wild animals.
+
+However, there is still debate. Wealthy schools often have better tools, while poor areas may be left behind. Experts agree that closing this gap must be the main goal so that technology creates fairness for everyone.`}
+                      </p>
+
+                      {/* Bảng đối chiếu từ vựng C1 Gốc vs B1 Giàn Giáo */}
+                      <div className="p-4 rounded-2xl bg-white/[0.02] border border-amber-500/30 space-y-3">
+                        <strong className="text-xs font-extrabold text-amber-300 block uppercase tracking-wider">
+                          📊 Bảng Đối Chiếu Từ Vựng C1 Gốc ➔ Từ Giàn Giáo B1:
+                        </strong>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                          <div className="p-2.5 rounded-xl bg-white/5 flex items-center justify-between">
+                            <span className="text-slate-300"><strong className="text-white">Integration</strong> (Hòa nhập, tích hợp)</span>
+                            <span className="text-amber-400 font-bold">➔ Combining together</span>
+                          </div>
+                          <div className="p-2.5 rounded-xl bg-white/5 flex items-center justify-between">
+                            <span className="text-slate-300"><strong className="text-white">Pedagogy</strong> (Phương pháp sư phạm)</span>
+                            <span className="text-amber-400 font-bold">➔ Teaching methods</span>
+                          </div>
+                          <div className="p-2.5 rounded-xl bg-white/5 flex items-center justify-between">
+                            <span className="text-slate-300"><strong className="text-white">Precision</strong> (Độ chuẩn xác cao)</span>
+                            <span className="text-amber-400 font-bold">➔ Exact accuracy</span>
+                          </div>
+                          <div className="p-2.5 rounded-xl bg-white/5 flex items-center justify-between">
+                            <span className="text-slate-300"><strong className="text-white">Controversy</strong> (Tranh cãi gay gắt)</span>
+                            <span className="text-amber-400 font-bold">➔ Public debate</span>
+                          </div>
+                          <div className="p-2.5 rounded-xl bg-white/5 flex items-center justify-between">
+                            <span className="text-slate-300"><strong className="text-white">Equaliser</strong> (Yếu tố tạo bình đẳng)</span>
+                            <span className="text-amber-400 font-bold">➔ Tool for fairness</span>
+                          </div>
+                          <div className="p-2.5 rounded-xl bg-white/5 flex items-center justify-between">
+                            <span className="text-slate-300"><strong className="text-white">Biodiversity</strong> (Đa dạng sinh học)</span>
+                            <span className="text-amber-400 font-bold">➔ Plants &amp; wild animals</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : scaffoldLevel === 'collocations' ? (
+                    <div className="space-y-4 animate-fade-in">
+                      <div className="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-bold flex items-center justify-between">
+                        <span>✨ CÁC CỤM TỪ ĂN ĐIỂM (ACADEMIC COLLOCATIONS &amp; TRANSITIONS):</span>
+                        <span className="text-[10px] bg-cyan-500/20 px-2 py-0.5 rounded">High-Scoring Phrasing</span>
+                      </div>
+                      <p 
+                        onMouseUp={handleTextSelection}
+                        onDoubleClick={handleTextSelection}
+                        onTouchEnd={handleTextSelection}
+                        className="text-gray-200 text-base md:text-lg leading-loose tracking-wide font-normal whitespace-pre-line text-justify cursor-text selection:bg-cyan-500/30 selection:text-white"
+                      >
+                        {readingData.passage}
+                      </p>
+
+                      <div className="p-4 rounded-2xl bg-cyan-950/20 border border-cyan-500/30 space-y-2">
+                        <strong className="text-xs font-extrabold text-cyan-300 block uppercase tracking-wider">
+                          💎 Các Cụm Từ Học Thuật Cần Ghi Vào Sổ Tay:
+                        </strong>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                          <div className="p-2 rounded-lg bg-white/5 text-slate-200"><strong className="text-cyan-400">transform the way:</strong> làm thay đổi hoàn toàn cách thức</div>
+                          <div className="p-2 rounded-lg bg-white/5 text-slate-200"><strong className="text-cyan-400">one-size-fits-all:</strong> áp đặt khuôn mẫu đồng nhất</div>
+                          <div className="p-2 rounded-lg bg-white/5 text-slate-200"><strong className="text-cyan-400">at scale:</strong> trên diện rộng quy mô lớn</div>
+                          <div className="p-2 rounded-lg bg-white/5 text-slate-200"><strong className="text-cyan-400">make a profound impact:</strong> tạo nên tác động sâu sắc</div>
+                          <div className="p-2 rounded-lg bg-white/5 text-slate-200"><strong className="text-cyan-400">digital divide:</strong> khoảng cách bất bình đẳng công nghệ</div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <p 
+                      onMouseUp={handleTextSelection}
+                      onDoubleClick={handleTextSelection}
+                      onTouchEnd={handleTextSelection}
+                      className="text-gray-200 text-base md:text-lg leading-loose tracking-wide font-normal whitespace-pre-line text-justify cursor-text selection:bg-cyan-500/30 selection:text-white animate-fade-in"
+                    >
+                      {readingData.passage}
+                    </p>
+                  )}
                 </div>
 
                 {/* Key Vocabulary Highlight Card */}
@@ -683,9 +830,61 @@ In conclusion, ${topic_val} represents one of the defining forces of the twenty-
                         </div>
 
                         {showExplanations[q.id] && (
-                          <div className="mt-3 p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-[11px] text-indigo-200">
-                            <span className="font-bold text-indigo-400 block uppercase mb-0.5">Giải thích:</span>
+                          <div className="mt-3 p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-[11px] text-indigo-200 space-y-1.5 animate-fade-in">
+                            <span className="font-bold text-indigo-400 block uppercase mb-0.5">Giải thích đáp án:</span>
                             <p>{q.explanation}</p>
+                          </div>
+                        )}
+
+                        {/* ─── TÍNH MỚI KHKT: GIẢI MÃ BẪY PHƯƠNG ÁN GÂY NHIỄU (DISTRACTOR TRAP ANALYSIS) ─── */}
+                        {selectedAnswers[q.id] !== undefined && (
+                          <div className="pt-2">
+                            <button
+                              onClick={() => setExpandedTraps(prev => ({ ...prev, [q.id]: !prev[q.id] }))}
+                              className="w-full py-2 px-3 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 text-[11px] font-extrabold transition flex items-center justify-between cursor-pointer"
+                            >
+                              <span className="flex items-center gap-1.5">
+                                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                                <span>🎯 Giải Mã 3 Bẫy Khảo Thí (Trap Decoder)</span>
+                              </span>
+                              <span className="text-[10px] text-amber-400/80 underline font-semibold">
+                                {expandedTraps[q.id] ? 'Thu gọn' : 'Bóc tách bẫy'}
+                              </span>
+                            </button>
+
+                            {expandedTraps[q.id] && (
+                              <div className="mt-2.5 p-3.5 rounded-xl bg-slate-900/90 border border-amber-500/30 text-[11px] space-y-2.5 animate-fade-in">
+                                <div className="flex items-center justify-between border-b border-white/10 pb-1.5">
+                                  <span className="font-black text-amber-300 uppercase tracking-wider text-[10px]">
+                                    Phân Tích Tâm Lý Khảo Thí (Psychometrics)
+                                  </span>
+                                  <span className="text-[9px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded font-bold">
+                                    TÍNH MỚI
+                                  </span>
+                                </div>
+
+                                <div className="space-y-1.5 text-slate-300 leading-relaxed">
+                                  <div className="p-2 rounded-lg bg-rose-500/10 border border-rose-500/20">
+                                    <strong className="text-rose-400 block font-bold">⚠️ Bẫy 1: Khái quát hóa quá đà (Overgeneralization)</strong>
+                                    <span>Học sinh dễ chọn nhầm phương án dùng từ tuyệt đối (All/Every/Always) trong khi đề chỉ nói "Một số trường".</span>
+                                  </div>
+
+                                  <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                                    <strong className="text-amber-400 block font-bold">⚠️ Bẫy 2: Dữ kiện đúng ngoài đời thực (Out-of-Text Truth)</strong>
+                                    <span>Nêu một sự thật khoa học hiển nhiên ngoài đời, nhưng bài đọc KHÔNG HỀ nhắc tới. Đây là bẫy kinh điển đề thi THPT!</span>
+                                  </div>
+
+                                  <div className="p-2 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
+                                    <strong className="text-indigo-400 block font-bold">⚠️ Bẫy 3: Đảo ngược quan hệ Nhân - Quả (Cause-Effect Flip)</strong>
+                                    <span>Giữ nguyên từ khóa trong bài nhưng hoán đổi vế nguyên nhân thành kết quả khiến học sinh đọc lướt bị lừa.</span>
+                                  </div>
+                                </div>
+
+                                <p className="text-[10px] text-slate-400 italic pt-1 border-t border-white/5">
+                                  💡 <em>Luyện tư duy phản biện khảo thí giúp học sinh không bao giờ mất điểm oan ở các câu 8+ và 9+!</em>
+                                </p>
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>

@@ -65,6 +65,7 @@ export default function MegaNavbar({
   ];
 
   const giaSuItems = [
+    { id: 'speaking-exam', title: 'Phòng Thi Nói & Đối Thoại AI', desc: 'Vấn đáp GDPT 2018, Tranh luận Socratic & IELTS Band 8.5', badge: 'MỚI • HOT', icon: Mic, action: () => { onNavigate('speaking-exam'); setOpenDropdown(null); setIsMobileDrawerOpen(false); } },
     { id: 'photo-solver', title: 'Chụp ảnh giải đề AI', desc: 'Tải ảnh bài tập & nhận lời giải từng bước', badge: 'MỚI', icon: Sparkles, action: () => { if (onOpenPhotoSolver) onOpenPhotoSolver(); setOpenDropdown(null); setIsMobileDrawerOpen(false); } },
     { id: 'teacher-hub', title: 'Cổng Giáo Viên • Xáo Đề & Quản Lý', desc: 'Xáo 1 đề thành 4 mã đề (101-104), quản lý lớp & giao topic tuần', badge: 'GV • HOT', icon: Shuffle, action: () => { onNavigate('teacher-portal'); setOpenDropdown(null); setIsMobileDrawerOpen(false); } },
     { id: 'chat-ai', title: 'Hỏi bài AI - Socrates 1:1', desc: 'Gia sư AI gợi mở tư duy đàm thoại 24/7', icon: Bot, action: () => { onNavigate('chat'); setOpenDropdown(null); setIsMobileDrawerOpen(false); } },

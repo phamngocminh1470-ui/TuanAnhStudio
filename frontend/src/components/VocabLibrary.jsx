@@ -6,6 +6,7 @@ import {
   ArrowRight, Loader2, Zap, HelpCircle, Lock
 } from 'lucide-react';
 import axios from 'axios';
+import { CURRICULUM_VOCABULARY } from '../data/curriculumVocabData';
 
 const API_BASE = '/api';
 
@@ -316,6 +317,7 @@ const THEMATIC_TOPICS_CONFIG = [
   { key: 'health_sports', label: '🍎 Sức khỏe & Thể thao', icon: BookOpen },
   { key: 'culture_city', label: '🏛️ Văn hóa, Ẩm thực & Đô thị', icon: Tag },
   { key: 'family_environment', label: '👨‍👩‍👧 Gia đình & Khoảng cách thế hệ', icon: BookMarked },
+  { key: 'curriculum', label: '📖 SGK GDPT 2018 (Lớp 10, 11, 12)', icon: BookOpen },
   { key: 'teen_psychology', label: '💡 Kỹ năng sống & Tâm lý học đường', icon: GraduationCap },
   { key: 'exam_mastery', label: '🏆 Collocations & Idioms THPT QG', icon: Bookmark }
 ];
@@ -331,6 +333,39 @@ const GRADES_CONFIG = [
   { id: '12', label: 'Lớp 12' },
   { id: 'THPT', label: '🎯 Ôn thi THPT QG' }
 ];
+
+// Chuyển đổi CURRICULUM_VOCABULARY thành các Topics theo Unit
+const CURRICULUM_TOPIC_GROUPS = (() => {
+  const map = {};
+  CURRICULUM_VOCABULARY.forEach(w => {
+    const key = `curr_g${w.grade}_${w.unit.replace(/\s+/g, '_')}`;
+    if (!map[key]) {
+      map[key] = {
+        topicId: key,
+        topicTitle: `Lớp ${w.grade} - ${w.unitTitle || w.unit}`,
+        grade: String(w.grade),
+        category: 'curriculum',
+        categoryLabel: `GDPT 2018 Lớp ${w.grade}`,
+        description: `Trọng tâm SGK Global Success & Friends Global Lớp ${w.grade}`,
+        words: []
+      };
+    }
+    map[key].words.push({
+      id: w.id,
+      word: w.word,
+      ipa: w.ipa,
+      reading: w.reading,
+      pos: w.pos,
+      meaning: w.meaning,
+      example: w.example,
+      example_vi: w.exampleVi,
+      collocation: w.collocation
+    });
+  });
+  return Object.values(map);
+})();
+
+const ALL_COMBINED_VOCAB_DATA = [...CURRICULUM_TOPIC_GROUPS, ...COMPREHENSIVE_VOCAB_DATA];
 
 function WordCard({ word }) {
   const [expanded, setExpanded] = useState(false);
@@ -365,6 +400,7 @@ function WordCard({ word }) {
             </div>
             <div className="flex items-center gap-2 mt-0.5 flex-wrap">
               {word.ipa && <span className="text-xs font-mono text-indigo-400 font-bold">{word.ipa}</span>}
+              {word.reading && <span className="text-[11px] text-amber-300/80 font-medium">({word.reading})</span>}
             </div>
             <p className="text-xs text-slate-200 mt-1 font-semibold leading-snug">{word.meaning}</p>
           </div>
@@ -383,6 +419,12 @@ function WordCard({ word }) {
               {word.example_vi && (
                 <p className="text-indigo-300 mt-1 leading-relaxed font-medium">({word.example_vi})</p>
               )}
+            </div>
+          )}
+          {word.collocation && (
+            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30">
+              <span className="text-[10px] text-amber-400 font-bold uppercase tracking-wider block mb-0.5">Collocation điểm 9+:</span>
+              <p className="text-amber-200 font-bold text-xs">{word.collocation}</p>
             </div>
           )}
           <button
@@ -404,7 +446,7 @@ export default function VocabLibrary({ selectedGrade = '11', currentUser }) {
   const [viewMode, setViewMode] = useState('by_grade'); // 'by_grade' | 'by_topic'
   const [selectedGradeFilter, setSelectedGradeFilter] = useState(effectiveGrade || '11');
   const [selectedThematicTopic, setSelectedThematicTopic] = useState('all');
-  const [activeTopicId, setActiveTopicId] = useState(COMPREHENSIVE_VOCAB_DATA[0].topicId);
+  const [activeTopicId, setActiveTopicId] = useState(ALL_COMBINED_VOCAB_DATA[0].topicId);
   const [searchQuery, setSearchQuery] = useState('');
 
   // Sync when selectedGrade or user grade changes
@@ -421,11 +463,11 @@ export default function VocabLibrary({ selectedGrade = '11', currentUser }) {
   // Danh sách topics được lọc theo Chế độ hiện tại
   const visibleTopics = useMemo(() => {
     if (viewMode === 'by_grade') {
-      if (selectedGradeFilter === 'all') return COMPREHENSIVE_VOCAB_DATA;
-      return COMPREHENSIVE_VOCAB_DATA.filter(t => String(t.grade).toUpperCase() === String(selectedGradeFilter).toUpperCase());
+      if (selectedGradeFilter === 'all') return ALL_COMBINED_VOCAB_DATA;
+      return ALL_COMBINED_VOCAB_DATA.filter(t => String(t.grade).toUpperCase() === String(selectedGradeFilter).toUpperCase());
     } else {
-      if (selectedThematicTopic === 'all') return COMPREHENSIVE_VOCAB_DATA;
-      return COMPREHENSIVE_VOCAB_DATA.filter(t => t.category === selectedThematicTopic);
+      if (selectedThematicTopic === 'all') return ALL_COMBINED_VOCAB_DATA;
+      return ALL_COMBINED_VOCAB_DATA.filter(t => t.category === selectedThematicTopic);
     }
   }, [viewMode, selectedGradeFilter, selectedThematicTopic]);
 
@@ -441,7 +483,7 @@ export default function VocabLibrary({ selectedGrade = '11', currentUser }) {
   // Toàn bộ từ vựng phẳng phục vụ tìm kiếm
   const allFlatWords = useMemo(() => {
     const words = [];
-    COMPREHENSIVE_VOCAB_DATA.forEach(t => {
+    ALL_COMBINED_VOCAB_DATA.forEach(t => {
       t.words.forEach(w => {
         words.push({ ...w, topicTitle: t.topicTitle, grade: t.grade });
       });

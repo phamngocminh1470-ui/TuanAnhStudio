@@ -131,7 +131,7 @@ function AIMessageBody({ content }) {
   return <div className="space-y-1">{elements}</div>;
 }
 
-export default function ChatMentor({ selectedGrade, keys, currentUser }) {
+export default function ChatMentor({ selectedGrade, keys, currentUser, onNavigate }) {
   const userId = currentUser?.id ? String(currentUser.id) : (currentUser?.username ? String(currentUser.username) : 'guest');
   
   const [engineMode, setEngineMode] = useState('reasoning'); // 'reasoning' (DeepSeek 120B) | 'groq' | 'gemini' | 'openrouter'
@@ -546,6 +546,90 @@ CONVERSATIONAL GUIDELINES:
                 <p className="text-xs sm:text-sm text-slate-400 max-w-lg mx-auto leading-relaxed">
                   Gia sư AI 1:1 Độc quyền — Giải đáp chuyên sâu Ngữ pháp, Bẫy đề thi THPT, Từ vựng, và Viết luận tiếng Anh theo thời gian thực.
                 </p>
+              </div>
+
+              {/* ══════════════════════════════════════════════════════════════════════════════ */}
+              {/* PHÒNG THI NÓI & ĐỐI THOẠI AI (SPEAKING EXAM & SOCRATIC SIMULATOR) */}
+              {/* ══════════════════════════════════════════════════════════════════════════════ */}
+              <div className="w-full max-w-xl p-4 rounded-3xl bg-gradient-to-r from-blue-900/40 via-indigo-900/40 to-purple-900/40 border border-cyan-500/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xl">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-300 shrink-0">
+                    <Mic className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-xs sm:text-sm font-black text-white">Phòng Thi Nói &amp; Đối Thoại AI</h4>
+                      <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                        MỚI • FULL ENGLISH
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-300 mt-0.5">
+                      Vấn đáp GDPT 2018 theo Unit, Tranh luận Socratic &amp; Phỏng vấn IELTS Band 8.5
+                    </p>
+                  </div>
+                </div>
+                {onNavigate && (
+                  <button
+                    onClick={() => onNavigate('speaking-exam')}
+                    className="w-full sm:w-auto px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black text-xs transition cursor-pointer shrink-0 shadow-md flex items-center justify-center gap-1.5"
+                  >
+                    <span>Vào Thi Nói</span>
+                    <ChevronDown className="w-3.5 h-3.5 -rotate-90" />
+                  </button>
+                )}
+              </div>
+
+              {/* ══════════════════════════════════════════════════════════════════════════════ */}
+              {/* TÍNH MỚI KHKT: LOCAL-CONTEXT ROLEPLAY (LUYỆN NÓI TÌNH HUỐNG BẢN ĐỊA VIỆT NAM)  */}
+              {/* ══════════════════════════════════════════════════════════════════════════════ */}
+              <div className="w-full max-w-xl space-y-3 pt-2">
+                <div className="flex items-center justify-between px-1">
+                  <span className="text-xs font-black text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                    <span>🇻🇳 Luyện Nói Tình Huống Bản Địa Việt Nam (Local Roleplay)</span>
+                  </span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                    TÍNH MỚI KHKT
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {[
+                    {
+                      title: "🥖 Chỉ đường & Mua Bánh Mì cho khách Tây",
+                      desc: "Đóng vai du khách nước ngoài muốn mua bánh mì pate & cà phê trứng",
+                      prompt: "Hãy đóng vai một du khách người Anh lần đầu đến Việt Nam và hỏi tôi cách gọi một ổ bánh mì pate và ly cà phê trứng ở vỉa hè Hà Nội. Hãy nói chuyện bằng tiếng Anh thân thiện, và sau mỗi câu hỏi của bạn, hãy gợi ý cho tôi 3 cách trả lời: (1) Cơ bản, (2) Tự nhiên, (3) Pro như người bản xứ. Hãy bắt đầu chào tôi trước!"
+                    },
+                    {
+                      title: "🏞️ Thuyết trình Danh Lam Thắng Cảnh Quê Hương",
+                      desc: "Bám sát định hướng Giáo dục Địa phương Chương trình GDPT 2018",
+                      prompt: "Hãy đóng vai một ban giám khảo hội thi nói tiếng Anh, lắng nghe và hướng dẫn tôi thuyết trình 2 phút giới thiệu về danh lam thắng cảnh hoặc đặc sản quê hương của tỉnh tôi. Hãy đặt câu hỏi mở đầu và gợi ý các từ vựng ăn điểm (Collocations) cho tôi!"
+                    },
+                    {
+                      title: "🏫 Phỏng vấn tham gia CLB Tiếng Anh Cấp 3",
+                      desc: "Tập dượt trả lời phỏng vấn ứng tuyển ban truyền thông / chuyên môn",
+                      prompt: "Hãy đóng vai Chủ nhiệm CLB Tiếng Anh (English Club President) của trường THPT và phỏng vấn tôi bằng tiếng Anh để gia nhập CLB. Hãy đặt từng câu hỏi một và sửa lỗi ngữ pháp kèm cách diễn đạt tự nhiên hơn cho tôi nhé!"
+                    },
+                    {
+                      title: "🛵 Đặt xe ôm công nghệ & Chỉ đường",
+                      desc: "Xử lý tình huống giao tiếp đời thực nhanh gọn, tự tin",
+                      prompt: "Hãy đóng vai một người bạn nước ngoài đi cùng tôi bị lạc đường ở Việt Nam và hỏi tôi cách đặt xe công nghệ (Grab/Be) và chỉ đường bằng tiếng Anh. Hãy bắt đầu hội thoại tự nhiên nhé!"
+                    }
+                  ].map((scenario, sIdx) => (
+                    <button
+                      key={sIdx}
+                      onClick={() => handleSendMessage(scenario.prompt)}
+                      className="p-3 rounded-2xl bg-gradient-to-br from-amber-500/10 via-slate-900/60 to-indigo-950/40 hover:from-amber-500/20 hover:to-indigo-900/50 border border-amber-500/30 hover:border-amber-400/60 text-left transition duration-200 cursor-pointer shadow-md group"
+                    >
+                      <strong className="text-xs font-bold text-amber-200 block group-hover:text-amber-100 transition">
+                        {scenario.title}
+                      </strong>
+                      <span className="text-[10px] text-slate-400 block mt-0.5 leading-snug">
+                        {scenario.desc}
+                      </span>
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Quick Prompts Cards */}

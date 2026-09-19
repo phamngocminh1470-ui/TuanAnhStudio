@@ -14,6 +14,7 @@ const PronunciationAssessor = lazy(() => import('./components/PronunciationAsses
 const AdaptiveDashboard = lazy(() => import('./components/AdaptiveDashboard'));
 const IRTTestEngine = lazy(() => import('./components/IRTTestEngine'));
 const SM2Flashcards = lazy(() => import('./components/SM2Flashcards'));
+const SpeakingExamSimulator = lazy(() => import('./components/SpeakingExamSimulator'));
 const AdaptiveReading = lazy(() => import('./components/AdaptiveReading'));
 const AdaptiveListening = lazy(() => import('./components/AdaptiveListening'));
 const UserGuide = lazy(() => import('./components/UserGuide'));
@@ -91,6 +92,7 @@ function App() {
   });
 
   const isTuanAnhDomain = typeof window !== 'undefined' && window.location.hostname.includes('tuananhstudio.top');
+  const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
   // Pha 2: User progress sync hook
   const { loadFromServer, syncStatus, serverStats } = useUserProgress();
@@ -444,6 +446,76 @@ function App() {
 
       {/* Main Content Space - Full Width Clean Layout with Top MegaNavbar */}
       <main className="flex-1 flex flex-col min-h-screen overflow-x-hidden relative w-full">
+        {/* ─── TÍNH MỚI KHKT: THANH TRẢI NGHIỆM LOCAL TEST ─── */}
+        {isLocalhost && (
+          <aside aria-label="Thanh trải nghiệm thử nghiệm tính mới KHKT" className="bg-gradient-to-r from-amber-500 via-orange-500 to-indigo-600 text-slate-950 px-4 py-2.5 shadow-xl flex flex-wrap items-center justify-between gap-3 text-xs z-50 sticky top-0 border-b border-black/20">
+            <div className="flex items-center gap-2">
+              <span className="bg-black text-amber-300 font-black px-2.5 py-0.5 rounded-full text-[10px] uppercase tracking-wider shadow">
+                🧪 PHÒNG THỬ NGHIỆM TÍNH MỚI KHKT (LOCAL)
+              </span>
+              <span className="font-extrabold hidden md:inline text-black">
+                Bấm vào từng tính năng để xem thử ngay trên máy:
+              </span>
+            </div>
+            <div className="flex items-center gap-2 overflow-x-auto">
+              <button
+                onClick={() => setActiveTab('sm2-flashcards')}
+                className={`px-3 py-1.5 rounded-xl font-black text-xs transition cursor-pointer flex items-center gap-1.5 ${
+                  activeTab === 'sm2-flashcards'
+                    ? 'bg-black text-amber-300 shadow-md scale-105 ring-2 ring-amber-300'
+                    : 'bg-black/75 hover:bg-black text-white'
+                }`}
+              >
+                <span>✨ 1. Kể Chuyện Chêm Từ (SM-2)</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('reading')}
+                className={`px-3 py-1.5 rounded-xl font-black text-xs transition cursor-pointer flex items-center gap-1.5 ${
+                  activeTab === 'reading'
+                    ? 'bg-black text-cyan-300 shadow-md scale-105 ring-2 ring-cyan-300'
+                    : 'bg-black/75 hover:bg-black text-white'
+                }`}
+              >
+                <span>🪜 2. Giàn Giáo Đọc Hiểu & Bóc Tách Bẫy</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('chat')}
+                className={`px-3 py-1.5 rounded-xl font-black text-xs transition cursor-pointer flex items-center gap-1.5 ${
+                  activeTab === 'chat'
+                    ? 'bg-black text-emerald-300 shadow-md scale-105 ring-2 ring-emerald-300'
+                    : 'bg-black/75 hover:bg-black text-white'
+                }`}
+              >
+                <span>🇻🇳 3. Luyện Nói Tình Huống VN</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('speaking-exam')}
+                className={`px-3 py-1.5 rounded-xl font-black text-xs transition cursor-pointer flex items-center gap-1.5 ${
+                  activeTab === 'speaking-exam'
+                    ? 'bg-black text-purple-300 shadow-md scale-105 ring-2 ring-purple-300'
+                    : 'bg-black/75 hover:bg-black text-white'
+                }`}
+              >
+                <span>🎙️ 4. Phòng Thi Nói &amp; Đối Thoại AI (MỚI)</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('vocab-library')}
+                className={`px-3 py-1.5 rounded-xl font-black text-xs transition cursor-pointer flex items-center gap-1.5 ${
+                  activeTab === 'vocab-library'
+                    ? 'bg-black text-yellow-300 shadow-md scale-105 ring-2 ring-yellow-300'
+                    : 'bg-black/75 hover:bg-black text-white'
+                }`}
+              >
+                <span>📚 5. Kho Từ Vựng Toàn Diện GDPT 2018</span>
+              </button>
+            </div>
+          </aside>
+        )}
+
         {/* Top Navigation Bar: Chuyên biệt cho tuananhstudio.top hoặc MegaNavbar cho examoraai.com */}
         {isTuanAnhDomain ? (
           <header className={`sticky top-0 z-40 w-full backdrop-blur-xl px-4 sm:px-8 py-3 flex items-center justify-between transition-colors duration-200 ${
@@ -575,7 +647,7 @@ function App() {
             )}
 
             {/* CÁC TAB HỌC TẬP YÊU CẦU ĐĂNG NHẬP / ĐĂNG KÝ (Ngoại trừ Dashboard, Hướng dẫn & Cổng Giáo Viên) */}
-            {!currentUser && activeTab !== 'dashboard' && activeTab !== 'hub' && activeTab !== 'guide' && activeTab !== 'teacher-portal' ? (
+            {!currentUser && !isLocalhost && activeTab !== 'dashboard' && activeTab !== 'hub' && activeTab !== 'guide' && activeTab !== 'teacher-portal' ? (
               <div className="flex-1 flex flex-col items-center justify-center py-20 px-4 max-w-lg mx-auto text-center space-y-6 animate-fade-in text-slate-100">
                 <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-blue-600 to-indigo-600 border border-cyan-400/40 flex items-center justify-center text-white shadow-xl mx-auto">
                   <GraduationCap className="w-8 h-8" />
@@ -638,6 +710,16 @@ function App() {
                     selectedGrade={selectedLevel} 
                     keys={keys} 
                     currentUser={currentUser} 
+                    onNavigate={(tab) => setActiveTab(tab)}
+                  />
+                )}
+
+                {/* TAB SPEAKING EXAM & INTERACTIVE DIALOGUE SIMULATOR (TÍNH MỚI) */}
+                {activeTab === 'speaking-exam' && (
+                  <SpeakingExamSimulator
+                    selectedGrade={selectedLevel}
+                    keys={keys}
+                    currentUser={currentUser}
                   />
                 )}
 
