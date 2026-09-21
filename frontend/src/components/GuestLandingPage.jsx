@@ -78,8 +78,8 @@ export default function GuestLandingPage({ onOpenAuth, onStartTrial, selectedGra
 
   const faqs = [
     {
-      q: 'Examora AI là gì và ai là người sáng lập dự án?',
-      a: 'Examora AI (examoraai.com) là nền tảng gia sư và luyện thi tiếng Anh thích ứng thông minh dành cho học sinh THPT. Dự án Nghiên cứu Khoa học Kỹ thuật (KHKT) này được sáng lập và phát triển bởi Phạm Đình Tuấn Anh — học sinh Trường THPT Nguyễn Khuyến, tỉnh Bà Rịa - Vũng Tàu.'
+      q: 'Examora AI là gì và mục tiêu của dự án là gì?',
+      a: 'Examora AI (examoraai.com) là nền tảng gia sư và luyện thi tiếng Anh thích ứng thông minh dành cho học sinh THPT. Đây là công trình nghiên cứu Khoa học Kỹ thuật (KHKT) ứng dụng Trí tuệ nhân tạo và Mô hình toán học 2PL IRT nhằm cá nhân hóa lộ trình học tập cho học sinh THPT.'
     },
     {
       q: 'Hệ thống Examora AI có hoàn toàn miễn phí không?',
@@ -120,7 +120,7 @@ export default function GuestLandingPage({ onOpenAuth, onStartTrial, selectedGra
               <span>// EXAMORA AI LABS • VIETNAM</span>
             </div>
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-[11px] font-mono tracking-wider text-amber-300 uppercase shadow-[0_0_12px_rgba(245,158,11,0.15)]">
-              <span>🏆 SÁNG LẬP: PHẠM ĐÌNH TUẤN ANH • THPT NGUYỄN KHUYẾN (BR-VT)</span>
+              <span>🏆 ĐỀ TÀI NGHIÊN CỨU KHOA HỌC KỸ THUẬT (KHKT) THPT</span>
             </div>
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-[11px] font-mono tracking-wider text-emerald-300 uppercase shadow-[0_0_12px_rgba(16,185,129,0.1)]">
               <span className="w-2 h-2 rounded-full bg-emerald-400 pulse-dot shadow-[0_0_8px_#10b981]" />
@@ -846,16 +846,16 @@ export default function GuestLandingPage({ onOpenAuth, onStartTrial, selectedGra
               <span>SERVER STATUS: 99.9% ACTIVE</span>
             </div>
             
-            {/* Founder & Author Credit (SEO E-E-A-T & Google Knowledge Graph) */}
+            {/* Project Research Badge */}
             <div className="p-3.5 rounded-xl bg-cyan-950/30 border border-cyan-500/25 text-xs space-y-1">
               <div className="text-[10px] font-mono text-cyan-400 font-bold uppercase tracking-wider flex items-center gap-1">
-                <span>⭐ TÁC GIẢ & SÁNG LẬP:</span>
+                <span>⭐ DỰ ÁN NGHIÊN CỨU KHOA HỌC:</span>
               </div>
               <div className="text-white font-semibold text-sm">
-                Phạm Đình Tuấn Anh
+                Examora AI System
               </div>
               <div className="text-slate-400 text-[11px] leading-relaxed">
-                Học sinh Trường THPT Nguyễn Khuyến — Tỉnh Bà Rịa - Vũng Tàu
+                Nền tảng khảo thí thích ứng 2PL IRT & Gia sư AI cá nhân hóa THPT
               </div>
             </div>
           </div>
@@ -907,7 +907,7 @@ export default function GuestLandingPage({ onOpenAuth, onStartTrial, selectedGra
 
         {/* Copyright */}
         <div className="w-full px-4 sm:px-6 md:px-12 2xl:px-16 flex flex-col sm:flex-row justify-between items-center text-xs font-mono text-slate-400 border-t border-cyan-500/20 pt-8 pb-12 gap-4">
-          <p>© 2026 EXAMORA AI. Sáng lập bởi Phạm Đình Tuấn Anh — THPT Nguyễn Khuyến (Bà Rịa - Vũng Tàu).</p>
+          <p>© 2026 EXAMORA AI. Đề tài Nghiên cứu Khoa học Kỹ thuật (KHKT) Dành Cho Học Sinh THPT.</p>
           <div className="flex gap-6">
             <span>BÀ RỊA - VŨNG TÀU, VIỆT NAM</span>
             <span>GDPT 2018 STANDARD</span>

@@ -1,4 +1,7 @@
-User-agent: *
+﻿User-agent: *
 Allow: /
+Allow: /humans.txt
+Allow: /authorship.json
+Allow: /.well-known/security.txt
 
 Sitemap: https://examoraai.com/sitemap.xml

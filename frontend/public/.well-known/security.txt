@@ -1,0 +1,5 @@
+﻿Contact: https://github.com/phamngocminh1470-ui
+Acknowledgments: https://examoraai.com/humans.txt
+Canonical: https://examoraai.com/.well-known/security.txt
+Policy: https://examoraai.com/authorship.json
+Preferred-Languages: vi, en

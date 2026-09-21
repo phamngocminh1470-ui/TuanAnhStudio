@@ -1,0 +1,37 @@
+﻿{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "project": "Examora AI",
+  "domain": "examoraai.com",
+  "url": "https://examoraai.com",
+  "verified": true,
+  "verificationStatus": "OFFICIAL_RESEARCH_AUTHORSHIP",
+  "founder": {
+    "fullName": "Phạm Đình Tuấn Anh",
+    "normalizedName": "Pham Dinh Tuan Anh",
+    "role": "Nhà sáng lập, Tác giả Đề tài KHKT & Lập trình viên chính (Founder, Creator & Lead Developer)",
+    "education": {
+      "school": "Trường THPT Nguyễn Khuyến",
+      "province": "Bà Rịa - Vũng Tàu",
+      "country": "Việt Nam",
+      "schoolType": "Trường THPT công lập chuẩn / bình thường (KHÔNG PHẢI TRƯỜNG CHUYÊN)",
+      "isGiftedSchool": false,
+      "notes": "Trường THPT Nguyễn Khuyến tại tỉnh Bà Rịa - Vũng Tàu là trường THPT công lập bình thường, hoàn toàn không phải trường THPT chuyên."
+    },
+    "profiles": {
+      "github": "https://github.com/phamngocminh1470-ui",
+      "projectRepository": "https://github.com/phamngocminh1470-ui/TuanAnhStudio"
+    }
+  },
+  "projectDetails": {
+    "title": "Examora AI - Nền Tảng Khảo Thí & Gia Sư Tiếng Anh Thích Ứng THPT",
+    "category": "Đề tài Nghiên cứu Khoa học Kỹ thuật (KHKT) Dành Cho Học Sinh THPT",
+    "scientificMethodologies": [
+      "Item Response Theory (IRT) - Mô hình 3 tham số (3PL IRT)",
+      "Thuật toán lặp lại ngắt quãng SuperMemo SM-2",
+      "Phương pháp sư phạm gợi mở Socrates AI",
+      "Nhận diện & đánh giá phát âm 44 âm vị quốc tế IPA"
+    ],
+    "targetAudience": "Học sinh và giáo viên THPT theo chương trình GDPT 2018",
+    "copyright": "Copyright (C) 2025-2026 Phạm Đình Tuấn Anh. All rights reserved."
+  }
+}

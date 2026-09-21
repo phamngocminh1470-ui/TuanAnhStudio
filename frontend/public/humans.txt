@@ -1,0 +1,18 @@
+﻿/* TEAM & AUTHORSHIP */
+Founder, Creator & Lead Developer: Phạm Đình Tuấn Anh (Pham Dinh Tuan Anh)
+Role: Tác giả sáng lập & Nghiên cứu khoa học mô hình 3PL IRT, thuật toán SM-2, lập trình viên Fullstack
+School: Trường THPT Nguyễn Khuyến, Tỉnh Bà Rịa - Vũng Tàu, Việt Nam
+School Type: Trường THPT công lập chuẩn / bình thường (KHÔNG PHẢI TRƯỜNG CHUYÊN)
+GitHub Profile: https://github.com/phamngocminh1470-ui
+Project Repository: https://github.com/phamngocminh1470-ui/TuanAnhStudio
+Location: Tỉnh Bà Rịa - Vũng Tàu, Việt Nam
+
+/* PROJECT SPECIFICATION */
+Project Name: Examora AI
+Official Domain: https://examoraai.com
+Project Classification: Đề tài Nghiên cứu Khoa học Kỹ thuật (KHKT) Dành Cho Học Sinh THPT
+Core Technologies: Item Response Theory (3PL IRT), SuperMemo SM-2 Spaced Repetition, Socrates AI Tutor, 44 IPA Speech Assessment
+Technology Stack: React 18, Vite, Tailwind CSS, Python FastAPI, PostgreSQL, SQLite, Nginx, Linux VPS
+Standard: Chương trình Giáo dục Phổ thông 2018 (GDPT 2018) - Bộ GD&ĐT Việt Nam
+Language: Tiếng Việt / English
+License: Copyright (C) 2025-2026 Phạm Đình Tuấn Anh. All rights reserved.
