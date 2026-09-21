@@ -515,6 +515,19 @@ export default function TeacherPortal({ keys, classes: propClasses, setClasses: 
   const [showMasterMatrix, setShowMasterMatrix] = useState(false);
   const [copiedMatrix, setCopiedMatrix] = useState(false);
 
+  // Cấu hình định dạng xuất bản A4 Portrait & Times New Roman chuẩn Bộ GD&ĐT
+  const [examFontSize, setExamFontSize] = useState(12); // 11, 12, 13, 14 pt
+  const [examHeaderInfo, setExamHeaderInfo] = useState({
+    department: 'SỞ GIÁO DỤC VÀ ĐÀO TẠO',
+    school: 'TRƯỜNG THPT NGUYỄN KHUYẾN',
+    examTitle: 'BÀI KIỂM TRA ĐỊNH KỲ MÔN TIẾNG ANH',
+    subjectTitle: 'MÔN: TIẾNG ANH - THPT',
+    durationMinutes: 50,
+    grade: '12'
+  });
+  const [showEditHeaderModal, setShowEditHeaderModal] = useState(false);
+  const [showCorrectInPreview, setShowCorrectInPreview] = useState(true);
+
   // Xử lý tải file đề thi của giáo viên lên (.docx, .doc, .txt)
   const handleUploadExamFile = async (e) => {
     const file = e.target.files?.[0];
@@ -654,79 +667,291 @@ export default function TeacherPortal({ keys, classes: propClasses, setClasses: 
     alert(`✓ Đã xáo đề thành công tạo ra ${generated.length} mã đề riêng biệt (Mã 101 - ${100 + generated.length}) kèm ma trận đáp án!`);
   };
 
-  // Xuất file Word (.doc) chuẩn UTF-8 trình bày đẹp mắt
+  // ════════════════════════════════════════════════════════════════════════════
+  // BỘ TẠO FILE WORD (.DOC) & IN ẤN CHUẨN QUỐC GIA: KHỔ A4 DỌC, TIMES NEW ROMAN
+  // Tương thích 100% Microsoft Word (mọi phiên bản), WPS Office, Google Docs
+  // ════════════════════════════════════════════════════════════════════════════
+  const generateWordDocContent = (examsList, { singleExamOnly = false, includeMatrix = true } = {}) => {
+    const list = Array.isArray(examsList) ? examsList : [examsList];
+    const totalExams = list.length;
+    const totalQ = list[0]?.questions?.length || 0;
+    const fontSize = Number(examFontSize) || 12;
+
+    let bodyContent = '';
+
+    list.forEach((exam, examIdx) => {
+      const estPages = Math.max(1, Math.ceil(exam.questions.length / 10));
+
+      let examHtml = `
+      <table class="header-table" border="0" cellspacing="0" cellpadding="0" style="width: 100%; border-collapse: collapse; border: none; margin-bottom: 6pt;">
+        <tr>
+          <td style="width: 52%; vertical-align: top; text-align: center; border: none; padding: 0 8pt 0 0;">
+            <p style="margin: 0 0 2pt 0; font-weight: bold; text-transform: uppercase; font-size: ${fontSize - 0.5}pt;">${examHeaderInfo.department || 'SỞ GIÁO DỤC VÀ ĐÀO TẠO'}</p>
+            <p style="margin: 0 0 2pt 0; font-weight: bold; text-transform: uppercase; font-size: ${fontSize}pt;">${examHeaderInfo.school || 'TRƯỜNG THPT NGUYỄN KHUYẾN'}</p>
+            <p style="margin: 0; font-style: italic; font-size: ${fontSize - 2}pt;">(Đề thi có ${estPages} trang)</p>
+          </td>
+          <td style="width: 48%; vertical-align: top; text-align: center; border: none; padding: 0 0 0 8pt;">
+            <p style="margin: 0 0 2pt 0; font-weight: bold; text-transform: uppercase; font-size: ${fontSize - 0.5}pt;">${examHeaderInfo.examTitle || 'BÀI KIỂM TRA ĐỊNH KỲ TIẾNG ANH'}</p>
+            <p style="margin: 0 0 2pt 0; font-weight: bold; font-size: ${fontSize}pt;">${examHeaderInfo.subjectTitle || 'MÔN: TIẾNG ANH - THPT'}</p>
+            <p style="margin: 0 0 4pt 0; font-style: italic; font-size: ${fontSize - 1.5}pt;">Thời gian làm bài: ${examHeaderInfo.durationMinutes || 50} phút (không kể phát đề)</p>
+            <table border="1" cellspacing="0" cellpadding="0" style="margin: 2pt auto 0 auto; border-collapse: collapse; border: 1.5pt solid #000000;">
+              <tr>
+                <td style="padding: 2pt 12pt; font-weight: bold; font-size: ${fontSize + 1.5}pt; border: 1.5pt solid #000000; text-align: center; letter-spacing: 1pt;">
+                  MÃ ĐỀ THI: ${exam.examCode}
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+
+      <table border="0" cellspacing="0" cellpadding="0" style="width: 100%; margin-top: 6pt; margin-bottom: 8pt; border-bottom: 1.5pt solid #000000; padding-bottom: 5pt; border-collapse: collapse;">
+        <tr>
+          <td style="border: none; font-size: ${fontSize - 0.5}pt; padding: 0;">
+            Họ và tên thí sinh: ............................................................................ Số báo danh: .............................
+          </td>
+        </tr>
+      </table>
+      `;
+
+      exam.questions.forEach((q) => {
+        const maxOptLen = Math.max(...q.options.map(o => (o.text || '').length));
+
+        let optionsTable = '';
+        if (maxOptLen <= 18) {
+          optionsTable = `
+          <table class="options-table" border="0" cellspacing="0" cellpadding="0" style="width: 100%; border-collapse: collapse; border: none; margin-top: 1.5pt; margin-bottom: 4.5pt;">
+            <tr>
+              <td style="width: 25%; border: none; padding: 1.5pt 4pt 1.5pt 0; vertical-align: top;"><b>A.</b> ${q.options[0]?.text || ''}</td>
+              <td style="width: 25%; border: none; padding: 1.5pt 4pt 1.5pt 0; vertical-align: top;"><b>B.</b> ${q.options[1]?.text || ''}</td>
+              <td style="width: 25%; border: none; padding: 1.5pt 4pt 1.5pt 0; vertical-align: top;"><b>C.</b> ${q.options[2]?.text || ''}</td>
+              <td style="width: 25%; border: none; padding: 1.5pt 4pt 1.5pt 0; vertical-align: top;"><b>D.</b> ${q.options[3]?.text || ''}</td>
+            </tr>
+          </table>`;
+        } else if (maxOptLen <= 42) {
+          optionsTable = `
+          <table class="options-table" border="0" cellspacing="0" cellpadding="0" style="width: 100%; border-collapse: collapse; border: none; margin-top: 1.5pt; margin-bottom: 4.5pt;">
+            <tr>
+              <td style="width: 50%; border: none; padding: 1.5pt 6pt 1.5pt 0; vertical-align: top;"><b>A.</b> ${q.options[0]?.text || ''}</td>
+              <td style="width: 50%; border: none; padding: 1.5pt 6pt 1.5pt 0; vertical-align: top;"><b>B.</b> ${q.options[1]?.text || ''}</td>
+            </tr>
+            <tr>
+              <td style="width: 50%; border: none; padding: 1.5pt 6pt 1.5pt 0; vertical-align: top;"><b>C.</b> ${q.options[2]?.text || ''}</td>
+              <td style="width: 50%; border: none; padding: 1.5pt 6pt 1.5pt 0; vertical-align: top;"><b>D.</b> ${q.options[3]?.text || ''}</td>
+            </tr>
+          </table>`;
+        } else {
+          optionsTable = `
+          <table class="options-table" border="0" cellspacing="0" cellpadding="0" style="width: 100%; border-collapse: collapse; border: none; margin-top: 1.5pt; margin-bottom: 4.5pt;">
+            <tr><td style="width: 100%; border: none; padding: 1.5pt 0; vertical-align: top;"><b>A.</b> ${q.options[0]?.text || ''}</td></tr>
+            <tr><td style="width: 100%; border: none; padding: 1.5pt 0; vertical-align: top;"><b>B.</b> ${q.options[1]?.text || ''}</td></tr>
+            <tr><td style="width: 100%; border: none; padding: 1.5pt 0; vertical-align: top;"><b>C.</b> ${q.options[2]?.text || ''}</td></tr>
+            <tr><td style="width: 100%; border: none; padding: 1.5pt 0; vertical-align: top;"><b>D.</b> ${q.options[3]?.text || ''}</td></tr>
+          </table>`;
+        }
+
+        examHtml += `
+        <div style="margin-top: 5pt; margin-bottom: 3pt; page-break-inside: avoid;">
+          <p style="margin: 0 0 2pt 0; text-align: justify;">
+            <b>${q.questionText}</b>
+          </p>
+          ${optionsTable}
+        </div>`;
+      });
+
+      examHtml += `
+      <p style="text-align: center; margin: 16pt 0 3pt 0; font-weight: bold; letter-spacing: 2pt;">---------- HẾT ----------</p>
+      <p style="text-align: center; font-style: italic; font-size: ${fontSize - 1.5}pt; margin-bottom: 12pt;">
+        Thí sinh không được sử dụng tài liệu. Cán bộ coi thi không giải thích gì thêm.
+      </p>`;
+
+      // Bảng đáp án chuẩn trên trang mới
+      examHtml += `
+      <br clear="all" style="page-break-before: always; mso-break-type: section-break;" />
+      <p style="text-align: center; font-weight: bold; font-size: ${fontSize + 2}pt; text-transform: uppercase; margin: 10pt 0 3pt 0;">
+        ĐÁP ÁN ĐỀ THI MÔN TIẾNG ANH - MÃ ĐỀ ${exam.examCode}
+      </p>
+      <p style="text-align: center; font-style: italic; font-size: ${fontSize - 1.5}pt; margin-bottom: 12pt;">
+        (Bảng đáp án chính thức gồm ${exam.questions.length} câu hỏi trắc nghiệm)
+      </p>
+      `;
+
+      const chunkSize = 10;
+      for (let cIdx = 0; cIdx < exam.answerKey.length; cIdx += chunkSize) {
+        const chunk = exam.answerKey.slice(cIdx, cIdx + chunkSize);
+        examHtml += `
+        <table border="1" cellspacing="0" cellpadding="0" style="border-collapse: collapse; border: 1pt solid #000000; width: 100%; margin-bottom: 8pt; text-align: center;">
+          <tr style="background-color: #f2f2f2;">
+            <th style="border: 1pt solid #000000; padding: 4pt 2pt; font-size: ${fontSize - 1}pt; width: 10%;">Câu</th>
+            ${chunk.map(c => `<th style="border: 1pt solid #000000; padding: 4pt 2pt; font-size: ${fontSize - 1}pt;">${c.qNum}</th>`).join('')}
+          </tr>
+          <tr>
+            <td style="border: 1pt solid #000000; padding: 4pt 2pt; font-weight: bold; font-size: ${fontSize - 1}pt; width: 10%;">Đ/A</td>
+            ${chunk.map(c => `<td style="border: 1pt solid #000000; padding: 4pt 2pt; font-weight: bold; font-size: ${fontSize + 1}pt; color: #b91c1c;">${c.ans}</td>`).join('')}
+          </tr>
+        </table>`;
+      }
+
+      bodyContent += examHtml;
+
+      if (examIdx < totalExams - 1) {
+        bodyContent += `<br clear="all" style="page-break-before: always; mso-break-type: section-break;" />`;
+      }
+    });
+
+    // Bảng Ma Trận Đáp Án Đối Chiếu Tổng Hợp (ở cuối gói trọn bộ)
+    if (!singleExamOnly && totalExams > 1 && includeMatrix) {
+      bodyContent += `
+      <br clear="all" style="page-break-before: always; mso-break-type: section-break;" />
+      <p style="text-align: center; font-weight: bold; font-size: ${fontSize + 3}pt; text-transform: uppercase; margin: 10pt 0 4pt 0;">
+        BẢNG MA TRẬN ĐÁP ÁN ĐỐI CHIẾU CÁC MÃ ĐỀ THI
+      </p>
+      <p style="text-align: center; font-style: italic; font-size: ${fontSize - 1.5}pt; margin-bottom: 14pt;">
+        (Dành cho Giám thị & Ban Chấm thi • Đối chiếu ${totalExams} mã đề từ ${list[0]?.examCode} đến ${list[totalExams - 1]?.examCode})
+      </p>
+      <table border="1" cellspacing="0" cellpadding="0" style="border-collapse: collapse; border: 1pt solid #000000; width: 100%; margin: 0 auto; text-align: center;">
+        <thead>
+          <tr style="background-color: #e5e7eb;">
+            <th style="border: 1pt solid #000000; padding: 5pt 4pt; font-size: ${fontSize - 0.5}pt; width: 12%;">Câu hỏi</th>
+            ${list.map(ex => `<th style="border: 1pt solid #000000; padding: 5pt 4pt; font-size: ${fontSize - 0.5}pt; font-weight: bold;">Mã ${ex.examCode}</th>`).join('')}
+          </tr>
+        </thead>
+        <tbody>
+          ${Array.from({ length: totalQ }, (_, i) => {
+            const qNum = i + 1;
+            const bgStyle = qNum % 2 === 0 ? 'background-color: #f9fafb;' : '';
+            return `
+            <tr style="${bgStyle}">
+              <td style="border: 1pt solid #000000; padding: 3.5pt 4pt; font-weight: bold; font-size: ${fontSize - 1}pt;">Câu ${qNum}</td>
+              ${list.map(ex => {
+                const ans = ex.answerKey.find(a => a.qNum === qNum)?.ans || '-';
+                return `<td style="border: 1pt solid #000000; padding: 3.5pt 4pt; font-weight: bold; font-size: ${fontSize}pt; color: #1e3a8a;">${ans}</td>`;
+              }).join('')}
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>`;
+    }
+
+    return `
+<html xmlns:o='urn:schemas-microsoft-com:office:office'
+      xmlns:w='urn:schemas-microsoft-com:office:word'
+      xmlns='http://www.w3.org/TR/REC-html40'>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="ProgId" content="Word.Document">
+<meta name="Generator" content="Microsoft Word 15">
+<meta name="Originator" content="Microsoft Word 15">
+<!--[if gte mso 9]>
+<xml>
+  <w:WordDocument>
+    <w:View>Print</w:View>
+    <w:Zoom>100</w:Zoom>
+    <w:DoNotOptimizeForBrowser/>
+    <w:PunctuationKerning/>
+    <w:ValidateAgainstSchemas/>
+    <w:SaveIfXMLInvalid>false</w:SaveIfXMLInvalid>
+    <w:IgnoreMixedContent>false</w:IgnoreMixedContent>
+    <w:AlwaysShowPlaceholderText>false</w:AlwaysShowPlaceholderText>
+    <w:Compatibility>
+      <w:BreakWrappedTables/>
+      <w:SnapToGridInCell/>
+      <w:WrapTextWithPunct/>
+      <w:UseAsianBreakRules/>
+      <w:DontGrowAutofit/>
+      <w:SplitPgLdFtMpt/>
+    </w:Compatibility>
+  </w:WordDocument>
+</xml>
+<![endif]-->
+<style>
+@page {
+  size: 595.3pt 841.9pt; /* A4 Portrait: 210mm x 297mm */
+  mso-page-orientation: portrait;
+  margin: 56.7pt 42.5pt 56.7pt 56.7pt; /* Lề trên: 2cm, Lề phải: 1.5cm, Lề dưới: 2cm, Lề trái: 2cm */
+  mso-header-margin: 36.0pt;
+  mso-footer-margin: 36.0pt;
+}
+@page Section1 {
+  size: 595.3pt 841.9pt;
+  mso-page-orientation: portrait;
+  margin: 56.7pt 42.5pt 56.7pt 56.7pt;
+  mso-header-margin: 36.0pt;
+  mso-footer-margin: 36.0pt;
+  mso-paper-source: 0;
+}
+div.Section1 {
+  page: Section1;
+}
+/* ÉP BUỘC FONT TIMES NEW ROMAN 100% CHO WORD VÀ WPS OFFICE */
+body, p, div, span, table, td, th, h1, h2, h3, h4 {
+  font-family: 'Times New Roman', Times, serif !important;
+  mso-ascii-font-family: 'Times New Roman' !important;
+  mso-hansi-font-family: 'Times New Roman' !important;
+  mso-bidi-font-family: 'Times New Roman' !important;
+  mso-font-alt: 'Times New Roman' !important;
+  color: #000000;
+}
+body {
+  font-size: ${fontSize}pt;
+  line-height: 1.25;
+  margin: 0;
+  padding: 0;
+}
+p {
+  margin-top: 0;
+  margin-bottom: 3pt;
+  mso-pagination: widow-orphan;
+}
+.header-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 6pt;
+  border: none !important;
+  mso-border-alt: none !important;
+}
+.header-table td {
+  border: none !important;
+  mso-border-alt: none !important;
+  padding: 0;
+  vertical-align: top;
+}
+.options-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1.5pt;
+  margin-bottom: 4.5pt;
+  border: none !important;
+  mso-border-alt: none !important;
+}
+.options-table td {
+  border: none !important;
+  mso-border-alt: none !important;
+  padding: 1.5pt 4pt 1.5pt 0;
+  vertical-align: top;
+}
+</style>
+</head>
+<body lang="VI">
+<div class="Section1">
+${bodyContent}
+</div>
+</body>
+</html>`;
+  };
+
+  // Xuất 1 mã đề Word (.doc) khổ A4 đứng, Times New Roman
   const handleExportWord = (examCode) => {
     if (!shuffledExams) return;
     const exam = shuffledExams.find(e => e.examCode === examCode);
     if (!exam) return;
 
-    let html = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-<head><meta charset='utf-8'><title>ĐỀ THI TIẾNG ANH THPT - MÃ ĐỀ ${exam.examCode}</title>
-<style>
-@page { size: A4; margin: 2cm; }
-body { font-family: 'Times New Roman', serif; font-size: 13pt; line-height: 1.35; color: #000; }
-.header-table { width: 100%; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 8px; }
-.title { text-align: center; font-weight: bold; font-size: 15pt; text-transform: uppercase; margin: 15px 0 10px 0; }
-.meta { font-size: 11pt; font-style: italic; margin-bottom: 15px; }
-.question-block { margin-top: 12px; margin-bottom: 6px; }
-.q-title { font-weight: bold; margin-bottom: 4px; }
-.options-grid { width: 100%; border-collapse: collapse; margin-left: 10px; margin-bottom: 8px; }
-.options-grid td { width: 50%; padding: 3px 0; vertical-align: top; }
-.answer-table { width: 100%; border-collapse: collapse; margin-top: 25px; }
-.answer-table th, .answer-table td { border: 1px solid #000; padding: 6px; text-align: center; font-size: 11pt; }
-.page-break { page-break-before: always; }
-</style>
-</head>
-<body>
-<table class="header-table">
-  <tr>
-    <td style="width: 55%; vertical-align: top;">
-      <strong>SỞ GIÁO DỤC VÀ ĐÀO TẠO</strong><br/>
-      <strong>TRƯỜNG THPT: ....................................................</strong>
-    </td>
-    <td style="width: 45%; text-align: right; vertical-align: top;">
-      <strong>ĐỀ KIỂM TRA ĐỊNH KỲ TIẾNG ANH</strong><br/>
-      <strong>MÃ ĐỀ THI: ${exam.examCode}</strong><br/>
-      <em>Thời gian làm bài: 50 phút</em>
-    </td>
-  </tr>
-</table>
-
-<div class="meta">Họ và tên thí sinh: ............................................................................ Số báo danh: ........................</div>
-
-<div class="title">NỘI DUNG ĐỀ THI (${exam.questions.length} CÂU HỎI TRẮC NGHIỆM)</div>
-`;
-
-    exam.questions.forEach(q => {
-      html += `<div class="question-block">`;
-      html += `<div class="q-title">${q.questionText}</div>`;
-      html += `<table class="options-grid">`;
-      html += `<tr>`;
-      html += `<td><strong>A.</strong> ${q.options[0]?.text || ''}</td>`;
-      html += `<td><strong>B.</strong> ${q.options[1]?.text || ''}</td>`;
-      html += `</tr><tr>`;
-      html += `<td><strong>C.</strong> ${q.options[2]?.text || ''}</td>`;
-      html += `<td><strong>D.</strong> ${q.options[3]?.text || ''}</td>`;
-      html += `</tr></table>`;
-      html += `</div>`;
-    });
-
-    html += `<div class="page-break"></div>`;
-    html += `<h3 style="text-align: center; font-weight: bold; text-transform: uppercase;">BẢNG ĐÁP ÁN CHUẨN - MÃ ĐỀ ${exam.examCode}</h3>`;
-    html += `<table class="answer-table"><tr>`;
-    exam.answerKey.forEach((a, i) => {
-      if (i > 0 && i % 10 === 0) html += `</tr><tr>`;
-      html += `<td><strong>C${a.qNum}</strong><br/>${a.ans}</td>`;
-    });
-    html += `</tr></table>`;
-
-    html += `</body></html>`;
-
+    const html = generateWordDocContent(exam, { singleExamOnly: true });
     const blob = new Blob(['\ufeff' + html], { type: 'application/msword;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `De_Thi_Tieng_Anh_MaDe_${exam.examCode}.doc`;
+    link.download = `De_Thi_Tieng_Anh_MaDe_${exam.examCode}_A4.doc`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -736,105 +961,171 @@ body { font-family: 'Times New Roman', serif; font-size: 13pt; line-height: 1.35
   // Xuất trọn bộ file Word kèm ma trận đáp án tổng hợp
   const handleExportAllWord = () => {
     if (!shuffledExams || shuffledExams.length === 0) return;
-    let html = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-<head><meta charset='utf-8'><title>TRỌN BỘ ${shuffledExams.length} MÃ ĐỀ THI TIẾNG ANH THPT</title>
-<style>
-@page { size: A4; margin: 2cm; }
-body { font-family: 'Times New Roman', serif; font-size: 13pt; line-height: 1.35; color: #000; }
-.header-table { width: 100%; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 8px; }
-.title { text-align: center; font-weight: bold; font-size: 15pt; text-transform: uppercase; margin: 15px 0 10px 0; }
-.question-block { margin-top: 12px; margin-bottom: 6px; }
-.q-title { font-weight: bold; margin-bottom: 4px; }
-.options-grid { width: 100%; border-collapse: collapse; margin-left: 10px; margin-bottom: 8px; }
-.options-grid td { width: 50%; padding: 3px 0; vertical-align: top; }
-.answer-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-.answer-table th, .answer-table td { border: 1px solid #000; padding: 6px; text-align: center; font-size: 11pt; }
-.page-break { page-break-before: always; }
-</style>
-</head>
-<body>`;
-
-    // Bảng ma trận đáp án tổng hợp
-    html += `<h2 style="text-align: center; font-weight: bold; text-transform: uppercase;">BẢNG MA TRẬN ĐÁP ÁN TỔNG HỢP (${shuffledExams.length} MÃ ĐỀ)</h2>`;
-    html += `<table class="answer-table"><thead><tr style="background: #e6e6e6;"><th>Câu</th>`;
-    shuffledExams.forEach(ex => html += `<th>Mã ${ex.examCode}</th>`);
-    html += `</tr></thead><tbody>`;
-
-    const totalQ = shuffledExams[0].questions.length;
-    for (let q = 1; q <= totalQ; q++) {
-      html += `<tr><td><strong>Câu ${q}</strong></td>`;
-      shuffledExams.forEach(ex => {
-        const item = ex.answerKey.find(a => a.qNum === q);
-        html += `<td style="font-weight: bold; font-size: 12pt;">${item?.ans || '-'}</td>`;
-      });
-      html += `</tr>`;
-    }
-    html += `</tbody></table>`;
-
-    // Từng mã đề thi
-    shuffledExams.forEach(ex => {
-      html += `<div class="page-break"></div>`;
-      html += `<table class="header-table"><tr><td style="width: 55%;"><strong>SỞ GD&ĐT • TRƯỜNG THPT: .............................</strong></td><td style="width: 45%; text-align: right;"><strong>MÃ ĐỀ: ${ex.examCode}</strong><br/><em>Thời gian: 50 phút</em></td></tr></table>`;
-      html += `<div class="title">ĐỀ KIỂM TRA TIẾNG ANH - MÃ ĐỀ ${ex.examCode}</div>`;
-      
-      ex.questions.forEach(q => {
-        html += `<div class="question-block"><div class="q-title">${q.questionText}</div>`;
-        html += `<table class="options-grid"><tr>`;
-        html += `<td><strong>A.</strong> ${q.options[0]?.text || ''}</td>`;
-        html += `<td><strong>B.</strong> ${q.options[1]?.text || ''}</td>`;
-        html += `</tr><tr>`;
-        html += `<td><strong>C.</strong> ${q.options[2]?.text || ''}</td>`;
-        html += `<td><strong>D.</strong> ${q.options[3]?.text || ''}</td>`;
-        html += `</tr></table></div>`;
-      });
-    });
-
-    html += `</body></html>`;
-
+    const html = generateWordDocContent(shuffledExams, { singleExamOnly: false, includeMatrix: true });
     const blob = new Blob(['\ufeff' + html], { type: 'application/msword;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `Tron_Bo_${shuffledExams.length}_Ma_De_Kem_Ma_Tran_Dap_An.doc`;
+    link.download = `Tron_Bo_${shuffledExams.length}_Ma_De_Kem_Ma_Tran_Dap_An_A4.doc`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
 
-  // In đề thi chuẩn PDF
+  // In đề thi chuẩn A4 Portrait
   const handlePrintExam = (examCode) => {
     if (!shuffledExams) return;
     const exam = shuffledExams.find(e => e.examCode === examCode);
     if (!exam) return;
 
+    const fontSize = Number(examFontSize) || 12;
     const printWin = window.open('', '_blank');
-    let content = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>In Đề Thi - Mã ${exam.examCode}</title>
+    if (!printWin) {
+      alert("Vui lòng cho phép trình duyệt mở pop-up để xem và in đề thi!");
+      return;
+    }
+
+    const estPages = Math.max(1, Math.ceil(exam.questions.length / 10));
+
+    let content = `<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>In Đề Thi Tiếng Anh - Mã ${exam.examCode}</title>
 <style>
-@page { size: A4; margin: 15mm; }
-body { font-family: 'Times New Roman', serif; font-size: 13pt; line-height: 1.35; color: #000; }
-.header { width: 100%; margin-bottom: 15px; border-bottom: 2px solid #000; padding-bottom: 8px; }
-.title { text-align: center; font-weight: bold; font-size: 14pt; text-transform: uppercase; margin: 10px 0; }
-.question { margin-top: 12px; margin-bottom: 4px; font-weight: bold; }
-.options { margin-left: 15px; margin-bottom: 8px; }
-.answer-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-.answer-table td { border: 1px solid #000; padding: 4px; text-align: center; font-size: 10pt; }
+@page {
+  size: A4 portrait;
+  margin: 18mm 15mm 18mm 20mm;
+}
+@media print {
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Times New Roman', Times, serif !important;
+    font-size: ${fontSize}pt !important;
+    line-height: 1.25;
+    color: #000000 !important;
+    background: #ffffff !important;
+  }
+  .no-print { display: none !important; }
+  .page-break { page-break-before: always; break-before: page; }
+  .question-item { page-break-inside: avoid; break-inside: avoid; }
+}
+body {
+  font-family: 'Times New Roman', Times, serif;
+  font-size: ${fontSize}pt;
+  line-height: 1.25;
+  color: #000;
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 20px;
+}
+.header-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; border: none; }
+.header-table td { border: none; vertical-align: top; padding: 0; }
+.candidate-box { width: 100%; border-bottom: 1.5px solid #000; padding-bottom: 6px; margin-bottom: 12px; font-size: ${fontSize - 0.5}pt; }
+.code-box { border: 1.5px solid #000; padding: 2px 10px; font-weight: bold; display: inline-block; font-size: ${fontSize + 1}pt; }
+.options-table { width: 100%; border-collapse: collapse; margin-top: 3px; margin-bottom: 6px; border: none; }
+.options-table td { border: none; padding: 2px 6px 2px 0; vertical-align: top; }
+.answer-grid { border-collapse: collapse; width: 100%; margin-top: 10px; margin-bottom: 12px; text-align: center; }
+.answer-grid th, .answer-grid td { border: 1px solid #000; padding: 4px 2px; font-size: ${fontSize - 1}pt; }
+.answer-grid th { background-color: #f2f2f2; font-weight: bold; }
 </style>
-</head><body onload="window.print()">
-<table class="header"><tr><td><strong>SỞ GD&ĐT • TRƯỜNG THPT: .............................</strong></td><td style="text-align: right;"><strong>MÃ ĐỀ: ${exam.examCode}</strong><br/><em>Thời gian: 50 phút</em></td></tr></table>
-<div class="title">ĐỀ KIỂM TRA TIẾNG ANH - MÃ ĐỀ ${exam.examCode}</div>
+</head>
+<body onload="window.print()">
+  <table class="header-table">
+    <tr>
+      <td style="width: 52%; text-align: center;">
+        <div style="font-weight: bold; text-transform: uppercase;">${examHeaderInfo.department || 'SỞ GIÁO DỤC VÀ ĐÀO TẠO'}</div>
+        <div style="font-weight: bold; text-transform: uppercase;">${examHeaderInfo.school || 'TRƯỜNG THPT NGUYỄN KHUYẾN'}</div>
+        <div style="font-style: italic; font-size: ${fontSize - 2}pt;">(Đề thi có ${estPages} trang)</div>
+      </td>
+      <td style="width: 48%; text-align: center;">
+        <div style="font-weight: bold; text-transform: uppercase;">${examHeaderInfo.examTitle || 'BÀI KIỂM TRA TIẾNG ANH'}</div>
+        <div style="font-weight: bold;">${examHeaderInfo.subjectTitle || 'MÔN: TIẾNG ANH - THPT'}</div>
+        <div style="font-style: italic; font-size: ${fontSize - 1.5}pt; margin-bottom: 4px;">Thời gian: ${examHeaderInfo.durationMinutes || 50} phút (không kể phát đề)</div>
+        <div class="code-box">MÃ ĐỀ: ${exam.examCode}</div>
+      </td>
+    </tr>
+  </table>
+
+  <div class="candidate-box">
+    Họ và tên thí sinh: ............................................................................ Số báo danh: .............................
+  </div>
 `;
-    exam.questions.forEach(q => {
-      content += `<div class="question">${q.questionText}</div><div class="options">`;
-      q.options.forEach(opt => content += `<div><strong>${opt.key}.</strong> ${opt.text}</div>`);
-      content += `</div>`;
+
+    exam.questions.forEach((q) => {
+      const maxOptLen = Math.max(...q.options.map(o => (o.text || '').length));
+      let optsHtml = '';
+      if (maxOptLen <= 18) {
+        optsHtml = `
+        <table class="options-table"><tr>
+          <td style="width: 25%;"><b>A.</b> ${q.options[0]?.text || ''}</td>
+          <td style="width: 25%;"><b>B.</b> ${q.options[1]?.text || ''}</td>
+          <td style="width: 25%;"><b>C.</b> ${q.options[2]?.text || ''}</td>
+          <td style="width: 25%;"><b>D.</b> ${q.options[3]?.text || ''}</td>
+        </tr></table>`;
+      } else if (maxOptLen <= 42) {
+        optsHtml = `
+        <table class="options-table">
+          <tr>
+            <td style="width: 50%;"><b>A.</b> ${q.options[0]?.text || ''}</td>
+            <td style="width: 50%;"><b>B.</b> ${q.options[1]?.text || ''}</td>
+          </tr>
+          <tr>
+            <td style="width: 50%;"><b>C.</b> ${q.options[2]?.text || ''}</td>
+            <td style="width: 50%;"><b>D.</b> ${q.options[3]?.text || ''}</td>
+          </tr>
+        </table>`;
+      } else {
+        optsHtml = `
+        <table class="options-table">
+          <tr><td style="width: 100%;"><b>A.</b> ${q.options[0]?.text || ''}</td></tr>
+          <tr><td style="width: 100%;"><b>B.</b> ${q.options[1]?.text || ''}</td></tr>
+          <tr><td style="width: 100%;"><b>C.</b> ${q.options[2]?.text || ''}</td></tr>
+          <tr><td style="width: 100%;"><b>D.</b> ${q.options[3]?.text || ''}</td></tr>
+        </table>`;
+      }
+
+      content += `
+      <div class="question-item" style="margin-top: 6px; margin-bottom: 4px;">
+        <div style="text-align: justify;"><b>${q.questionText}</b></div>
+        ${optsHtml}
+      </div>`;
     });
-    content += `<div style="page-break-before: always; margin-top: 30px;"><h3 style="text-align:center;">BẢNG ĐÁP ÁN MÃ ĐỀ ${exam.examCode}</h3><table class="answer-table"><tr>`;
-    exam.answerKey.forEach((a, i) => {
-      if (i > 0 && i % 10 === 0) content += `</tr><tr>`;
-      content += `<td><strong>C${a.qNum}</strong>: ${a.ans}</td>`;
-    });
-    content += `</tr></table></div></body></html>`;
+
+    content += `
+    <div style="text-align: center; margin: 20px 0 4px 0; font-weight: bold; letter-spacing: 2px;">---------- HẾT ----------</div>
+    <div style="text-align: center; font-style: italic; font-size: ${fontSize - 1.5}pt; margin-bottom: 20px;">
+      Thí sinh không được sử dụng tài liệu. Cán bộ coi thi không giải thích gì thêm.
+    </div>
+
+    <div class="page-break" style="page-break-before: always; break-before: page; margin-top: 25px;">
+      <div style="text-align: center; font-weight: bold; font-size: ${fontSize + 2}pt; text-transform: uppercase; margin-bottom: 4px;">
+        ĐÁP ÁN ĐỀ THI MÔN TIẾNG ANH - MÃ ĐỀ ${exam.examCode}
+      </div>
+      <div style="text-align: center; font-style: italic; font-size: ${fontSize - 1.5}pt; margin-bottom: 15px;">
+        (Bảng đáp án chính thức gồm ${exam.questions.length} câu hỏi)
+      </div>
+    `;
+
+    const chunkSize = 10;
+    for (let cIdx = 0; cIdx < exam.answerKey.length; cIdx += chunkSize) {
+      const chunk = exam.answerKey.slice(cIdx, cIdx + chunkSize);
+      content += `
+      <table class="answer-grid">
+        <tr>
+          <th style="width: 10%;">Câu</th>
+          ${chunk.map(c => `<th>${c.qNum}</th>`).join('')}
+        </tr>
+        <tr>
+          <td style="font-weight: bold;">Đ/A</td>
+          ${chunk.map(c => `<td style="font-weight: bold; font-size: ${fontSize + 1}pt; color: #b91c1c;">${c.ans}</td>`).join('')}
+        </tr>
+      </table>`;
+    }
+
+    content += `</div></body></html>`;
 
     printWin.document.write(content);
     printWin.document.close();
@@ -873,48 +1164,80 @@ body { font-family: 'Times New Roman', serif; font-size: 13pt; line-height: 1.35
   const handleExportMasterMatrixWord = () => {
     if (!shuffledExams || shuffledExams.length === 0) return;
     const totalQ = shuffledExams[0]?.questions?.length || 0;
-    let html = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-<head><meta charset='utf-8'><title>BẢNG MA TRẬN ĐÁP ÁN ĐỐI CHIẾU CÁC MÃ ĐỀ</title>
+    const fontSize = Number(examFontSize) || 12;
+
+    let html = `
+<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="ProgId" content="Word.Document">
+<meta name="Generator" content="Microsoft Word 15">
+<meta name="Originator" content="Microsoft Word 15">
+<!--[if gte mso 9]>
+<xml>
+  <w:WordDocument>
+    <w:View>Print</w:View>
+    <w:Zoom>100</w:Zoom>
+    <w:DoNotOptimizeForBrowser/>
+  </w:WordDocument>
+</xml>
+<![endif]-->
 <style>
-@page { size: A4; margin: 1.5cm; }
-body { font-family: 'Times New Roman', serif; font-size: 12pt; line-height: 1.3; }
-.title { text-align: center; font-weight: bold; font-size: 15pt; text-transform: uppercase; margin-bottom: 5px; }
-.sub { text-align: center; font-size: 11pt; font-style: italic; margin-bottom: 20px; }
-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-th, td { border: 1px solid #000; padding: 6px 4px; text-align: center; font-size: 11pt; }
-th { background-color: #f2f2f2; font-weight: bold; }
+@page Section1 {
+  size: 595.3pt 841.9pt; /* A4 Portrait */
+  mso-page-orientation: portrait;
+  margin: 56.7pt 42.5pt 56.7pt 56.7pt;
+}
+div.Section1 { page: Section1; }
+body, p, div, span, table, td, th {
+  font-family: 'Times New Roman', Times, serif !important;
+  mso-ascii-font-family: 'Times New Roman' !important;
+  mso-hansi-font-family: 'Times New Roman' !important;
+  mso-bidi-font-family: 'Times New Roman' !important;
+  color: #000000;
+}
+body { font-size: ${fontSize}pt; line-height: 1.3; }
+.title { text-align: center; font-weight: bold; font-size: ${fontSize + 3}pt; text-transform: uppercase; margin-bottom: 4pt; }
+.sub { text-align: center; font-size: ${fontSize - 1.5}pt; font-style: italic; margin-bottom: 16pt; }
+table { width: 100%; border-collapse: collapse; margin-top: 10pt; }
+th, td { border: 1pt solid #000000; padding: 4pt 4pt; text-align: center; font-size: ${fontSize - 1}pt; }
+th { background-color: #e5e7eb; font-weight: bold; }
 </style>
 </head>
-<body>
+<body lang="VI">
+<div class="Section1">
 <div class="title">BẢNG MA TRẬN ĐÁP ÁN TỔNG HỢP CÁC MÃ ĐỀ THI</div>
-<div class="sub">Hệ thống xáo đề tự động Examora AI • tuananhstudio.top</div>
-<table>
+<div class="sub">Hệ thống xáo đề tự động Examora AI • examoraai.com</div>
+<table border="1" cellspacing="0" cellpadding="0">
   <thead>
-    <tr>
-      <th>Câu</th>
+    <tr style="background-color: #e5e7eb;">
+      <th style="width: 14%;">Câu hỏi</th>
       ${shuffledExams.map(ex => `<th>Mã ${ex.examCode}</th>`).join('')}
     </tr>
   </thead>
   <tbody>
     ${Array.from({ length: totalQ }, (_, i) => {
       const qNum = i + 1;
-      return `<tr>
-        <td><strong>${qNum}</strong></td>
+      const bg = qNum % 2 === 0 ? 'style="background-color: #f9fafb;"' : '';
+      return `<tr ${bg}>
+        <td><strong>Câu ${qNum}</strong></td>
         ${shuffledExams.map(ex => {
           const ans = ex.answerKey.find(a => a.qNum === qNum)?.ans || '-';
-          return `<td><strong>${ans}</strong></td>`;
+          return `<td style="font-weight: bold; font-size: ${fontSize}pt; color: #1e3a8a;">${ans}</td>`;
         }).join('')}
       </tr>`;
     }).join('')}
   </tbody>
 </table>
-</body></html>`;
+</div>
+</body>
+</html>`;
 
     const blob = new Blob(['\ufeff' + html], { type: 'application/msword;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `Ma_Tran_Dap_An_Tong_Hop_${shuffledExams.length}_MaDe.doc`;
+    link.download = `Ma_Tran_Dap_An_Tong_Hop_${shuffledExams.length}_MaDe_A4.doc`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -2763,45 +3086,128 @@ Trả về định dạng JSON thuần túy:
             {/* Cột Phải: Xem Mã Đề Đã Sinh & Tải Word / In PDF */}
             <div className="lg:col-span-7 space-y-4">
               {shuffledExams ? (
-                <div className={`p-5 rounded-2xl border space-y-5 ${
+                <div className={`p-4 sm:p-5 rounded-2xl border space-y-4 ${
                   isLight ? 'bg-white border-slate-200 shadow-sm text-slate-900' : 'glass border-white/10 text-white'
                 }`}>
-                  <div className={`flex flex-wrap items-center justify-between gap-3 pb-4 border-b ${
+                  
+                  {/* THANH CÔNG CỤ ĐỊNH DẠNG: CỠ CHỮ, FONT, SỬA TIÊU ĐỀ, ĐÁP ÁN */}
+                  <div className={`p-3 rounded-xl border flex flex-wrap items-center justify-between gap-3 ${
+                    isLight ? 'bg-slate-50 border-slate-200' : 'bg-white/[0.03] border-white/10'
+                  }`}>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className={`text-[11px] font-extrabold uppercase tracking-wider flex items-center gap-1 ${
+                        isLight ? 'text-slate-800' : 'text-slate-300'
+                      }`}>
+                        ⚙️ Định dạng Word:
+                      </span>
+
+                      {/* CHỌN CỠ CHỮ CHO GIÁO VIÊN */}
+                      <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-bold ${
+                        isLight ? 'bg-white border-slate-300 text-slate-900 shadow-xs' : 'bg-black/50 border-white/15 text-white'
+                      }`}>
+                        <span className="text-[11px] text-amber-500 font-extrabold">Cỡ chữ:</span>
+                        <select
+                          value={examFontSize}
+                          onChange={(e) => setExamFontSize(Number(e.target.value))}
+                          className="bg-transparent text-xs font-black focus:outline-none cursor-pointer"
+                          title="Chọn cỡ chữ in đề thi (Chuẩn Bộ GD&ĐT là 12pt hoặc 13pt)"
+                        >
+                          <option value={11} className={isLight ? 'text-black' : 'text-black'}>11 pt (Nhỏ gọn)</option>
+                          <option value={12} className={isLight ? 'text-black' : 'text-black'}>12 pt (Chuẩn Bộ GD&ĐT)</option>
+                          <option value={13} className={isLight ? 'text-black' : 'text-black'}>13 pt (Tiêu chuẩn)</option>
+                          <option value={14} className={isLight ? 'text-black' : 'text-black'}>14 pt (Cỡ chữ lớn)</option>
+                        </select>
+                      </div>
+
+                      {/* BADGE KHỔ A4 DỌC */}
+                      <span className="px-2 py-1 rounded-lg text-[10px] font-bold bg-blue-500/15 text-blue-700 dark:text-blue-300 border border-blue-500/30">
+                        📄 Khổ A4 Dọc (210×297mm)
+                      </span>
+
+                      {/* BADGE FONT TIMES NEW ROMAN */}
+                      <span className="px-2 py-1 rounded-lg text-[10px] font-bold bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/30 font-serif">
+                        🔤 Times New Roman
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {/* NÚT TÙY CHỈNH TIÊU ĐỀ SỞ / TRƯỜNG */}
+                      <button
+                        type="button"
+                        onClick={() => setShowEditHeaderModal(true)}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition flex items-center gap-1.5 cursor-pointer shadow-xs ${
+                          isLight
+                            ? 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-300'
+                            : 'bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border-amber-500/30'
+                        }`}
+                        title="Tùy chỉnh thông tin Sở GD&ĐT, Tên Trường, Kỳ Thi và Thời gian làm bài"
+                      >
+                        <Edit3 className="w-3.5 h-3.5 text-amber-500" />
+                        <span>Sửa Tiêu Đề Trường</span>
+                      </button>
+
+                      {/* BẬT / TẮT ĐÁP ÁN ĐÚNG TRÊN PREVIEW */}
+                      <button
+                        type="button"
+                        onClick={() => setShowCorrectInPreview(!showCorrectInPreview)}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition flex items-center gap-1 cursor-pointer shadow-xs ${
+                          showCorrectInPreview
+                            ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                            : isLight ? 'bg-slate-100 text-slate-600 border-slate-200' : 'bg-white/5 text-gray-400 border-white/10'
+                        }`}
+                        title="Bật/tắt đánh dấu đáp án đúng trên màn hình xem trước"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        <span>{showCorrectInPreview ? 'Đáp Án: Hiện' : 'Đáp Án: Ẩn'}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* THANH CHỌN MÃ ĐỀ & BỘ NÚT TẢI FILE NỔI BẬT */}
+                  <div className={`flex flex-wrap items-center justify-between gap-3 pb-3 border-b ${
                     isLight ? 'border-slate-200' : 'border-white/10'
                   }`}>
+                    {/* Danh sách tab mã đề */}
                     <div className="flex items-center gap-2">
-                      <span className={`text-xs font-bold ${isLight ? 'text-slate-600' : 'text-gray-400'}`}>Xem mã đề:</span>
-                      <div className="flex gap-1.5">
+                      <span className={`text-xs font-bold ${isLight ? 'text-slate-600' : 'text-gray-400'}`}>Mã đề:</span>
+                      <div className="flex flex-wrap gap-1.5">
                         {shuffledExams.map(ex => (
                           <button
                             key={ex.examCode}
                             onClick={() => setSelectedExamCode(ex.examCode)}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition cursor-pointer ${
+                            className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition cursor-pointer flex items-center gap-1 ${
                               selectedExamCode === ex.examCode
-                                ? 'bg-amber-500 text-slate-950 font-black shadow-xs'
+                                ? 'bg-amber-500 text-slate-950 font-black shadow-md shadow-amber-500/25 scale-105'
                                 : isLight
-                                  ? 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                                  : 'bg-white/5 text-gray-400 hover:text-white'
+                                  ? 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'
+                                  : 'bg-white/5 text-gray-400 hover:text-white border border-white/5'
                             }`}
                           >
-                            Mã {ex.examCode}
+                            <span>Mã {ex.examCode}</span>
+                            <span className="text-[10px] opacity-75">({ex.questions.length}c)</span>
                           </button>
                         ))}
                       </div>
                     </div>
 
+                    {/* Bộ nút tải file & in ấn */}
                     <div className="flex flex-wrap items-center gap-2">
                       <button
                         onClick={() => handleExportWord(selectedExamCode)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition flex items-center gap-1.5 cursor-pointer shadow-xs ${
-                          isLight
-                            ? 'bg-blue-50 hover:bg-blue-100 text-blue-800 border-blue-200'
-                            : 'bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border-blue-500/40'
-                        }`}
-                        title="Tải đề thi về dưới dạng file Microsoft Word (.doc) chuẩn tiếng Việt UTF-8"
+                        className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white transition flex items-center gap-1.5 cursor-pointer shadow-md shadow-blue-500/20"
+                        title="Tải file Word (.doc) riêng của mã đề này, mở ra là khổ đứng A4, Times New Roman"
                       >
-                        <FileText className={`w-3.5 h-3.5 ${isLight ? 'text-blue-600' : 'text-blue-400'}`} />
-                        <span>Tải Word (.doc)</span>
+                        <Download className="w-3.5 h-3.5" />
+                        <span>Tải Word Mã Này (.doc)</span>
+                      </button>
+
+                      <button
+                        onClick={handleExportAllWord}
+                        className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white transition flex items-center gap-1.5 cursor-pointer shadow-md shadow-indigo-500/25"
+                        title="Tải trọn bộ tất cả các mã đề kèm Ma trận đáp án trong 1 file Word duy nhất"
+                      >
+                        <Layers className="w-3.5 h-3.5" />
+                        <span>Tải Trọn Bộ ({shuffledExams.length} Mã)</span>
                       </button>
 
                       <button
@@ -2811,17 +3217,17 @@ Trả về định dạng JSON thuần túy:
                             ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-200'
                             : 'bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border-emerald-500/40'
                         }`}
-                        title="In hoặc lưu file PDF đề thi này"
+                        title="In hoặc lưu PDF khổ A4 đứng"
                       >
-                        <Printer className={`w-3.5 h-3.5 ${isLight ? 'text-emerald-600' : 'text-emerald-400'}`} />
-                        <span>In / PDF</span>
+                        <Printer className="w-3.5 h-3.5 text-emerald-500" />
+                        <span>In / PDF A4</span>
                       </button>
 
                       <button
                         onClick={() => {
                           const active = shuffledExams.find(e => e.examCode === selectedExamCode);
                           if (!active) return;
-                          let text = `ĐỀ THI TIẾNG ANH - MÃ ĐỀ ${active.examCode}\n\n`;
+                          let text = `${examHeaderInfo.school}\n${examHeaderInfo.examTitle} - MÃ ĐỀ ${active.examCode}\n\n`;
                           active.questions.forEach(q => {
                             text += `${q.questionText}\n`;
                             q.options.forEach(o => text += `${o.key}. ${o.text}\n`);
@@ -2834,44 +3240,156 @@ Trả về định dạng JSON thuần túy:
                             ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
                             : 'bg-white/5 hover:bg-white/10 text-gray-300 border-white/10'
                         }`}
+                        title="Sao chép toàn bộ nội dung đề thi vào bộ nhớ tạm"
                       >
-                        <Copy className={`w-3.5 h-3.5 ${isLight ? 'text-amber-600' : 'text-amber-400'}`} />
+                        <Copy className="w-3.5 h-3.5 text-amber-500" />
                         <span>{copiedKey ? 'Đã Copy!' : 'Copy'}</span>
                       </button>
                     </div>
                   </div>
 
-                  {/* Hiển thị đề thi của mã được chọn */}
-                  {selectedExamCode && (
-                    <div className={`max-h-[380px] overflow-y-auto space-y-4 pr-2 divide-y ${
-                      isLight ? 'divide-slate-100' : 'divide-white/5'
-                    }`}>
-                      {shuffledExams.find(e => e.examCode === selectedExamCode)?.questions.map((q) => (
-                        <div key={q.questionNumber} className="pt-3 space-y-2 text-xs">
-                          <div className={`font-bold leading-relaxed ${isLight ? 'text-slate-900' : 'text-white'}`}>{q.questionText}</div>
-                          <div className="grid grid-cols-2 gap-2">
-                            {q.options.map(opt => (
-                              <div 
-                                key={opt.key} 
-                                className={`p-2 rounded-lg border ${
-                                  opt.key === q.correctKey 
-                                    ? isLight
-                                      ? 'bg-emerald-50 border-emerald-300 text-emerald-950 font-bold shadow-xs'
-                                      : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300 font-bold'
-                                    : isLight
-                                      ? 'bg-slate-50/70 border-slate-200 text-slate-800'
-                                      : 'bg-black/30 border-white/5 text-slate-300'
-                                }`}
-                              >
-                                <span className="font-mono font-bold mr-1.5">{opt.key}.</span>
-                                <span>{opt.text}</span>
+                  {/* KHUNG XEM TRƯỚC TỜ GIẤY A4 ĐÍCH THỰC (A4 PAPER PREVIEW SHEET) */}
+                  {selectedExamCode && (() => {
+                    const activeExam = shuffledExams.find(e => e.examCode === selectedExamCode);
+                    if (!activeExam) return null;
+                    const estPages = Math.max(1, Math.ceil(activeExam.questions.length / 10));
+
+                    return (
+                      <div className="max-h-[620px] overflow-y-auto p-2 sm:p-4 rounded-xl bg-slate-200 dark:bg-slate-950/80 border border-slate-300 dark:border-white/10">
+                        {/* TỜ GIẤY A4 TRẮNG TINH */}
+                        <div 
+                          className="max-w-[760px] mx-auto bg-white text-slate-950 p-6 sm:p-10 shadow-2xl rounded-sm border border-slate-300 font-serif space-y-4"
+                          style={{
+                            fontFamily: "'Times New Roman', Times, serif",
+                            fontSize: `${examFontSize}pt`,
+                            lineHeight: 1.35
+                          }}
+                        >
+                          {/* ĐẦU TRANG 2 CỘT CHUẨN BỘ GD&ĐT */}
+                          <div className="grid grid-cols-2 gap-4 pb-2 text-center select-none">
+                            <div className="space-y-0.5">
+                              <div className="font-bold uppercase tracking-tight" style={{ fontSize: `${examFontSize - 0.5}pt` }}>
+                                {examHeaderInfo.department || 'SỞ GIÁO DỤC VÀ ĐÀO TẠO'}
                               </div>
-                            ))}
+                              <div className="font-bold uppercase tracking-tight" style={{ fontSize: `${examFontSize}pt` }}>
+                                {examHeaderInfo.school || 'TRƯỜNG THPT NGUYỄN KHUYẾN'}
+                              </div>
+                              <div className="italic text-slate-600 text-[11px]">
+                                (Đề thi có {estPages} trang)
+                              </div>
+                            </div>
+
+                            <div className="space-y-0.5">
+                              <div className="font-bold uppercase tracking-tight" style={{ fontSize: `${examFontSize - 0.5}pt` }}>
+                                {examHeaderInfo.examTitle || 'BÀI KIỂM TRA ĐỊNH KỲ TIẾNG ANH'}
+                              </div>
+                              <div className="font-bold" style={{ fontSize: `${examFontSize}pt` }}>
+                                {examHeaderInfo.subjectTitle || 'MÔN: TIẾNG ANH - THPT'}
+                              </div>
+                              <div className="italic text-slate-600 text-[11px]">
+                                Thời gian làm bài: {examHeaderInfo.durationMinutes || 50} phút (không kể phát đề)
+                              </div>
+                              <div className="inline-block border-2 border-slate-900 font-bold px-3 py-0.5 mt-1 text-center font-mono">
+                                MÃ ĐỀ: {activeExam.examCode}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* THÔNG TIN THÍ SINH & ĐƯỜNG KẺ NGANG */}
+                          <div className="border-b-2 border-slate-900 pb-2 text-xs select-none">
+                            Họ và tên thí sinh: ............................................................................ Số báo danh: .............................
+                          </div>
+
+                          {/* DANH SÁCH CÂU HỎI TRẮC NGHIỆM */}
+                          <div className="space-y-3.5 pt-1">
+                            {activeExam.questions.map((q) => {
+                              const maxOptLen = Math.max(...q.options.map(o => (o.text || '').length));
+
+                              let colClass = 'grid-cols-4';
+                              if (maxOptLen > 42) colClass = 'grid-cols-1';
+                              else if (maxOptLen > 18) colClass = 'grid-cols-2';
+
+                              return (
+                                <div key={q.questionNumber} className="space-y-1">
+                                  <div className="text-justify leading-relaxed">
+                                    <span className="font-bold mr-1.5">Câu {q.questionNumber}:</span>
+                                    <span>{q.questionText.replace(/^(?:Câu|Question|Bài)\s*\d+[\s.:]/i, '')}</span>
+                                  </div>
+
+                                  <div className={`grid ${colClass} gap-x-3 gap-y-1 text-left`}>
+                                    {q.options.map(opt => {
+                                      const isCorrect = opt.key === q.correctKey;
+                                      return (
+                                        <div
+                                          key={opt.key}
+                                          className={`py-0.5 px-1.5 rounded transition ${
+                                            showCorrectInPreview && isCorrect
+                                              ? 'bg-emerald-100 text-emerald-950 font-bold border border-emerald-400'
+                                              : 'text-slate-900'
+                                          }`}
+                                        >
+                                          <span className="font-bold mr-1">{opt.key}.</span>
+                                          <span>{opt.text}</span>
+                                          {showCorrectInPreview && isCorrect && (
+                                            <span className="ml-1 text-emerald-700 text-xs font-bold select-none">✓</span>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          {/* PHẦN KẾT THÚC ĐỀ THI */}
+                          <div className="pt-4 text-center select-none space-y-1">
+                            <div className="font-bold tracking-widest text-sm">---------- HẾT ----------</div>
+                            <div className="italic text-xs text-slate-600">
+                              Thí sinh không được sử dụng tài liệu. Cán bộ coi thi không giải thích gì thêm.
+                            </div>
+                          </div>
+
+                          {/* BẢNG ĐÁP ÁN MÃ ĐỀ NÀY (TRANG CUỐI) */}
+                          <div className="border-t-2 border-dashed border-slate-400 pt-6 mt-6 select-none">
+                            <div className="font-bold uppercase text-center text-sm">
+                              BẢNG ĐÁP ÁN MÃ ĐỀ {activeExam.examCode}
+                            </div>
+                            <div className="text-center italic text-xs text-slate-600 mb-3">
+                              (Bảng đáp án chính thức gồm {activeExam.questions.length} câu hỏi)
+                            </div>
+
+                            {/* Chia từng 10 câu */}
+                            {Array.from({ length: Math.ceil(activeExam.answerKey.length / 10) }, (_, chunkIdx) => {
+                              const chunk = activeExam.answerKey.slice(chunkIdx * 10, (chunkIdx + 1) * 10);
+                              return (
+                                <table key={chunkIdx} className="w-full border-collapse border border-slate-900 text-center text-xs mb-2">
+                                  <thead>
+                                    <tr className="bg-slate-100">
+                                      <th className="border border-slate-900 p-1 w-12 font-bold">Câu</th>
+                                      {chunk.map(c => (
+                                        <th key={c.qNum} className="border border-slate-900 p-1 font-bold">{c.qNum}</th>
+                                      ))}
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    <tr>
+                                      <td className="border border-slate-900 p-1 font-bold">Đ/A</td>
+                                      {chunk.map(c => (
+                                        <td key={c.qNum} className="border border-slate-900 p-1 font-extrabold text-red-700">
+                                          {c.ans}
+                                        </td>
+                                      ))}
+                                    </tr>
+                                  </tbody>
+                                </table>
+                              );
+                            })}
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  )}
+                      </div>
+                    );
+                  })()}
                 </div>
               ) : (
                 <div className={`p-12 rounded-2xl border text-center space-y-4 flex flex-col items-center justify-center min-h-[350px] ${
@@ -3398,6 +3916,112 @@ Trả về định dạng JSON thuần túy:
                 }`}
               >
                 Đóng Bảng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL TÙY CHỈNH TIÊU ĐỀ SỞ / TRƯỜNG CHO ĐỀ THI */}
+      {showEditHeaderModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
+          <div className={`w-full max-w-lg rounded-3xl p-6 md:p-7 border shadow-2xl space-y-5 ${
+            isLight ? 'bg-white border-slate-200 text-slate-900' : 'bg-[#0f172a] border-white/10 text-white'
+          }`}>
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-white/10">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-500">
+                  <Edit3 className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-sm md:text-base">Tùy Chỉnh Tiêu Đề Đề Thi</h3>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">Thông tin xuất hiện ở đầu trang giấy A4 và file Word</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowEditHeaderModal(false)}
+                className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-3.5 text-xs">
+              <div className="space-y-1">
+                <label className="font-bold">1. Tên Sở GD&ĐT:</label>
+                <input
+                  type="text"
+                  value={examHeaderInfo.department}
+                  onChange={(e) => setExamHeaderInfo({ ...examHeaderInfo, department: e.target.value })}
+                  placeholder="Ví dụ: SỞ GIÁO DỤC VÀ ĐÀO TẠO"
+                  className={`w-full p-2.5 rounded-xl border text-xs focus:outline-none ${
+                    isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-black/40 border-white/10 text-white'
+                  }`}
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-bold">2. Tên Trường THPT:</label>
+                <input
+                  type="text"
+                  value={examHeaderInfo.school}
+                  onChange={(e) => setExamHeaderInfo({ ...examHeaderInfo, school: e.target.value })}
+                  placeholder="Ví dụ: TRƯỜNG THPT NGUYỄN KHUYẾN"
+                  className={`w-full p-2.5 rounded-xl border text-xs focus:outline-none ${
+                    isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-black/40 border-white/10 text-white'
+                  }`}
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-bold">3. Tiêu Đề Kỳ Thi:</label>
+                <input
+                  type="text"
+                  value={examHeaderInfo.examTitle}
+                  onChange={(e) => setExamHeaderInfo({ ...examHeaderInfo, examTitle: e.target.value })}
+                  placeholder="Ví dụ: BÀI KIỂM TRA ĐỊNH KỲ TIẾNG ANH"
+                  className={`w-full p-2.5 rounded-xl border text-xs focus:outline-none ${
+                    isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-black/40 border-white/10 text-white'
+                  }`}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="font-bold">4. Môn Thi / Khối Lớp:</label>
+                  <input
+                    type="text"
+                    value={examHeaderInfo.subjectTitle}
+                    onChange={(e) => setExamHeaderInfo({ ...examHeaderInfo, subjectTitle: e.target.value })}
+                    placeholder="MÔN: TIẾNG ANH - THPT"
+                    className={`w-full p-2.5 rounded-xl border text-xs focus:outline-none ${
+                      isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-black/40 border-white/10 text-white'
+                    }`}
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-bold">5. Thời Gian Làm Bài (phút):</label>
+                  <input
+                    type="number"
+                    value={examHeaderInfo.durationMinutes}
+                    onChange={(e) => setExamHeaderInfo({ ...examHeaderInfo, durationMinutes: Number(e.target.value) })}
+                    placeholder="50"
+                    className={`w-full p-2.5 rounded-xl border text-xs focus:outline-none ${
+                      isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-black/40 border-white/10 text-white'
+                    }`}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-3 border-t border-slate-200 dark:border-white/10">
+              <button
+                type="button"
+                onClick={() => setShowEditHeaderModal(false)}
+                className="px-5 py-2.5 rounded-xl font-bold text-xs bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 shadow-md shadow-orange-500/20 cursor-pointer"
+              >
+                ✓ Lưu &amp; Cập Nhật Tiêu Đề
               </button>
             </div>
           </div>
