@@ -333,7 +333,7 @@ export default function MegaNavbar({
             {/* Mobile Hamburger Menu Button */}
             <button
               onClick={() => setIsMobileDrawerOpen(!isMobileDrawerOpen)}
-              className="lg:hidden p-2 rounded-xl bg-black/[0.04] hover:bg-black/[0.08] border border-black/10 text-zinc-700 hover:text-black transition cursor-pointer"
+              className="lg:hidden p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white transition cursor-pointer"
               title="Menu Điều Hướng"
             >
               {isMobileDrawerOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -497,11 +497,11 @@ export default function MegaNavbar({
 
       {/* ─── FULL-SCREEN MOBILE SLIDE-OUT DRAWER ────────────────────────────────── */}
       {isMobileDrawerOpen && (
-        <div className="lg:hidden fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="w-full max-w-md h-full bg-white border-l border-black/10 flex flex-col justify-between shadow-2xl overflow-y-auto text-[#111111] animate-in slide-in-from-right duration-300">
+        <div className="lg:hidden fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="w-full max-w-md h-full bg-[#0c122c] border-l border-cyan-500/20 flex flex-col justify-between shadow-2xl overflow-y-auto text-slate-100 animate-in slide-in-from-right duration-300">
             
             {/* Drawer Header */}
-            <div className="p-5 border-b border-black/10 flex items-center justify-between sticky top-0 bg-white/95 backdrop-blur-md z-10">
+            <div className="p-5 border-b border-cyan-500/20 flex items-center justify-between sticky top-0 bg-[#0c122c]/95 backdrop-blur-md z-10">
               <div className="flex items-center gap-3">
                 <img 
                   src="/navbar_logo_v3.png" 
@@ -509,13 +509,13 @@ export default function MegaNavbar({
                   className="h-9 w-auto object-contain" 
                 />
                 <div>
-                  <h3 className="font-semibold text-base text-[#111111] font-outfit leading-tight">Examora AI</h3>
-                  <span className="text-[11px] text-zinc-500 font-mono uppercase tracking-wider">THPT AI • GDPT 2018</span>
+                  <h3 className="font-semibold text-base text-white font-outfit leading-tight">Examora AI</h3>
+                  <span className="text-[11px] text-cyan-400 font-mono uppercase tracking-wider">THPT AI • GDPT 2018</span>
                 </div>
               </div>
               <button
                 onClick={() => setIsMobileDrawerOpen(false)}
-                className="w-9 h-9 rounded-xl bg-black/[0.04] hover:bg-black/[0.08] border border-black/10 flex items-center justify-center text-zinc-600 hover:text-black transition cursor-pointer"
+                className="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
