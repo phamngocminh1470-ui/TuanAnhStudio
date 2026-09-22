@@ -49,19 +49,198 @@ const DEFAULT_TESTER_USER = {
   grade: '12'
 };
 
-function App() {
-  const [activeTab, setActiveTab] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      if (params.get('portal') === 'teacher' || params.get('tab') === 'teacher-portal') {
-        return 'teacher-portal';
-      }
-      if (window.location.hostname.includes('tuananhstudio.top')) {
-        return 'teacher-portal';
-      }
+// Bảng ánh xạ Slug (mã trên URL) sang mã Tab nội bộ của React
+export const TAB_ALIASES = {
+  // Cổng giáo viên & xáo đề
+  'xao-de': 'teacher-portal',
+  'teacher-portal': 'teacher-portal',
+  'giao-vien': 'teacher-portal',
+  'cong-giao-vien': 'teacher-portal',
+  'teacher': 'teacher-portal',
+  'shuffler': 'teacher-portal',
+
+  // Phòng thi nói Speaking
+  'thi-noi': 'speaking-exam',
+  'speaking-exam': 'speaking-exam',
+  'speaking': 'speaking-exam',
+  'noi': 'speaking-exam',
+  'van-dap': 'speaking-exam',
+
+  // Kho đề thật & thi tốt nghiệp THPT
+  'kho-de': 'official-exams',
+  'official-exams': 'official-exams',
+  'de-that': 'official-exams',
+  'thpt': 'official-exams',
+  'on-thi-thpt': 'official-exams',
+  'de-thi': 'official-exams',
+
+  // Học liệu & Từ vựng SGK
+  'tu-vung': 'vocab-library',
+  'sgk': 'vocab-library',
+  'vocab-library': 'vocab-library',
+  'tu-vung-sgk': 'vocab-library',
+  'vocab': 'vocab-library',
+  'hoc-lieu': 'vocab-library',
+
+  // Thi thử thích ứng IRT
+  'thi-thu': 'irt-test',
+  'irt-test': 'irt-test',
+  'irt': 'irt-test',
+  'luyen-de': 'irt-test',
+  'dgnl': 'irt-test',
+  'tsa': 'irt-test',
+  'thich-ung': 'irt-test',
+
+  // AI Gia Sư Socrates 1:1
+  'gia-su-ai': 'chat',
+  'chat': 'chat',
+  'socrates': 'chat',
+  'hoi-bai': 'chat',
+  'gia-su': 'chat',
+
+  // Luyện phát âm IPA
+  'phat-am': 'pronounce',
+  'pronounce': 'pronounce',
+  'ipa': 'pronounce',
+  'luyen-phat-am': 'pronounce',
+
+  // Chấm bài luận Writing
+  'luyen-viet': 'writing-practice',
+  'writing-practice': 'writing-practice',
+  'writing': 'writing-practice',
+  'bai-luan': 'writing-practice',
+  'viet': 'writing-practice',
+
+  // Flashcards Não bộ SM-2
+  'flashcards': 'sm2-flashcards',
+  'tu-vung-sm2': 'sm2-flashcards',
+  'sm2': 'sm2-flashcards',
+  'sm2-flashcards': 'sm2-flashcards',
+  'the-nho': 'sm2-flashcards',
+
+  // Đọc hiểu thích ứng
+  'doc-hieu': 'reading',
+  'reading': 'reading',
+  'doc': 'reading',
+
+  // Luyện nghe tương tác
+  'luyen-nghe': 'listening',
+  'listening': 'listening',
+  'nghe': 'listening',
+
+  // Lớp học học sinh
+  'lop-hoc': 'student-classroom',
+  'student-classroom': 'student-classroom',
+  'classroom': 'student-classroom',
+  'lop': 'student-classroom',
+
+  // Hướng dẫn sử dụng
+  'huong-dan': 'guide',
+  'guide': 'guide',
+  'so-tay': 'guide',
+
+  // Báo cáo & phân tích
+  'bao-cao': 'analytics',
+  'analytics': 'analytics',
+  'nang-luc': 'analytics',
+  'thong-ke': 'analytics',
+
+  // Admin
+  'admin': 'admin-panel',
+  'admin-panel': 'admin-panel',
+  'quan-tri': 'admin-panel',
+
+  // Cấu hình
+  'cai-dat': 'settings',
+  'settings': 'settings',
+  'api-keys': 'settings',
+
+  // Trang chủ
+  'trang-chu': 'dashboard',
+  'home': 'dashboard',
+  'dashboard': 'dashboard',
+  'hub': 'dashboard'
+};
+
+// Bảng ánh xạ mã Tab nội bộ sang mã Slug hiển thị trên thanh địa chỉ URL
+export const TAB_TO_SLUG = {
+  'teacher-portal': 'xao-de',
+  'speaking-exam': 'thi-noi',
+  'official-exams': 'kho-de',
+  'vocab-library': 'tu-vung',
+  'irt-test': 'thi-thu',
+  'chat': 'gia-su-ai',
+  'pronounce': 'phat-am',
+  'writing-practice': 'luyen-viet',
+  'sm2-flashcards': 'flashcards',
+  'reading': 'doc-hieu',
+  'listening': 'luyen-nghe',
+  'student-classroom': 'lop-hoc',
+  'guide': 'huong-dan',
+  'analytics': 'bao-cao',
+  'admin-panel': 'admin',
+  'settings': 'cai-dat',
+  'dashboard': ''
+};
+
+// Tiêu đề trang tương ứng cho từng tab
+export const TAB_TITLES = {
+  'teacher-portal': 'Cổng Giáo Viên & Xáo Đề Thi - Examora AI',
+  'speaking-exam': 'Phòng Thi Nói & Đối Thoại AI - Examora AI',
+  'irt-test': 'Thi Thử Thích Ứng IRT - Examora AI',
+  'official-exams': 'Kho Đề Thật & Lời Giải Chi Tiết - Examora AI',
+  'vocab-library': 'Học Liệu & Từ Vựng SGK Global Success - Examora AI',
+  'chat': 'Hỏi Bài Gia Sư AI Socrates 1:1 - Examora AI',
+  'pronounce': 'Luyện Phát Âm Chuẩn 44 Âm IPA - Examora AI',
+  'writing-practice': 'Chấm Bài Luận & Đoạn Văn AI - Examora AI',
+  'sm2-flashcards': 'Thẻ Nhớ Não Bộ Thuật Toán SM-2 - Examora AI',
+  'reading': 'Đọc Hiểu Thích Ứng - Examora AI',
+  'listening': 'Luyện Nghe Tương Tác - Examora AI',
+  'student-classroom': 'Lớp Học Trực Tuyến - Examora AI',
+  'guide': 'Sổ Tay Hướng Dẫn Sử Dụng - Examora AI',
+  'analytics': 'Báo Cáo Phân Tích Năng Lực - Examora AI',
+  'admin-panel': 'Bảng Quản Trị Hệ Thống - Examora AI',
+  'settings': 'Cấu Hình API Keys - Examora AI',
+  'dashboard': 'Examora AI (examoraai) - Nền Tảng Học & Khảo Thí Tiếng Anh Thích Ứng THPT'
+};
+
+function getInitialTab() {
+  if (typeof window === 'undefined') return 'dashboard';
+  if (window.location.hostname.includes('tuananhstudio.top')) {
+    return 'teacher-portal';
+  }
+
+  // 1. Kiểm tra pathname trực tiếp: ví dụ /xao-de, /thi-noi, /kho-de, /tu-vung, /thi-thu, ...
+  try {
+    const pathClean = window.location.pathname.replace(/^\/+|\/+$/g, '').trim().toLowerCase();
+    if (pathClean && TAB_ALIASES[pathClean]) {
+      return TAB_ALIASES[pathClean];
     }
-    return 'dashboard';
-  });
+  } catch (e) {}
+
+  // 2. Kiểm tra query param: ?tab=xao-de, ?muc=xao-de, ?id=xao-de, ?portal=teacher...
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const rawTab = params.get('tab') || params.get('muc') || params.get('id') || (params.get('portal') === 'teacher' ? 'teacher-portal' : null);
+    if (rawTab) {
+      const norm = rawTab.trim().toLowerCase();
+      if (TAB_ALIASES[norm]) return TAB_ALIASES[norm];
+    }
+  } catch (e) {}
+
+  // 3. Kiểm tra hash: #xao-de, #thi-noi...
+  try {
+    if (window.location.hash) {
+      const rawHash = window.location.hash.replace(/^#/, '').trim().toLowerCase();
+      if (TAB_ALIASES[rawHash]) return TAB_ALIASES[rawHash];
+    }
+  } catch (e) {}
+
+  return 'dashboard';
+}
+
+function App() {
+  const [activeTab, setActiveTab] = useState(getInitialTab);
   const [selectedLevel, setSelectedLevel] = useState('12');
   const [backendStatus, setBackendStatus] = useState('connecting');
   const [isAuthOpen, setIsAuthOpen] = useState(false);
@@ -329,6 +508,118 @@ function App() {
     };
   }, []);
 
+  // Lắng nghe sự kiện Back / Forward của trình duyệt để đồng bộ URL và Tab
+  useEffect(() => {
+    const handlePopState = () => {
+      if (typeof window === 'undefined') return;
+      let resolved = 'dashboard';
+
+      // 1. Kiểm tra pathname trực tiếp (ví dụ /xao-de, /thi-noi)
+      try {
+        const pathClean = window.location.pathname.replace(/^\/+|\/+$/g, '').trim().toLowerCase();
+        if (pathClean && TAB_ALIASES[pathClean]) {
+          resolved = TAB_ALIASES[pathClean];
+        }
+      } catch (e) {}
+
+      // 2. Kiểm tra query param nếu pathname là /
+      if (resolved === 'dashboard') {
+        try {
+          const params = new URLSearchParams(window.location.search);
+          const rawTab = params.get('tab') || params.get('muc') || params.get('id') || (params.get('portal') === 'teacher' ? 'teacher-portal' : null);
+          if (rawTab) {
+            const norm = rawTab.trim().toLowerCase();
+            if (TAB_ALIASES[norm]) resolved = TAB_ALIASES[norm];
+          } else if (window.location.hash) {
+            const rawHash = window.location.hash.replace(/^#/, '').trim().toLowerCase();
+            if (TAB_ALIASES[rawHash]) resolved = TAB_ALIASES[rawHash];
+          }
+        } catch (e) {}
+      }
+
+      setActiveTab(resolved);
+      if (TAB_TITLES[resolved]) {
+        document.title = TAB_TITLES[resolved];
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    // Cập nhật tiêu đề trang và làm sạch URL khi tải lần đầu
+    try {
+      const currentInitial = getInitialTab();
+      if (TAB_TITLES[currentInitial]) {
+        document.title = TAB_TITLES[currentInitial];
+      }
+
+      const url = new URL(window.location.href);
+      let changed = false;
+
+      // Xóa param tạm thời v=clean_ui_test nếu có
+      if (url.searchParams.get('v') === 'clean_ui_test') {
+        url.searchParams.delete('v');
+        changed = true;
+      }
+
+      // Nếu đang mở một tab cụ thể mà URL chưa có param tab tương ứng thì đồng bộ ngay
+      if (currentInitial !== 'dashboard') {
+        const slug = TAB_TO_SLUG[currentInitial];
+        if (slug && url.searchParams.get('tab') !== slug) {
+          url.searchParams.set('tab', slug);
+          url.searchParams.delete('portal');
+          url.searchParams.delete('muc');
+          changed = true;
+        }
+      }
+
+      if (changed) {
+        const nextUrl = url.pathname + (url.search ? url.search : '') + (url.hash ? url.hash : '');
+        window.history.replaceState({ tab: currentInitial }, '', nextUrl);
+      }
+    } catch (e) {}
+
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Hàm chuyển Tab tập trung - tự động cập nhật URL trên thanh địa chỉ trình duyệt (Deep Linking)
+  const handleNavigate = (tab) => {
+    setActiveTab(tab);
+    if (typeof window !== 'undefined') {
+      try {
+        const url = new URL(window.location.href);
+        const slug = TAB_TO_SLUG[tab] !== undefined ? TAB_TO_SLUG[tab] : (tab === 'dashboard' || tab === 'hub' ? '' : tab);
+
+        if (!slug) {
+          url.searchParams.delete('tab');
+          url.searchParams.delete('muc');
+          url.searchParams.delete('id');
+          url.searchParams.delete('portal');
+          if (url.pathname !== '/') {
+            url.pathname = '/';
+          }
+        } else {
+          url.searchParams.set('tab', slug);
+          url.searchParams.delete('portal');
+          url.searchParams.delete('muc');
+          url.searchParams.delete('id');
+        }
+        // Xóa param thử nghiệm v=clean_ui_test nếu có để URL sạch đẹp
+        if (url.searchParams.get('v') === 'clean_ui_test') {
+          url.searchParams.delete('v');
+        }
+
+        const nextUrl = url.pathname + (url.search ? url.search : '') + (url.hash ? url.hash : '');
+        window.history.pushState({ tab }, '', nextUrl);
+
+        if (TAB_TITLES[tab]) {
+          document.title = TAB_TITLES[tab];
+        }
+      } catch (err) {
+        console.warn('Lỗi đồng bộ URL:', err);
+      }
+    }
+  };
+
   const handleLevelChange = (level) => {
     if (currentUser && currentUser.role === 'student' && currentUser.grade) {
       // Học sinh đã đăng ký thì cố định theo khối của tài khoản
@@ -380,7 +671,7 @@ function App() {
     setCurrentUser(null);
     setIsProfileOpen(false);
     setIsAuthOpen(false);
-    setActiveTab('dashboard');
+    handleNavigate('dashboard');
   };
 
   const handleLoginSuccess = async (userData) => {
@@ -423,7 +714,7 @@ function App() {
         isOpen={isAuthOpen} 
         onClose={() => setIsAuthOpen(false)} 
         onLoginSuccess={handleLoginSuccess} 
-        onNavigate={(tab) => setActiveTab(tab)}
+        onNavigate={(tab) => handleNavigate(tab)}
         initialMode={authMode}
       />
 
@@ -459,7 +750,7 @@ function App() {
             </div>
             <div className="flex items-center gap-2 overflow-x-auto">
               <button
-                onClick={() => setActiveTab('sm2-flashcards')}
+                onClick={() => handleNavigate('sm2-flashcards')}
                 className={`px-3 py-1.5 rounded-xl font-black text-xs transition cursor-pointer flex items-center gap-1.5 ${
                   activeTab === 'sm2-flashcards'
                     ? 'bg-black text-amber-300 shadow-md scale-105 ring-2 ring-amber-300'
@@ -470,7 +761,7 @@ function App() {
               </button>
 
               <button
-                onClick={() => setActiveTab('reading')}
+                onClick={() => handleNavigate('reading')}
                 className={`px-3 py-1.5 rounded-xl font-black text-xs transition cursor-pointer flex items-center gap-1.5 ${
                   activeTab === 'reading'
                     ? 'bg-black text-cyan-300 shadow-md scale-105 ring-2 ring-cyan-300'
@@ -481,7 +772,7 @@ function App() {
               </button>
 
               <button
-                onClick={() => setActiveTab('chat')}
+                onClick={() => handleNavigate('chat')}
                 className={`px-3 py-1.5 rounded-xl font-black text-xs transition cursor-pointer flex items-center gap-1.5 ${
                   activeTab === 'chat'
                     ? 'bg-black text-emerald-300 shadow-md scale-105 ring-2 ring-emerald-300'
@@ -492,7 +783,7 @@ function App() {
               </button>
 
               <button
-                onClick={() => setActiveTab('speaking-exam')}
+                onClick={() => handleNavigate('speaking-exam')}
                 className={`px-3 py-1.5 rounded-xl font-black text-xs transition cursor-pointer flex items-center gap-1.5 ${
                   activeTab === 'speaking-exam'
                     ? 'bg-black text-purple-300 shadow-md scale-105 ring-2 ring-purple-300'
@@ -503,7 +794,7 @@ function App() {
               </button>
 
               <button
-                onClick={() => setActiveTab('vocab-library')}
+                onClick={() => handleNavigate('vocab-library')}
                 className={`px-3 py-1.5 rounded-xl font-black text-xs transition cursor-pointer flex items-center gap-1.5 ${
                   activeTab === 'vocab-library'
                     ? 'bg-black text-yellow-300 shadow-md scale-105 ring-2 ring-yellow-300'
@@ -600,7 +891,7 @@ function App() {
         ) : (
           <MegaNavbar
             activeTab={activeTab}
-            onNavigate={(tab) => setActiveTab(tab)}
+            onNavigate={(tab) => handleNavigate(tab)}
             selectedGrade={selectedLevel}
             onGradeChange={handleLevelChange}
             currentUser={currentUser}
@@ -631,7 +922,7 @@ function App() {
                 <LearningHub
                   selectedGrade={selectedLevel}
                   onGradeChange={handleLevelChange}
-                  onNavigate={(tab) => setActiveTab(tab)}
+                  onNavigate={(tab) => handleNavigate(tab)}
                   currentUser={currentUser}
                   serverStats={serverStats}
                   onOpenPhotoSolver={() => setIsPhotoSolverOpen(true)}
@@ -642,12 +933,13 @@ function App() {
                   onStartTrial={() => handleOpenAuth('register')}
                   selectedGrade={selectedLevel}
                   onGradeChange={handleLevelChange}
+                  onNavigate={handleNavigate}
                 />
               )
             )}
 
-            {/* CÁC TAB HỌC TẬP YÊU CẦU ĐĂNG NHẬP / ĐĂNG KÝ (Ngoại trừ Dashboard, Hướng dẫn & Cổng Giáo Viên) */}
-            {!currentUser && !isLocalhost && activeTab !== 'dashboard' && activeTab !== 'hub' && activeTab !== 'guide' && activeTab !== 'teacher-portal' ? (
+            {/* CÁC TAB HỌC TẬP YÊU CẦU ĐĂNG NHẬP / ĐĂNG KÝ (Ngoại trừ Dashboard, Hướng dẫn, Cổng Giáo Viên, Kho Đề & SGK) */}
+            {!currentUser && !isLocalhost && activeTab !== 'dashboard' && activeTab !== 'hub' && activeTab !== 'guide' && activeTab !== 'teacher-portal' && activeTab !== 'official-exams' && activeTab !== 'vocab-library' ? (
               <div className="flex-1 flex flex-col items-center justify-center py-20 px-4 max-w-lg mx-auto text-center space-y-6 animate-fade-in text-slate-100">
                 <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-blue-600 to-indigo-600 border border-cyan-400/40 flex items-center justify-center text-white shadow-xl mx-auto">
                   <GraduationCap className="w-8 h-8" />
@@ -681,7 +973,7 @@ function App() {
                 {activeTab === 'analytics' && (
                   <AdaptiveDashboard
                     selectedGrade={selectedLevel}
-                    onNavigate={(tab) => setActiveTab(tab)}
+                    onNavigate={(tab) => handleNavigate(tab)}
                     onOpenExportModal={() => setIsExportModalOpen(true)}
                     currentUser={currentUser}
                     serverStats={serverStats}
@@ -710,7 +1002,7 @@ function App() {
                     selectedGrade={selectedLevel} 
                     keys={keys} 
                     currentUser={currentUser} 
-                    onNavigate={(tab) => setActiveTab(tab)}
+                    onNavigate={(tab) => handleNavigate(tab)}
                   />
                 )}
 
@@ -737,7 +1029,7 @@ function App() {
                   <StudentClassroom
                     classes={portalClasses}
                     setClasses={updatePortalClasses}
-                    onNavigate={(tab) => setActiveTab(tab)}
+                    onNavigate={(tab) => handleNavigate(tab)}
                   />
                 )}
 
@@ -746,7 +1038,7 @@ function App() {
                   <OfficialExamRepository 
                     selectedGrade={selectedLevel}
                     currentUser={currentUser}
-                    onStartExam={(tab) => setActiveTab(tab)} 
+                    onStartExam={(tab) => handleNavigate(tab)} 
                   />
                 )}
 
@@ -755,7 +1047,7 @@ function App() {
                   if (!currentUser) {
                     setIsAuthOpen(true);
                   } else {
-                    setActiveTab(tab);
+                    handleNavigate(tab);
                   }
                 }} />}
 
@@ -782,7 +1074,7 @@ function App() {
                     currentUser={currentUser} 
                     classes={portalClasses} 
                     setClasses={updatePortalClasses}
-                    onNavigate={(tab) => setActiveTab(tab)}
+                    onNavigate={(tab) => handleNavigate(tab)}
                     standaloneShufflerOnly={isTuanAnhDomain}
                     isLightMode={isTuanAnhDomain ? (tuananhTheme === 'light') : false}
                     onOpenCanva={() => setIsCanvaOpen(true)}

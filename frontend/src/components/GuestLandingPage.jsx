@@ -53,7 +53,7 @@ function DaturaStatCol({ index, value, suffix = '', label, desc }) {
   );
 }
 
-export default function GuestLandingPage({ onOpenAuth, onStartTrial, selectedGrade, onGradeChange }) {
+export default function GuestLandingPage({ onOpenAuth, onStartTrial, selectedGrade, onGradeChange, onNavigate }) {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [openFaq, setOpenFaq] = useState(0);
   const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
@@ -863,11 +863,11 @@ export default function GuestLandingPage({ onOpenAuth, onStartTrial, selectedGra
           <div className="space-y-3">
             <div className="text-[11px] font-mono text-cyan-400/80 uppercase tracking-wider">TÍNH NĂNG CHÍNH</div>
             <ul className="space-y-2 text-xs text-slate-400 font-normal">
-              <li><button onClick={() => onOpenAuth && onOpenAuth('register')} className="hover:text-cyan-300 transition-colors cursor-pointer">Luyện đề thích ứng 2PL IRT</button></li>
-              <li><button onClick={() => onOpenAuth && onOpenAuth('register')} className="hover:text-cyan-300 transition-colors cursor-pointer">Chấm phát âm 44 Âm IPA</button></li>
-              <li><button onClick={() => onOpenAuth && onOpenAuth('register')} className="hover:text-cyan-300 transition-colors cursor-pointer">Gia sư gợi mở Socrates AI</button></li>
-              <li><button onClick={() => onOpenAuth && onOpenAuth('register')} className="hover:text-cyan-300 transition-colors cursor-pointer">Thẻ nhớ não bộ SM-2</button></li>
-              <li><button onClick={() => onOpenAuth && onOpenAuth('register')} className="hover:text-cyan-300 transition-colors cursor-pointer">Cổng Giáo viên & Xáo đề</button></li>
+              <li><button onClick={() => onNavigate ? onNavigate('irt-test') : onOpenAuth && onOpenAuth('register')} className="hover:text-cyan-300 transition-colors cursor-pointer">Luyện đề thích ứng 2PL IRT</button></li>
+              <li><button onClick={() => onNavigate ? onNavigate('pronounce') : onOpenAuth && onOpenAuth('register')} className="hover:text-cyan-300 transition-colors cursor-pointer">Chấm phát âm 44 Âm IPA</button></li>
+              <li><button onClick={() => onNavigate ? onNavigate('chat') : onOpenAuth && onOpenAuth('register')} className="hover:text-cyan-300 transition-colors cursor-pointer">Gia sư gợi mở Socrates AI</button></li>
+              <li><button onClick={() => onNavigate ? onNavigate('sm2-flashcards') : onOpenAuth && onOpenAuth('register')} className="hover:text-cyan-300 transition-colors cursor-pointer">Thẻ nhớ não bộ SM-2</button></li>
+              <li><button onClick={() => onNavigate ? onNavigate('teacher-portal') : onOpenAuth && onOpenAuth('register')} className="hover:text-cyan-300 transition-colors cursor-pointer">Cổng Giáo viên & Xáo đề</button></li>
             </ul>
           </div>
 
@@ -875,9 +875,9 @@ export default function GuestLandingPage({ onOpenAuth, onStartTrial, selectedGra
             <div className="text-[11px] font-mono text-cyan-400/80 uppercase tracking-wider">TÀI NGUYÊN & CÀI ĐẶT</div>
             <ul className="space-y-2 text-xs text-slate-400 font-normal">
               <li><button onClick={() => setIsInstallModalOpen(true)} className="text-emerald-400 font-bold hover:text-emerald-300 transition-colors cursor-pointer flex items-center gap-1.5"><span>📲 Cài Đặt App Mobile (Android/iOS)</span></button></li>
-              <li><button onClick={() => onOpenAuth && onOpenAuth('register')} className="hover:text-cyan-300 transition-colors cursor-pointer">Đề thi THPT Quốc gia 2025</button></li>
-              <li><button onClick={() => onOpenAuth && onOpenAuth('register')} className="hover:text-cyan-300 transition-colors cursor-pointer">Kho từ vựng Global Success</button></li>
-              <li><button onClick={() => onOpenAuth && onOpenAuth('register')} className="hover:text-cyan-300 transition-colors cursor-pointer">Sổ tay hướng dẫn sử dụng AI</button></li>
+              <li><button onClick={() => onNavigate ? onNavigate('official-exams') : onOpenAuth && onOpenAuth('register')} className="hover:text-cyan-300 transition-colors cursor-pointer">Đề thi THPT Quốc gia 2025</button></li>
+              <li><button onClick={() => onNavigate ? onNavigate('vocab-library') : onOpenAuth && onOpenAuth('register')} className="hover:text-cyan-300 transition-colors cursor-pointer">Kho từ vựng Global Success</button></li>
+              <li><button onClick={() => onNavigate ? onNavigate('guide') : onOpenAuth && onOpenAuth('register')} className="hover:text-cyan-300 transition-colors cursor-pointer">Sổ tay hướng dẫn sử dụng AI</button></li>
             </ul>
           </div>
 
