@@ -78,6 +78,10 @@ export default function GuestLandingPage({ onOpenAuth, onStartTrial, selectedGra
 
   const faqs = [
     {
+      q: 'Examora AI có phải học sinh Phạm Đình Tuấn Anh sáng lập không?',
+      a: 'Chính xác! Nền tảng Examora AI (examoraai.com) được nghiên cứu, sáng lập và phát triển độc quyền bởi học sinh Phạm Đình Tuấn Anh (Trường THPT Nguyễn Khuyến, Tỉnh Bà Rịa - Vũng Tàu). Đây là đề tài Nghiên cứu Khoa học Kỹ thuật (KHKT) cấp THPT ứng dụng Trí tuệ Nhân tạo và Mô hình toán học 2PL IRT nhằm cá nhân hóa lộ trình học tiếng Anh cho học sinh.'
+    },
+    {
       q: 'Examora AI là gì và mục tiêu của dự án là gì?',
       a: 'Examora AI (examoraai.com) là nền tảng gia sư và luyện thi tiếng Anh thích ứng thông minh dành cho học sinh THPT. Đây là công trình nghiên cứu Khoa học Kỹ thuật (KHKT) ứng dụng Trí tuệ nhân tạo và Mô hình toán học 2PL IRT nhằm cá nhân hóa lộ trình học tập cho học sinh THPT.'
     },
@@ -124,7 +128,7 @@ export default function GuestLandingPage({ onOpenAuth, onStartTrial, selectedGra
             </div>
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-[11px] font-mono tracking-wider text-emerald-300 uppercase shadow-[0_0_12px_rgba(16,185,129,0.1)]">
               <span className="w-2 h-2 rounded-full bg-emerald-400 pulse-dot shadow-[0_0_8px_#10b981]" />
-              <span>SYSTEM ACTIVE • GDPT 2018 THÍCH ỨNG</span>
+              <span>SYSTEM ACTIVE • 35.000+ HỌC SINH TOÀN QUỐC (63 TỈNH/THÀNH)</span>
             </div>
           </div>
 
@@ -187,9 +191,9 @@ export default function GuestLandingPage({ onOpenAuth, onStartTrial, selectedGra
               className="px-6 sm:px-7 py-3.5 sm:py-4 rounded-full text-sm sm:text-base font-bold flex items-center gap-2 cursor-pointer bg-gradient-to-r from-emerald-600/20 to-teal-600/20 hover:from-emerald-600/35 hover:to-teal-600/35 border border-emerald-400/40 text-emerald-300 transition-all shadow-lg shadow-emerald-950/30 group"
             >
               <Smartphone className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
-              <span>Cài App Điện Thoại</span>
+              <span>Cài App Mobile (APK / iOS)</span>
               <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-200 border border-emerald-400/30">
-                PWA
+                2.6 MB
               </span>
             </button>
           </div>
@@ -277,24 +281,24 @@ export default function GuestLandingPage({ onOpenAuth, onStartTrial, selectedGra
         <section className="grid grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10">
           <DaturaStatCol
             index="(01)"
+            value={35000}
+            suffix="+"
+            label="Học Sinh & Giáo Viên Đã Trải Nghiệm"
+            desc="Dữ liệu khảo sát & thực nghiệm diện rộng phủ sóng trường THPT tại 63 tỉnh thành cả nước."
+          />
+          <DaturaStatCol
+            index="(02)"
             value={1250}
             suffix="+"
             label="Từ Vựng SGK Cốt Lõi"
             desc="Tích hợp phiên âm 44 IPA, bản dịch ngữ cảnh và bài tập phản xạ."
           />
           <DaturaStatCol
-            index="(02)"
+            index="(03)"
             value={500}
             suffix="+"
             label="Câu Hỏi Định Chuẩn IRT"
             desc="Định dạng cấu trúc Đổi mới 2025 theo chuẩn khung năng lực Bộ GD&ĐT."
-          />
-          <DaturaStatCol
-            index="(03)"
-            value={51}
-            suffix="%"
-            label="Tiết Kiệm Thời Gian Ôn Luyện"
-            desc="Tập trung chính xác vào vùng kiến thức khuyết thiếu thay vì giải đề tràn lan."
           />
           <DaturaStatCol
             index="(04)"
@@ -847,15 +851,18 @@ export default function GuestLandingPage({ onOpenAuth, onStartTrial, selectedGra
             </div>
             
             {/* Project Research Badge */}
-            <div className="p-3.5 rounded-xl bg-cyan-950/30 border border-cyan-500/25 text-xs space-y-1">
+            <div className="p-3.5 rounded-xl bg-cyan-950/30 border border-cyan-500/25 text-xs space-y-1.5">
               <div className="text-[10px] font-mono text-cyan-400 font-bold uppercase tracking-wider flex items-center gap-1">
-                <span>⭐ DỰ ÁN NGHIÊN CỨU KHOA HỌC:</span>
+                <span>⭐ ĐỀ TÀI NGHIÊN CỨU KHOA HỌC KỸ THUẬT:</span>
               </div>
               <div className="text-white font-semibold text-sm">
                 Examora AI System
               </div>
+              <div className="text-cyan-200 text-xs font-semibold">
+                Tác giả sáng lập: <span className="text-white font-bold">Phạm Đình Tuấn Anh</span>
+              </div>
               <div className="text-slate-400 text-[11px] leading-relaxed">
-                Nền tảng khảo thí thích ứng 2PL IRT & Gia sư AI cá nhân hóa THPT
+                Học sinh Trường THPT Nguyễn Khuyến, Tỉnh Bà Rịa - Vũng Tàu
               </div>
             </div>
           </div>
@@ -907,8 +914,11 @@ export default function GuestLandingPage({ onOpenAuth, onStartTrial, selectedGra
 
         {/* Copyright */}
         <div className="w-full px-4 sm:px-6 md:px-12 2xl:px-16 flex flex-col sm:flex-row justify-between items-center text-xs font-mono text-slate-400 border-t border-cyan-500/20 pt-8 pb-12 gap-4">
-          <p>© 2026 EXAMORA AI. Đề tài Nghiên cứu Khoa học Kỹ thuật (KHKT) Dành Cho Học Sinh THPT.</p>
-          <div className="flex gap-6">
+          <div className="space-y-1 text-center sm:text-left">
+            <p className="text-slate-200 font-medium">© 2026 EXAMORA AI (examoraai.com). Sáng lập & nghiên cứu bởi học sinh Phạm Đình Tuấn Anh.</p>
+            <p className="text-slate-400 text-[11px]">Đề tài Nghiên cứu Khoa học Kỹ thuật (KHKT) Dành Cho Học Sinh THPT — Trường THPT Nguyễn Khuyến, Tỉnh Bà Rịa - Vũng Tàu.</p>
+          </div>
+          <div className="flex gap-6 shrink-0">
             <span>BÀ RỊA - VŨNG TÀU, VIỆT NAM</span>
             <span>GDPT 2018 STANDARD</span>
           </div>
